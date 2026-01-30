@@ -15,8 +15,8 @@
 # Login to Supabase (opens browser for auth)
 supabase login
 
-# Link your project (if not already linked)
-supabase link --project-ref YOUR_PROJECT_REF
+# Link your project (smart-agent-platform)
+supabase link --project-ref sthnezuadfbmbqlxiwtq
 ```
 
 ### Step 2: Deploy Migrations
