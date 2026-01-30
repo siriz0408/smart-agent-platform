@@ -21,9 +21,10 @@ ALTER TABLE public.document_chunks
 CREATE INDEX IF NOT EXISTS idx_document_chunks_tenant_id
   ON public.document_chunks(tenant_id);
 
--- Step 5: Create composite index for filtered queries
-CREATE INDEX IF NOT EXISTS idx_document_chunks_tenant_doc
-  ON public.document_chunks(tenant_id, document_id);
+-- Step 5: Create composite index for filtered queries with ordering
+-- Supports: tenant filtering + document filtering + ordered retrieval in one index scan
+CREATE INDEX IF NOT EXISTS idx_document_chunks_tenant_doc_idx
+  ON public.document_chunks(tenant_id, document_id, chunk_index);
 
 -- Step 6: Replace RLS policy with efficient version
 DROP POLICY IF EXISTS "Users can view document_chunks for their documents"

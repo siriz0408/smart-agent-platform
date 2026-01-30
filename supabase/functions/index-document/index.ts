@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
-import { AI_CONFIG, getAIApiKey } from "../_shared/ai-config.ts";
+import { AI_CONFIG, getAIApiKey, getAnthropicHeaders, callAnthropicAPI, extractTextFromResponse } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 
 // deno-lint-ignore no-explicit-any
@@ -525,38 +525,17 @@ Be concise and focus on the most important points.`;
 // ============================================================================
 
 async function callAI(prompt: string, content: string, maxTokens: number = 1000): Promise<string | null> {
-  let aiApiKey: string;
   try {
-    aiApiKey = getAIApiKey();
-  } catch {
-    logger.error("AI API key not configured");
-    return null;
-  }
+    // Use the Anthropic API helper from ai-config.ts
+    const response = await callAnthropicAPI(
+      [{ role: "user", content: content.slice(0, 30000) }], // Limit content size
+      {
+        system: prompt,
+        maxTokens,
+      }
+    );
 
-  try {
-    const response = await fetch(AI_CONFIG.GATEWAY_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${aiApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: AI_CONFIG.DEFAULT_MODEL,
-        messages: [
-          { role: "system", content: prompt },
-          { role: "user", content: content.slice(0, 30000) } // Limit content size
-        ],
-        max_tokens: maxTokens,
-      }),
-    });
-
-    if (!response.ok) {
-      logger.error("AI API error", { status: response.status });
-      return null;
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || null;
+    return extractTextFromResponse(response);
   } catch (error) {
     logger.error("AI call failed", { error: error instanceof Error ? error.message : String(error) });
     return null;
@@ -608,7 +587,7 @@ serve(async (req) => {
 
   try {
     // Validate required environment variables
-    requireEnv(["LOVABLE_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]);
+    requireEnv(["ANTHROPIC_API_KEY", "SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY"]);
 
     const { documentId, batch, startJob } = await req.json();
 
@@ -848,6 +827,7 @@ serve(async (req) => {
           .from("document_chunks")
           .insert({
             document_id: documentId,
+            tenant_id: document.tenant_id, // Required after denormalization migration
             chunk_index: i,
             content: chunk,
             embedding: JSON.stringify(embedding),

@@ -47,58 +47,19 @@ CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
--- 3. Insert tenant for super admin
+-- 3. Insert demo tenant (always created for app to work)
 INSERT INTO public.tenants (id, name, slug)
-VALUES ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'Smart Agent Demo', 'smart-agent-demo');
+VALUES ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'Smart Agent Demo', 'smart-agent-demo')
+ON CONFLICT (id) DO NOTHING;
 
--- 4. Insert profile for super admin
-INSERT INTO public.profiles (user_id, tenant_id, email, full_name)
-VALUES (
-  '0dc552c6-1b65-4803-a162-25eaa41d392e',
-  'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-  'siriz0408@gmail.com',
-  'Samuel Irizarry'
-);
-
--- 5. Insert super_admin role
-INSERT INTO public.user_roles (user_id, tenant_id, role)
-VALUES (
-  '0dc552c6-1b65-4803-a162-25eaa41d392e',
-  'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-  'super_admin'
-);
-
--- 6. Insert brokerage subscription (full access)
+-- 4. Insert demo subscription for demo tenant
 INSERT INTO public.subscriptions (tenant_id, plan, status)
-VALUES (
-  'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee',
-  'brokerage',
-  'active'
-);
+VALUES ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'brokerage', 'active')
+ON CONFLICT DO NOTHING;
 
--- 7. Sample Contacts (5)
-INSERT INTO public.contacts (tenant_id, first_name, last_name, email, phone, contact_type, status, tags)
-VALUES
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'John', 'Martinez', 'john.martinez@email.com', '(512) 555-0101', 'buyer', 'active', ARRAY['first-time-buyer', 'pre-approved']),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'Sarah', 'Thompson', 'sarah.t@email.com', '(512) 555-0102', 'seller', 'active', ARRAY['relocation', 'urgent']),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'Michael', 'Chen', 'mchen@email.com', '(512) 555-0103', 'lead', 'active', ARRAY['investor']),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'Emily', 'Rodriguez', 'emily.r@email.com', '(512) 555-0104', 'buyer', 'active', ARRAY['luxury', 'cash-buyer']),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'David', 'Wilson', 'dwilson@email.com', '(512) 555-0105', 'seller', 'active', ARRAY['downsizing']);
-
--- 8. Sample Properties (3)
-INSERT INTO public.properties (tenant_id, address, city, state, zip_code, property_type, status, price, bedrooms, bathrooms, square_feet, year_built, description, listing_agent_id)
-VALUES
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', '123 Oak Lane', 'Austin', 'TX', '78701', 'single_family', 'active', 485000, 3, 2, 1850, 2018, 'Beautiful modern home in downtown Austin with open floor plan.', '0dc552c6-1b65-4803-a162-25eaa41d392e'),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', '456 River View Dr', 'Austin', 'TX', '78702', 'condo', 'pending', 325000, 2, 2, 1200, 2020, 'Luxury condo with stunning river views and resort-style amenities.', '0dc552c6-1b65-4803-a162-25eaa41d392e'),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', '789 Hill Country Blvd', 'Austin', 'TX', '78704', 'single_family', 'active', 725000, 4, 3, 2800, 2015, 'Spacious Hill Country home with pool and panoramic views.', '0dc552c6-1b65-4803-a162-25eaa41d392e');
-
--- 9. Sample Deals (4)
-INSERT INTO public.deals (tenant_id, deal_type, stage, estimated_value, commission_rate, expected_close_date, agent_id)
-VALUES
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'buyer', 'showing', 450000, 3.0, '2026-03-15', '0dc552c6-1b65-4803-a162-25eaa41d392e'),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'seller', 'under_contract', 485000, 2.5, '2026-02-28', '0dc552c6-1b65-4803-a162-25eaa41d392e'),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'buyer', 'offer', 325000, 3.0, '2026-03-01', '0dc552c6-1b65-4803-a162-25eaa41d392e'),
-  ('aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee', 'seller', 'lead', 600000, 2.5, NULL, '0dc552c6-1b65-4803-a162-25eaa41d392e');
+-- Note: Profile, user_roles, and user-linked data (contacts, properties, deals)
+-- will be created automatically when the first user signs up via the trigger above.
+-- The handle_new_user() trigger creates all necessary records on user creation.
 
 -- 10. Sample AI Agents (5 certified marketplace agents)
 INSERT INTO public.ai_agents (name, description, icon, category, is_certified, is_public, system_prompt, usage_count)

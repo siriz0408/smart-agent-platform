@@ -4,21 +4,31 @@
 -- =====================================================
 
 -- =====================================================
--- PHASE 1A: Create Deal Stage Enums
+-- PHASE 1A: Create Deal Stage Enums (if not exists)
 -- =====================================================
 
--- Buyer journey stages (13 stages)
-CREATE TYPE public.deal_stage_buyer AS ENUM (
-  'browsing', 'interested', 'touring', 'offer_prep', 'offer_submitted',
-  'negotiating', 'under_contract', 'inspection', 'appraisal',
-  'final_walkthrough', 'closing', 'closed', 'lost'
-);
+-- Buyer journey stages (13 stages) - only create if not exists
+DO $$
+BEGIN
+  CREATE TYPE public.deal_stage_buyer AS ENUM (
+    'browsing', 'interested', 'touring', 'offer_prep', 'offer_submitted',
+    'negotiating', 'under_contract', 'inspection', 'appraisal',
+    'final_walkthrough', 'closing', 'closed', 'lost'
+  );
+EXCEPTION WHEN duplicate_object THEN
+  -- Type already exists, ignore
+END $$;
 
--- Seller journey stages (11 stages)
-CREATE TYPE public.deal_stage_seller AS ENUM (
-  'preparing', 'listed', 'showing', 'offer_received', 'negotiating',
-  'under_contract', 'inspection', 'appraisal', 'closing', 'closed', 'withdrawn'
-);
+-- Seller journey stages (11 stages) - only create if not exists
+DO $$
+BEGIN
+  CREATE TYPE public.deal_stage_seller AS ENUM (
+    'preparing', 'listed', 'showing', 'offer_received', 'negotiating',
+    'under_contract', 'inspection', 'appraisal', 'closing', 'closed', 'withdrawn'
+  );
+EXCEPTION WHEN duplicate_object THEN
+  -- Type already exists, ignore
+END $$;
 
 -- =====================================================
 -- PHASE 1B: Alter Profiles Table
@@ -47,14 +57,21 @@ CREATE INDEX IF NOT EXISTS idx_deals_seller_user ON public.deals(seller_user_id)
 CREATE INDEX IF NOT EXISTS idx_deals_buyer_stage ON public.deals(buyer_stage) WHERE buyer_stage IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_deals_seller_stage ON public.deals(seller_stage) WHERE seller_stage IS NOT NULL;
 
--- RLS policies for buyer/seller deal access
-CREATE POLICY "Buyers can view their own deals" 
-  ON public.deals FOR SELECT TO authenticated 
-  USING (auth.uid() = buyer_user_id);
+-- RLS policies for buyer/seller deal access (only create if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'deals' AND policyname = 'Buyers can view their own deals') THEN
+    CREATE POLICY "Buyers can view their own deals"
+      ON public.deals FOR SELECT TO authenticated
+      USING (auth.uid() = buyer_user_id);
+  END IF;
 
-CREATE POLICY "Sellers can view their own deals" 
-  ON public.deals FOR SELECT TO authenticated 
-  USING (auth.uid() = seller_user_id);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'deals' AND policyname = 'Sellers can view their own deals') THEN
+    CREATE POLICY "Sellers can view their own deals"
+      ON public.deals FOR SELECT TO authenticated
+      USING (auth.uid() = seller_user_id);
+  END IF;
+END $$;
 
 -- =====================================================
 -- PHASE 1D: Alter Properties and Contacts Tables
@@ -94,26 +111,43 @@ CREATE INDEX IF NOT EXISTS idx_document_projects_created_by ON public.document_p
 
 ALTER TABLE public.document_projects ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view projects in their tenant" 
-  ON public.document_projects FOR SELECT
-  USING (tenant_id = public.get_user_tenant_id(auth.uid()));
+-- Document projects policies (only create if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_projects' AND policyname = 'Users can view projects in their tenant') THEN
+    CREATE POLICY "Users can view projects in their tenant"
+      ON public.document_projects FOR SELECT
+      USING (tenant_id = public.get_user_tenant_id(auth.uid()));
+  END IF;
 
-CREATE POLICY "Users can create projects in their tenant" 
-  ON public.document_projects FOR INSERT
-  WITH CHECK (tenant_id = public.get_user_tenant_id(auth.uid()));
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_projects' AND policyname = 'Users can create projects in their tenant') THEN
+    CREATE POLICY "Users can create projects in their tenant"
+      ON public.document_projects FOR INSERT
+      WITH CHECK (tenant_id = public.get_user_tenant_id(auth.uid()));
+  END IF;
 
-CREATE POLICY "Users can update projects in their tenant" 
-  ON public.document_projects FOR UPDATE
-  USING (tenant_id = public.get_user_tenant_id(auth.uid()));
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_projects' AND policyname = 'Users can update projects in their tenant') THEN
+    CREATE POLICY "Users can update projects in their tenant"
+      ON public.document_projects FOR UPDATE
+      USING (tenant_id = public.get_user_tenant_id(auth.uid()));
+  END IF;
 
-CREATE POLICY "Users can delete their own projects" 
-  ON public.document_projects FOR DELETE
-  USING (created_by = auth.uid());
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_projects' AND policyname = 'Users can delete their own projects') THEN
+    CREATE POLICY "Users can delete their own projects"
+      ON public.document_projects FOR DELETE
+      USING (created_by = auth.uid());
+  END IF;
+END $$;
 
--- Trigger for updated_at
-CREATE TRIGGER update_document_projects_updated_at 
-  BEFORE UPDATE ON public.document_projects 
-  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+-- Trigger for updated_at (only create if not exists)
+DO $$
+BEGIN
+  CREATE TRIGGER update_document_projects_updated_at
+    BEFORE UPDATE ON public.document_projects
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+EXCEPTION WHEN duplicate_object THEN
+  -- Trigger already exists, ignore
+END $$;
 
 -- Document project members junction table
 CREATE TABLE IF NOT EXISTS public.document_project_members (
@@ -130,26 +164,36 @@ CREATE INDEX IF NOT EXISTS idx_doc_project_members_document ON public.document_p
 
 ALTER TABLE public.document_project_members ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view project members in their tenant" 
-  ON public.document_project_members FOR SELECT
-  USING (project_id IN (
-    SELECT id FROM public.document_projects 
-    WHERE tenant_id = public.get_user_tenant_id(auth.uid())
-  ));
+-- Document project members policies (only create if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_project_members' AND policyname = 'Users can view project members in their tenant') THEN
+    CREATE POLICY "Users can view project members in their tenant"
+      ON public.document_project_members FOR SELECT
+      USING (project_id IN (
+        SELECT id FROM public.document_projects
+        WHERE tenant_id = public.get_user_tenant_id(auth.uid())
+      ));
+  END IF;
 
-CREATE POLICY "Users can add documents to projects in their tenant" 
-  ON public.document_project_members FOR INSERT
-  WITH CHECK (project_id IN (
-    SELECT id FROM public.document_projects 
-    WHERE tenant_id = public.get_user_tenant_id(auth.uid())
-  ));
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_project_members' AND policyname = 'Users can add documents to projects in their tenant') THEN
+    CREATE POLICY "Users can add documents to projects in their tenant"
+      ON public.document_project_members FOR INSERT
+      WITH CHECK (project_id IN (
+        SELECT id FROM public.document_projects
+        WHERE tenant_id = public.get_user_tenant_id(auth.uid())
+      ));
+  END IF;
 
-CREATE POLICY "Users can remove documents from projects in their tenant" 
-  ON public.document_project_members FOR DELETE
-  USING (project_id IN (
-    SELECT id FROM public.document_projects 
-    WHERE tenant_id = public.get_user_tenant_id(auth.uid())
-  ));
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'document_project_members' AND policyname = 'Users can remove documents from projects in their tenant') THEN
+    CREATE POLICY "Users can remove documents from projects in their tenant"
+      ON public.document_project_members FOR DELETE
+      USING (project_id IN (
+        SELECT id FROM public.document_projects
+        WHERE tenant_id = public.get_user_tenant_id(auth.uid())
+      ));
+  END IF;
+END $$;
 
 -- Add project_id to documents table
 ALTER TABLE public.documents 

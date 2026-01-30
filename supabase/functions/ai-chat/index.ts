@@ -11,6 +11,34 @@ const corsHeaders = {
 };
 
 // ====================================================================
+// ANTHROPIC API HELPERS
+// ====================================================================
+
+// Convert OpenAI-style tool to Anthropic format
+interface OpenAITool {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+interface AnthropicTool {
+  name: string;
+  description: string;
+  input_schema: Record<string, unknown>;
+}
+
+function convertToAnthropicTools(openAITools: OpenAITool[]): AnthropicTool[] {
+  return openAITools.map((tool) => ({
+    name: tool.function.name,
+    description: tool.function.description,
+    input_schema: tool.function.parameters,
+  }));
+}
+
+// ====================================================================
 // AI-POWERED PROPERTY SEARCH INTENT DETECTION
 // ====================================================================
 
@@ -541,18 +569,17 @@ async function detectIntentWithAI(
   apiKey: string
 ): Promise<IntentDetectionResult> {
   try {
-    const intentResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const intentResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash", // Better reasoning for intent detection
-        messages: [
-          {
-            role: "system",
-            content: `You are a real estate assistant query parser. Your job is to detect user intent and call the appropriate tool.
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1024,
+        system: `You are a real estate assistant query parser. Your job is to detect user intent and call the appropriate tool.
 
 ## TOOL SELECTION RULES
 
@@ -682,18 +709,18 @@ async function detectIntentWithAI(
 - "under X" or "below X" means price_max/price = X
 - "over X" or "above X" means price_min = X
 - Default down payment to 20% if not specified
-- Default interest rate to 6.75% if not specified  
+- Default interest rate to 6.75% if not specified
 - Default loan term to 30 years if not specified
 - For calculator without specific price, use 300000 as default
 - For closing costs, default to buyer view unless "seller" or "selling" is mentioned
 - For rent vs buy, default to 7 years comparison, 3% appreciation, 3% rent increase
 - For seller net sheet, default mortgage balance to 280000, commission to 6%
-- For agent commission, default to 50/50 listing/buyer split, 70/30 agent/broker split`
-          },
+- For agent commission, default to 50/50 listing/buyer split, 70/30 agent/broker split`,
+        messages: [
           { role: "user", content: message }
         ],
-        tools: [PROPERTY_SEARCH_TOOL, MORTGAGE_CALCULATOR_TOOL, AFFORDABILITY_CALCULATOR_TOOL, CLOSING_COSTS_CALCULATOR_TOOL, RENT_VS_BUY_CALCULATOR_TOOL, CMA_COMPARISON_TOOL, HOME_BUYING_CHECKLIST_TOOL, HOME_SELLING_CHECKLIST_TOOL, SELLER_NET_SHEET_TOOL, AGENT_COMMISSION_CALCULATOR_TOOL],
-        tool_choice: "auto",
+        tools: convertToAnthropicTools([PROPERTY_SEARCH_TOOL, MORTGAGE_CALCULATOR_TOOL, AFFORDABILITY_CALCULATOR_TOOL, CLOSING_COSTS_CALCULATOR_TOOL, RENT_VS_BUY_CALCULATOR_TOOL, CMA_COMPARISON_TOOL, HOME_BUYING_CHECKLIST_TOOL, HOME_SELLING_CHECKLIST_TOOL, SELLER_NET_SHEET_TOOL, AGENT_COMMISSION_CALCULATOR_TOOL]),
+        tool_choice: { type: "auto" },
       }),
     });
 
@@ -703,17 +730,22 @@ async function detectIntentWithAI(
     }
 
     const intentData = await intentResponse.json();
-    const toolCall = intentData.choices?.[0]?.message?.tool_calls?.[0];
-    
-    if (!toolCall) {
+
+    // Anthropic format: tool_use is in content array with type: "tool_use"
+    const toolUseBlock = intentData.content?.find(
+      (block: { type: string }) => block.type === "tool_use"
+    );
+
+    if (!toolUseBlock) {
       console.log("No tool call detected by AI");
       return { type: "none" };
     }
 
-    const args = JSON.parse(toolCall.function.arguments);
-    console.log(`AI called tool: ${toolCall.function.name}`, args);
+    // Anthropic provides input as object, not stringified
+    const args = toolUseBlock.input || {};
+    console.log(`AI called tool: ${toolUseBlock.name}`, args);
 
-    if (toolCall.function.name === "search_properties") {
+    if (toolUseBlock.name === "search_properties") {
       return {
         type: "property_search",
         propertySearchParams: {
@@ -735,7 +767,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_mortgage_calculator") {
+    if (toolUseBlock.name === "show_mortgage_calculator") {
       return {
         type: "mortgage_calculator",
         mortgageCalculatorParams: {
@@ -747,7 +779,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_affordability_calculator") {
+    if (toolUseBlock.name === "show_affordability_calculator") {
       return {
         type: "affordability_calculator",
         affordabilityCalculatorParams: {
@@ -759,7 +791,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_closing_costs_calculator") {
+    if (toolUseBlock.name === "show_closing_costs_calculator") {
       return {
         type: "closing_costs_calculator",
         closingCostsCalculatorParams: {
@@ -770,7 +802,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_rent_vs_buy_calculator") {
+    if (toolUseBlock.name === "show_rent_vs_buy_calculator") {
       return {
         type: "rent_vs_buy_calculator",
         rentVsBuyCalculatorParams: {
@@ -785,7 +817,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_cma_comparison") {
+    if (toolUseBlock.name === "show_cma_comparison") {
       return {
         type: "cma_comparison",
         cmaComparisonParams: {
@@ -799,7 +831,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_home_buying_checklist") {
+    if (toolUseBlock.name === "show_home_buying_checklist") {
       return {
         type: "home_buying_checklist",
         homeBuyingChecklistParams: {
@@ -808,7 +840,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_home_selling_checklist") {
+    if (toolUseBlock.name === "show_home_selling_checklist") {
       return {
         type: "home_selling_checklist",
         homeSellingChecklistParams: {
@@ -817,7 +849,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_seller_net_sheet") {
+    if (toolUseBlock.name === "show_seller_net_sheet") {
       return {
         type: "seller_net_sheet",
         sellerNetSheetParams: {
@@ -828,7 +860,7 @@ async function detectIntentWithAI(
       };
     }
 
-    if (toolCall.function.name === "show_agent_commission_calculator") {
+    if (toolUseBlock.name === "show_agent_commission_calculator") {
       return {
         type: "agent_commission_calculator",
         agentCommissionCalculatorParams: {
@@ -1036,7 +1068,7 @@ function buildPropertyContext(
     criteriaLines.push(`- Additional Criteria: ${params.keywords.join(', ')}`);
   }
 
-  let context = `
+  const context = `
 ## Property Search Results
 
 The user searched for properties with the following criteria:
@@ -1247,9 +1279,9 @@ serve(async (req) => {
   try {
     const { messages, conversationId, includeDocuments, documentIds } = await req.json();
     
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      throw new Error("ANTHROPIC_API_KEY is not configured");
     }
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
@@ -1337,7 +1369,7 @@ serve(async (req) => {
           console.log("Analyzing message for intent:", lastUserMessage.content);
           
           // Use combined intent detection
-          const intentResult = await detectIntentWithAI(lastUserMessage.content, LOVABLE_API_KEY);
+          const intentResult = await detectIntentWithAI(lastUserMessage.content, ANTHROPIC_API_KEY);
           console.log("Intent detection result:", intentResult.type);
           
           // ================================================================
@@ -1390,18 +1422,18 @@ Provide a brief, helpful response:
 Keep your response SHORT and conversational - the calculator widget speaks for itself.`;
             
             // Stream AI response with calculator context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + calcContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + calcContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -1499,18 +1531,18 @@ Provide a brief, helpful response:
 Keep your response SHORT and conversational - the calculator widget speaks for itself.`;
             
             // Stream AI response with calculator context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + calcContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + calcContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -1620,18 +1652,18 @@ Provide a brief, helpful response:
 Keep your response SHORT and conversational - the calculator widget speaks for itself.`;
             
             // Stream AI response with calculator context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + calcContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + calcContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -1749,18 +1781,18 @@ Provide a brief, helpful response:
 Keep your response SHORT and conversational - the calculator widget speaks for itself.`;
             
             // Stream AI response with calculator context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + calcContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + calcContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -1800,8 +1832,8 @@ Keep your response SHORT and conversational - the calculator widget speaks for i
             await writeStatus(writer, encoder, "searching", "Finding comparable sales...");
             
             // We need a zpid to get comps - if we don't have one, we need to search first
-            let zpid = cmaParams.zpid;
-            let subjectAddress = cmaParams.address || "";
+            const zpid = cmaParams.zpid;
+            const subjectAddress = cmaParams.address || "";
             
             // If no zpid but we have an address, try to find the property first
             if (!zpid && cmaParams.address) {
@@ -2035,18 +2067,18 @@ Provide a brief, helpful CMA summary:
 Keep your response SHORT and conversational - the CMA widget speaks for itself.`;
             
             // Stream AI response with CMA context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + cmaContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + cmaContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -2126,18 +2158,18 @@ Provide a brief, encouraging response:
 4. Keep it SHORT and conversational - the checklist speaks for itself`;
             
             // Stream AI response with checklist context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + checklistContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + checklistContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -2219,18 +2251,18 @@ Provide a brief, encouraging response:
 4. Keep it SHORT and conversational - the checklist speaks for itself`;
             
             // Stream AI response with checklist context
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + checklistContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + checklistContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -2305,18 +2337,18 @@ Provide a brief, helpful response:
 5. Keep it SHORT - the interactive calculator speaks for itself`;
             
             // Stream AI response
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + netSheetContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + netSheetContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -2396,18 +2428,18 @@ Provide a brief, helpful response:
 5. Keep it SHORT - the interactive calculator speaks for itself`;
             
             // Stream AI response
-            const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
               method: "POST",
               headers: {
-                Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                "Content-Type": "application/json",
+                "x-api-key": ANTHROPIC_API_KEY,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
               },
               body: JSON.stringify({
-                model: "google/gemini-3-flash-preview",
-                messages: [
-                  { role: "system", content: BASE_SYSTEM_PROMPT + commContext },
-                  ...messages,
-                ],
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1024,
+                system: BASE_SYSTEM_PROMPT + commContext,
+                messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                 stream: true,
               }),
             });
@@ -2608,18 +2640,18 @@ Provide a brief, helpful response:
                 );
                 
                 // Call the AI API for the text response
-                const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+                const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
                   method: "POST",
                   headers: {
-                    Authorization: `Bearer ${LOVABLE_API_KEY}`,
-                    "Content-Type": "application/json",
+                    "x-api-key": ANTHROPIC_API_KEY,
+                    "anthropic-version": "2023-06-01",
+                    "content-type": "application/json",
                   },
                   body: JSON.stringify({
-                    model: "google/gemini-3-flash-preview",
-                    messages: [
-                      { role: "system", content: BASE_SYSTEM_PROMPT + propertyContext },
-                      ...messages,
-                    ],
+                    model: "claude-sonnet-4-20250514",
+                    max_tokens: 1024,
+                    system: BASE_SYSTEM_PROMPT + propertyContext,
+                    messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
                     stream: true,
                   }),
                 });
@@ -2666,18 +2698,18 @@ Provide a brief, helpful response:
           await writeStatus(writer, encoder, "generating", "Processing your request...");
           
           // Call the regular AI API for a general response
-          const regularAiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          const regularAiResponse = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
+              "x-api-key": ANTHROPIC_API_KEY,
+              "anthropic-version": "2023-06-01",
+              "content-type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
-              messages: [
-                { role: "system", content: BASE_SYSTEM_PROMPT },
-                ...messages,
-              ],
+              model: "claude-sonnet-4-20250514",
+              max_tokens: 1024,
+              system: BASE_SYSTEM_PROMPT,
+              messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
               stream: true,
             }),
           });
@@ -2938,18 +2970,18 @@ Let them know you couldn't find relevant information in the selected documents a
     // ====================================================================
     // STANDARD AI RESPONSE (no property search or document context)
     // ====================================================================
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
-        messages: [
-          { role: "system", content: systemPrompt },
-          ...messages,
-        ],
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 4096,
+        system: systemPrompt,
+        messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
         stream: true,
       }),
     });

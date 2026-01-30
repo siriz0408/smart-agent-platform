@@ -66,14 +66,15 @@ CREATE TABLE public.user_presence (
   updated_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Typing Indicators table
-CREATE TABLE public.typing_indicators (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  started_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE (conversation_id, user_id)
-);
+-- NOTE: typing_indicators table requires conversations table which is not yet implemented
+-- Will be created as part of real-time messaging feature
+-- CREATE TABLE public.typing_indicators (
+--   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+--   conversation_id UUID NOT NULL REFERENCES conversations(id) ON DELETE CASCADE,
+--   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+--   started_at TIMESTAMPTZ DEFAULT now(),
+--   UNIQUE (conversation_id, user_id)
+-- );
 
 -- Add extended profile fields to profiles table
 ALTER TABLE public.profiles 
@@ -186,17 +187,15 @@ CREATE POLICY "Users can view presence in their tenant"
     )
   );
 
--- Typing Indicators RLS
-ALTER TABLE public.typing_indicators ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can manage their own typing indicators"
-  ON public.typing_indicators FOR ALL TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-
-CREATE POLICY "Participants can view typing indicators"
-  ON public.typing_indicators FOR SELECT TO authenticated
-  USING (is_conversation_participant(auth.uid(), conversation_id));
+-- NOTE: typing_indicators RLS - deferred until conversations table exists
+-- ALTER TABLE public.typing_indicators ENABLE ROW LEVEL SECURITY;
+-- CREATE POLICY "Users can manage their own typing indicators"
+--   ON public.typing_indicators FOR ALL TO authenticated
+--   USING (user_id = auth.uid())
+--   WITH CHECK (user_id = auth.uid());
+-- CREATE POLICY "Participants can view typing indicators"
+--   ON public.typing_indicators FOR SELECT TO authenticated
+--   USING (is_conversation_participant(auth.uid(), conversation_id));
 
 -- ============================================================================
 -- Indexes for Performance
@@ -208,30 +207,39 @@ CREATE INDEX IF NOT EXISTS idx_profile_gallery_user_id ON public.profile_gallery
 CREATE INDEX IF NOT EXISTS idx_profile_privacy_settings_user_id ON public.profile_privacy_settings(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_presence_user_id ON public.user_presence(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_presence_status ON public.user_presence(status);
-CREATE INDEX IF NOT EXISTS idx_typing_indicators_conversation_id ON public.typing_indicators(conversation_id);
+-- NOTE: typing_indicators index - deferred until table exists
+-- CREATE INDEX IF NOT EXISTS idx_typing_indicators_conversation_id ON public.typing_indicators(conversation_id);
 
 -- ============================================================================
 -- Enable Realtime for presence and typing
 -- ============================================================================
 
-ALTER PUBLICATION supabase_realtime ADD TABLE public.user_presence;
-ALTER PUBLICATION supabase_realtime ADD TABLE public.typing_indicators;
+DO $$
+BEGIN
+  ALTER PUBLICATION supabase_realtime ADD TABLE public.user_presence;
+EXCEPTION WHEN duplicate_object THEN
+  -- Already added, ignore
+END $$;
+
+-- NOTE: typing_indicators realtime - deferred until table exists
+-- ALTER PUBLICATION supabase_realtime ADD TABLE public.typing_indicators;
 
 -- ============================================================================
 -- Auto-cleanup function for stale typing indicators
 -- ============================================================================
 
-CREATE OR REPLACE FUNCTION public.cleanup_stale_typing_indicators()
-RETURNS void
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  DELETE FROM typing_indicators
-  WHERE started_at < now() - interval '10 seconds';
-END;
-$$;
+-- NOTE: cleanup function for typing_indicators - deferred until table exists
+-- CREATE OR REPLACE FUNCTION public.cleanup_stale_typing_indicators()
+-- RETURNS void
+-- LANGUAGE plpgsql
+-- SECURITY DEFINER
+-- SET search_path = public
+-- AS $$
+-- BEGIN
+--   DELETE FROM typing_indicators
+--   WHERE started_at < now() - interval '10 seconds';
+-- END;
+-- $$;
 
 -- ============================================================================
 -- Triggers for updated_at
@@ -264,53 +272,86 @@ VALUES
   ('profile-gallery', 'profile-gallery', true, 10485760, ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif'])
 ON CONFLICT (id) DO NOTHING;
 
--- Storage RLS Policies for avatars
-CREATE POLICY "Users can upload own avatar"
-  ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Storage RLS Policies for avatars (only create if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can upload own avatar') THEN
+    CREATE POLICY "Users can upload own avatar"
+      ON storage.objects FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
 
-CREATE POLICY "Avatars are publicly accessible"
-  ON storage.objects FOR SELECT TO public
-  USING (bucket_id = 'avatars');
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Avatars are publicly accessible') THEN
+    CREATE POLICY "Avatars are publicly accessible"
+      ON storage.objects FOR SELECT TO public
+      USING (bucket_id = 'avatars');
+  END IF;
 
-CREATE POLICY "Users can update own avatar"
-  ON storage.objects FOR UPDATE TO authenticated
-  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can update own avatar') THEN
+    CREATE POLICY "Users can update own avatar"
+      ON storage.objects FOR UPDATE TO authenticated
+      USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
 
-CREATE POLICY "Users can delete own avatar"
-  ON storage.objects FOR DELETE TO authenticated
-  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can delete own avatar') THEN
+    CREATE POLICY "Users can delete own avatar"
+      ON storage.objects FOR DELETE TO authenticated
+      USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
+END $$;
 
--- Storage RLS Policies for profile-covers
-CREATE POLICY "Users can upload own cover"
-  ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'profile-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Storage RLS Policies for profile-covers (only create if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can upload own cover') THEN
+    CREATE POLICY "Users can upload own cover"
+      ON storage.objects FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'profile-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
 
-CREATE POLICY "Covers are publicly accessible"
-  ON storage.objects FOR SELECT TO public
-  USING (bucket_id = 'profile-covers');
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Covers are publicly accessible') THEN
+    CREATE POLICY "Covers are publicly accessible"
+      ON storage.objects FOR SELECT TO public
+      USING (bucket_id = 'profile-covers');
+  END IF;
 
-CREATE POLICY "Users can update own cover"
-  ON storage.objects FOR UPDATE TO authenticated
-  USING (bucket_id = 'profile-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can update own cover') THEN
+    CREATE POLICY "Users can update own cover"
+      ON storage.objects FOR UPDATE TO authenticated
+      USING (bucket_id = 'profile-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
 
-CREATE POLICY "Users can delete own cover"
-  ON storage.objects FOR DELETE TO authenticated
-  USING (bucket_id = 'profile-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can delete own cover') THEN
+    CREATE POLICY "Users can delete own cover"
+      ON storage.objects FOR DELETE TO authenticated
+      USING (bucket_id = 'profile-covers' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
+END $$;
 
--- Storage RLS Policies for profile-gallery
-CREATE POLICY "Users can upload to own gallery"
-  ON storage.objects FOR INSERT TO authenticated
-  WITH CHECK (bucket_id = 'profile-gallery' AND auth.uid()::text = (storage.foldername(name))[1]);
+-- Storage RLS Policies for profile-gallery (only create if not exists)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can upload to own gallery') THEN
+    CREATE POLICY "Users can upload to own gallery"
+      ON storage.objects FOR INSERT TO authenticated
+      WITH CHECK (bucket_id = 'profile-gallery' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
 
-CREATE POLICY "Gallery is publicly accessible"
-  ON storage.objects FOR SELECT TO public
-  USING (bucket_id = 'profile-gallery');
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Gallery is publicly accessible') THEN
+    CREATE POLICY "Gallery is publicly accessible"
+      ON storage.objects FOR SELECT TO public
+      USING (bucket_id = 'profile-gallery');
+  END IF;
 
-CREATE POLICY "Users can update own gallery items"
-  ON storage.objects FOR UPDATE TO authenticated
-  USING (bucket_id = 'profile-gallery' AND auth.uid()::text = (storage.foldername(name))[1]);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can update own gallery items') THEN
+    CREATE POLICY "Users can update own gallery items"
+      ON storage.objects FOR UPDATE TO authenticated
+      USING (bucket_id = 'profile-gallery' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
 
-CREATE POLICY "Users can delete own gallery items"
-  ON storage.objects FOR DELETE TO authenticated
-  USING (bucket_id = 'profile-gallery' AND auth.uid()::text = (storage.foldername(name))[1]);
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE schemaname = 'storage' AND tablename = 'objects' AND policyname = 'Users can delete own gallery items') THEN
+    CREATE POLICY "Users can delete own gallery items"
+      ON storage.objects FOR DELETE TO authenticated
+      USING (bucket_id = 'profile-gallery' AND auth.uid()::text = (storage.foldername(name))[1]);
+  END IF;
+END $$;

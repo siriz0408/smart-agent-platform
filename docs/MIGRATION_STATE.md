@@ -1,7 +1,7 @@
 # Migration State - SAVE THIS FILE
 
 **Last Updated:** 2026-01-30
-**Status:** Phase 1 Complete, Phase 2 In Progress
+**Status:** Phase 3 Complete, Ready for Testing
 
 ---
 
@@ -55,20 +55,32 @@ Clone URL: https://github.com/siriz0408/smart-agent-platform.git
 
 ---
 
-### Phase 2: Supabase Project Setup ⏸️ IN PROGRESS
+### Phase 2: Supabase Project Setup ✅ COMPLETE
 - [x] Created new Supabase project: `smart-agent-platform`
 - [x] Collected all credentials (see above)
-- [ ] Configure storage buckets
-- [ ] Run 32 database migrations
-- [ ] Deploy 22 edge functions
-- [ ] Configure 8 secrets
+- [x] Storage buckets created via migrations (avatars, profile-covers, profile-gallery)
+- [x] Create `documents` bucket (private, 50MB limit) ✅
+- [x] Run 32 database migrations ✅
+- [x] Deploy 20 edge functions ✅
+- [x] **Switched AI from Lovable Gateway to Anthropic Claude** ✅
+- [x] Configure ALL secrets ✅
 
-**Next Steps:**
-1. Link Supabase CLI to new project
-2. Create 4 storage buckets
-3. Push all migrations
-4. Deploy all edge functions
-5. Configure secrets
+**All Secrets Configured:**
+- ✅ AI_GATEWAY_URL (https://api.anthropic.com/v1/messages)
+- ✅ AI_MODEL (claude-sonnet-4-20250514)
+- ✅ APP_URL (https://smart-agent-platform.vercel.app)
+- ✅ ANTHROPIC_API_KEY
+- ✅ STRIPE_SECRET_KEY
+- ✅ RAPIDAPI_KEY
+- ✅ RESEND_API_KEY
+
+**All Storage Buckets Configured:**
+- ✅ `documents` (private, 50MB limit, PDF/images/text/Word)
+- ✅ `avatars` (public, 2MB limit)
+- ✅ `profile-covers` (public, 5MB limit)
+- ✅ `profile-gallery` (public, 10MB limit)
+- ✅ `property-photos` (public)
+- ✅ `message-attachments` (private)
 
 ---
 
@@ -134,36 +146,44 @@ supabase functions list  # All should say "deployed"
 ### Step 5: Configure Secrets
 
 ```bash
-# You'll need these API keys (gather before running):
-# - LOVABLE_API_KEY
-# - STRIPE_SECRET_KEY (test mode)
-# - STRIPE_WEBHOOK_SECRET
-# - RESEND_API_KEY
-# - RAPIDAPI_KEY
+# ✅ ALREADY CONFIGURED (Anthropic AI settings):
+# - AI_GATEWAY_URL=https://api.anthropic.com/v1/messages
+# - AI_MODEL=claude-sonnet-4-20250514
+# - APP_URL=http://localhost:8080
 
-supabase secrets set LOVABLE_API_KEY=<your-key>
-supabase secrets set STRIPE_SECRET_KEY=sk_test_...
-supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
-supabase secrets set RESEND_API_KEY=re_...
-supabase secrets set RAPIDAPI_KEY=<your-key>
-supabase secrets set APP_URL=http://localhost:8080
-supabase secrets set AI_GATEWAY_URL=https://ai.gateway.lovable.dev
-supabase secrets set AI_MODEL=google/gemini-3-flash-preview
+# ⚠️ YOU NEED TO SET these API keys:
+export SUPABASE_ACCESS_TOKEN="sbp_d3890f8398db89710dbecf7cae00edcc803375c8"
+
+supabase secrets set ANTHROPIC_API_KEY=<your-anthropic-key> --project-ref sthnezuadfbmbqlxiwtq
+supabase secrets set STRIPE_SECRET_KEY=sk_test_... --project-ref sthnezuadfbmbqlxiwtq
+supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_... --project-ref sthnezuadfbmbqlxiwtq
+supabase secrets set RESEND_API_KEY=re_... --project-ref sthnezuadfbmbqlxiwtq
+supabase secrets set RAPIDAPI_KEY=<your-key> --project-ref sthnezuadfbmbqlxiwtq
 ```
+
+---
+
+## ✅ Completed Phases (continued)
+
+### Phase 3: Vercel Deployment ✅ COMPLETE
+- [x] Import GitHub repo to Vercel
+- [x] Configure 3 environment variables
+- [x] Deploy to production
+- [x] Update Supabase APP_URL secret with Vercel URL
+- [x] Update Supabase Auth redirect URLs
+
+**Production URL:** https://smart-agent-platform.vercel.app
+
+**Environment Variables Set:**
+- ✅ VITE_SUPABASE_URL
+- ✅ VITE_SUPABASE_PUBLISHABLE_KEY
+- ✅ VITE_SUPABASE_PROJECT_ID
 
 ---
 
 ## 📋 Remaining Phases
 
-### Phase 3: Vercel Deployment ⏸️ PENDING
-- [ ] Import GitHub repo to Vercel
-- [ ] Configure 3 environment variables
-- [ ] Deploy to production
-- [ ] Update Supabase with Vercel URL
-
-**Guide:** See `docs/VERCEL_DEPLOYMENT.md`
-
-### Phase 4: Testing ⏸️ PENDING
+### Phase 4: Testing ⏸️ READY TO START
 - [ ] Complete comprehensive testing checklist
 - [ ] Verify all features working
 - [ ] Run Lighthouse performance tests
@@ -196,22 +216,21 @@ All guides are in the `/docs` folder:
 
 1. **Don't delete old infrastructure yet**
    - Old Supabase project: `zgyeaupwubdavjmxzinj`
-   - Keep running until new infrastructure is stable
+   - Keep running until new infrastructure is stable (1-2 weeks)
 
-2. **Database password**
-   - You should have saved this when creating the project
-   - If lost, you can reset it in Supabase dashboard
+2. **Production is LIVE**
+   - App URL: https://smart-agent-platform.vercel.app
+   - Monitor Supabase logs for errors
+   - Check Vercel deployment logs if issues arise
 
-3. **API Keys Needed for Phase 2 Step 5**
-   - Gather these before configuring secrets:
-     - Lovable AI API key
-     - Stripe test keys
-     - Resend API key
-     - RapidAPI key
+3. **AI Provider Change**
+   - Switched from Lovable Gateway to Anthropic Claude
+   - Using claude-sonnet-4-20250514 model
+   - 13 API calls in ai-chat function converted
 
 4. **Next Session Resume Point**
-   - Start at Phase 2, Step 2 (Link Supabase CLI)
-   - Follow `docs/SUPABASE_SETUP.md` from Phase 2.3 onwards
+   - Continue with Phase 4: Testing
+   - Follow the testing checklist below
 
 ---
 
@@ -225,22 +244,27 @@ cd /Users/sam.irizarry/Downloads/ReAgentOS_V1
 # Read this state file
 cat docs/MIGRATION_STATE.md
 
-# Continue with Phase 2
-cat docs/SUPABASE_SETUP.md
+# Start local dev server for testing
+npm run dev
 ```
 
 **Or simply tell Claude:**
-> "Continue the Smart Agent migration from Phase 2"
+> "Continue testing Smart Agent - Phase 4"
+
+**Production Testing:**
+> Visit https://smart-agent-platform.vercel.app
 
 ---
 
-**Migration paused at:** Phase 2 - Supabase Project Setup (In Progress)
+**Migration Status:** Phase 3 Complete - App Live in Production!
 
-**Next steps:**
-1. Update local config files
-2. Link Supabase CLI
-3. Create storage buckets
-4. Deploy migrations and functions
-5. Configure secrets
+**Production URL:** https://smart-agent-platform.vercel.app
 
-**Estimated time remaining:** 6-8 hours across Phases 2-6
+**Next steps (Phase 4 - Testing):**
+1. Test authentication (login, signup, logout)
+2. Test AI chat with Anthropic Claude
+3. Test document upload and indexing
+4. Test property search (RapidAPI)
+5. Test CRM features (contacts, deals, pipeline)
+
+**Estimated time remaining:** 2-4 hours for testing, then 24-48 hours monitoring

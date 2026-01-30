@@ -5,24 +5,32 @@
 -- Verify no NULL values exist before adding constraints
 DO $$
 BEGIN
-  -- Check document_chunks.document_id
-  IF EXISTS (SELECT 1 FROM document_chunks WHERE document_id IS NULL) THEN
-    RAISE EXCEPTION 'Found NULL document_id in document_chunks. Clean up before migration.';
+  -- Check document_chunks.document_id (only if table exists)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'document_chunks') THEN
+    IF EXISTS (SELECT 1 FROM document_chunks WHERE document_id IS NULL) THEN
+      RAISE EXCEPTION 'Found NULL document_id in document_chunks. Clean up before migration.';
+    END IF;
   END IF;
 
-  -- Check ai_messages.conversation_id
-  IF EXISTS (SELECT 1 FROM ai_messages WHERE conversation_id IS NULL) THEN
-    RAISE EXCEPTION 'Found NULL conversation_id in ai_messages. Clean up before migration.';
+  -- Check ai_messages.conversation_id (only if table exists)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'ai_messages') THEN
+    IF EXISTS (SELECT 1 FROM ai_messages WHERE conversation_id IS NULL) THEN
+      RAISE EXCEPTION 'Found NULL conversation_id in ai_messages. Clean up before migration.';
+    END IF;
   END IF;
 
-  -- Check deal_milestones.deal_id
-  IF EXISTS (SELECT 1 FROM deal_milestones WHERE deal_id IS NULL) THEN
-    RAISE EXCEPTION 'Found NULL deal_id in deal_milestones. Clean up before migration.';
+  -- Check deal_milestones.deal_id (only if table exists)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'deal_milestones') THEN
+    IF EXISTS (SELECT 1 FROM deal_milestones WHERE deal_id IS NULL) THEN
+      RAISE EXCEPTION 'Found NULL deal_id in deal_milestones. Clean up before migration.';
+    END IF;
   END IF;
 
-  -- Check contact_agents (both columns)
-  IF EXISTS (SELECT 1 FROM contact_agents WHERE contact_id IS NULL OR agent_user_id IS NULL) THEN
-    RAISE EXCEPTION 'Found NULL in contact_agents relationship. Clean up before migration.';
+  -- Check contact_agents (only if table exists)
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'contact_agents') THEN
+    IF EXISTS (SELECT 1 FROM contact_agents WHERE contact_id IS NULL OR agent_user_id IS NULL) THEN
+      RAISE EXCEPTION 'Found NULL in contact_agents relationship. Clean up before migration.';
+    END IF;
   END IF;
 END $$;
 
