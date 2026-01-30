@@ -1,73 +1,201 @@
-# Welcome to your Lovable project
+# Smart Agent - AI Real Estate Assistant Platform
 
-## Project info
+Smart Agent is an AI-powered SaaS application designed for real estate professionals. It provides intelligent document analysis, CRM features, and multi-document chat capabilities to streamline real estate workflows.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Features
 
-## How can I edit this code?
+- **AI-Powered Document Analysis**: Upload contracts, disclosures, and inspection reports. Get instant AI summaries and structured data extraction.
+- **Multi-Document Chat**: Ask questions across all your documents simultaneously using advanced RAG (Retrieval-Augmented Generation).
+- **Real Estate CRM**: Manage contacts, properties, and deals in one unified platform.
+- **Pipeline Management**: Track deals through stages with milestone reminders.
+- **Stripe Billing**: Integrated subscription management with multiple pricing tiers.
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18 + TypeScript + Vite
+- **UI Components**: shadcn/ui + Tailwind CSS
+- **Backend**: Supabase (PostgreSQL + pgvector + Edge Functions)
+- **Payments**: Stripe
+- **Deployment**: Vercel
+- **AI**: Lovable AI Gateway (Gemini Flash 3)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 20+ and npm
+- Supabase account
+- Stripe account (for billing features)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+```bash
+# Clone the repository
+git clone https://github.com/<username>/smart-agent-platform.git
+cd smart-agent-platform
 
-Follow these steps:
+# Install dependencies
+npm install
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Set up environment variables (see below)
+cp .env.example .env
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at http://localhost:8080
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Environment Variables
 
-**Use GitHub Codespaces**
+Create a `.env` file in the project root with the following variables:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+VITE_SUPABASE_URL=https://<your-project-id>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<your-anon-key>
+VITE_SUPABASE_PROJECT_ID=<your-project-id>
+```
 
-## What technologies are used for this project?
+Get these values from your Supabase project dashboard (Settings → API).
 
-This project is built with:
+## Development
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```bash
+# Start dev server with hot reload
+npm run dev
 
-## How can I deploy this project?
+# Run linter
+npm run lint
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+# Run type checking
+npm run typecheck
 
-## Can I connect a custom domain to my Lovable project?
+# Run tests
+npm run test
 
-Yes, you can!
+# Run tests in watch mode
+npm run test:watch
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+# Build for production
+npm run build
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Preview production build
+npm run preview
+```
+
+## Database Setup
+
+This project uses Supabase with 32 database migrations. To set up the database:
+
+```bash
+# Install Supabase CLI
+npm install -g supabase
+
+# Login to Supabase
+supabase login
+
+# Link to your project
+supabase link --project-ref <your-project-id>
+
+# Push migrations
+supabase db push
+
+# Verify migrations
+supabase migration list
+```
+
+## Edge Functions
+
+The project includes 22 Supabase Edge Functions for backend operations:
+
+```bash
+# Deploy all functions
+supabase functions deploy
+
+# Deploy specific function
+supabase functions deploy ai-chat
+
+# View function logs
+supabase functions logs ai-chat --tail
+```
+
+### Required Secrets
+
+Configure these secrets in your Supabase project:
+
+```bash
+supabase secrets set LOVABLE_API_KEY=<your-key>
+supabase secrets set STRIPE_SECRET_KEY=<your-key>
+supabase secrets set STRIPE_WEBHOOK_SECRET=<your-key>
+supabase secrets set RESEND_API_KEY=<your-key>
+supabase secrets set RAPIDAPI_KEY=<your-key>
+supabase secrets set APP_URL=https://your-app.vercel.app
+supabase secrets set AI_GATEWAY_URL=https://ai.gateway.lovable.dev
+supabase secrets set AI_MODEL=google/gemini-3-flash-preview
+```
+
+## Deployment to Vercel
+
+This project is optimized for deployment on Vercel:
+
+1. **Push code to GitHub**
+2. **Import project to Vercel**: https://vercel.com/new
+3. **Configure environment variables** in Vercel dashboard:
+   - `VITE_SUPABASE_URL`
+   - `VITE_SUPABASE_PUBLISHABLE_KEY`
+   - `VITE_SUPABASE_PROJECT_ID`
+4. **Deploy**
+
+Vercel will automatically detect the Vite framework and configure the build settings.
+
+### Automatic Deployments
+
+- **Production**: Pushes to `main` branch automatically deploy to production
+- **Preview**: Pull requests get preview deployments with unique URLs
+
+## Project Structure
+
+```
+smart-agent-platform/
+├── src/
+│   ├── components/     # React components (organized by feature)
+│   ├── pages/          # Route components
+│   ├── hooks/          # Custom React hooks
+│   ├── lib/            # Utilities and configurations
+│   ├── integrations/   # External service integrations (Supabase)
+│   └── main.tsx        # Application entry point
+├── supabase/
+│   ├── functions/      # 22 Edge Functions (Deno runtime)
+│   ├── migrations/     # 32 database migrations
+│   └── config.toml     # Supabase configuration
+├── public/             # Static assets
+└── docs/               # Documentation and plans
+```
+
+## Documentation
+
+- **Architecture**: See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation
+- **PRD**: See [Smart_Agent_Platform_PRD_v2.md](./Smart_Agent_Platform_PRD_v2.md) for product requirements
+- **Task Board**: See [TASK_BOARD.md](./TASK_BOARD.md) for development progress
+
+## Contributing
+
+This is a private project. If you have access and want to contribute:
+
+1. Create a feature branch: `git checkout -b feature/your-feature`
+2. Make changes and test thoroughly
+3. Run linter and type checks: `npm run lint && npm run typecheck`
+4. Commit with clear messages
+5. Push and create a pull request
+
+## License
+
+Proprietary - All rights reserved
+
+## Support
+
+For questions or issues, please contact the development team.
+
+---
+
+Built with [Supabase](https://supabase.com) and [Vercel](https://vercel.com)
