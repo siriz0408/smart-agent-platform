@@ -3,8 +3,16 @@
 -- Impact: Maintains query performance long-term
 
 -- Create archive table (partitioned by month)
+-- Note: Partitioned tables cannot have standalone PRIMARY KEY on id
+-- The partition key (recorded_at) must be part of any unique constraint
 CREATE TABLE IF NOT EXISTS public.usage_records_archive (
-  LIKE public.usage_records INCLUDING ALL
+  id UUID NOT NULL DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL,
+  record_type TEXT NOT NULL CHECK (record_type IN ('ai_query', 'document_upload', 'storage')),
+  quantity INTEGER DEFAULT 1,
+  recorded_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
+  -- Composite primary key including partition key
+  PRIMARY KEY (recorded_at, id)
 ) PARTITION BY RANGE (recorded_at);
 
 -- Create partition for current year (add more as needed)

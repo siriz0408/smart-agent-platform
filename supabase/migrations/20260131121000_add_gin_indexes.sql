@@ -28,11 +28,6 @@ CREATE INDEX IF NOT EXISTS idx_external_properties_raw_data_gin
 CREATE INDEX IF NOT EXISTS idx_ai_agents_workflow_gin
   ON public.ai_agents USING GIN (workflow);
 
--- Conditional GIN index (only for rows with metadata)
-CREATE INDEX IF NOT EXISTS idx_ai_messages_metadata_gin
-  ON public.ai_messages USING GIN (metadata)
-  WHERE metadata IS NOT NULL AND metadata != '{}'::jsonb;
-
 COMMENT ON INDEX idx_contacts_tags_gin IS
   'GIN index for tag containment queries (@>, &&, etc.)';
 COMMENT ON INDEX idx_contacts_custom_fields_gin IS
