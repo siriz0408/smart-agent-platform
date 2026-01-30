@@ -1,0 +1,58 @@
+project_id = "roxwxcyglpxkufvwfdcj"
+
+[functions.ai-chat]
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.create-customer-portal]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.index-document]
+verify_jwt = false
+
+[functions.search-documents]
+verify_jwt = false
+
+[functions.delete-document]
+verify_jwt = false
+
+[functions.execute-agent]
+verify_jwt = false
+
+[functions.create-test-users]
+verify_jwt = false
+
+[functions.zillow-search]
+verify_jwt = false
+
+[functions.zillow-property-detail]
+verify_jwt = false
+
+[functions.save-external-property]
+verify_jwt = false
+
+[functions.clone-shared-document]
+verify_jwt = false
+
+[functions.list-invoices]
+verify_jwt = false
+
+[functions.usage-history]
+verify_jwt = false
+
+[functions.send-email]
+verify_jwt = false
+
+[functions.check-milestone-reminders]
+verify_jwt = false
+
+[functions.deal-stage-webhook]
+verify_jwt = false
+
+[functions.send-invite]
+verify_jwt = false

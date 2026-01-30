@@ -1,0 +1,126 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import Stripe from "https://esm.sh/stripe@14.21.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { logger } from "../_shared/logger.ts";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+// Price IDs mapped to plan names
+const PRICE_IDS: Record<string, string> = {
+  starter: Deno.env.get("STRIPE_STARTER_PRICE_ID") || "price_1Sud7Q1d1AvgoBGodhWI0BSF",
+  professional: Deno.env.get("STRIPE_PROFESSIONAL_PRICE_ID") || "price_1Sud7R1d1AvgoBGohGAkTXGI",
+  team: Deno.env.get("STRIPE_TEAM_PRICE_ID") || "price_1Sud7S1d1AvgoBGoNBzj7Cj4",
+};
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) {
+      throw new Error("STRIPE_SECRET_KEY is not configured");
+    }
+
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const userId = userData.user.id;
+    const userEmail = userData.user.email;
+
+    // Get tenant_id and subscription
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("tenant_id")
+      .eq("user_id", userId)
+      .single();
+
+    if (!profile?.tenant_id) {
+      throw new Error("Profile not found");
+    }
+
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("stripe_customer_id")
+      .eq("tenant_id", profile.tenant_id)
+      .single();
+
+    const { plan } = await req.json();
+    const priceId = PRICE_IDS[plan];
+    if (!priceId) {
+      throw new Error(`Invalid plan: ${plan}`);
+    }
+
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2023-10-16",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
+
+    // Get or create Stripe customer
+    let customerId = subscription?.stripe_customer_id;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: userEmail,
+        metadata: { tenant_id: profile.tenant_id },
+      });
+      customerId = customer.id;
+
+      // Save customer ID
+      await supabase
+        .from("subscriptions")
+        .update({ stripe_customer_id: customerId })
+        .eq("tenant_id", profile.tenant_id);
+    }
+
+    // Create checkout session
+    const origin = req.headers.get("origin") || "https://lovable.dev";
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: "subscription",
+      success_url: `${origin}/settings/billing?success=true`,
+      cancel_url: `${origin}/settings/billing?canceled=true`,
+      subscription_data: {
+        metadata: { tenant_id: profile.tenant_id },
+      },
+    });
+
+    return new Response(JSON.stringify({ url: session.url }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (error: unknown) {
+    console.error("Error creating checkout session:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    return new Response(
+      JSON.stringify({ error: errorMessage }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
+    );
+  }
+});
