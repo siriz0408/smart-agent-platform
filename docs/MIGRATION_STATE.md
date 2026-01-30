@@ -181,21 +181,84 @@ supabase secrets set RAPIDAPI_KEY=<your-key> --project-ref sthnezuadfbmbqlxiwtq
 
 ---
 
+### Phase 3.5: Database Optimization ✅ COMPLETE - READY TO DEPLOY
+- [x] Comprehensive database audit (Supabase Postgres best practices)
+- [x] Created 14 optimization migrations (Sprint 1-3)
+- [x] Fixed critical edge function bug (tenant_id in chunk inserts)
+- [x] Code review completed and fixes applied
+- [x] Created comprehensive test suite (TypeScript + Bash)
+- [x] Created deployment documentation
+
+**Performance Improvements Expected:**
+- Hybrid search (RAG): 200ms → 50ms (4x faster)
+- Chunk neighbors: 500ms → 50ms (10x faster)
+- Usage quota check: 100ms → 5ms (20x faster)
+- Tenant-scoped lists: 50ms → 5ms (10x faster)
+
+**Migrations Created:**
+- Sprint 1 (Critical): 5 migrations - tenant_id indexes, FK indexes, denormalization
+- Sprint 2 (High Priority): 4 migrations - partial/GIN/composite indexes, vector tuning
+- Sprint 3 (Maintenance): 5 migrations - monitoring views, archival, NOT NULL constraints
+
+**Test Infrastructure:**
+- ✅ TypeScript integration tests (17 test cases)
+- ✅ Bash verification script (18 checks)
+- ✅ SQL helper functions migration
+- ✅ Testing documentation
+- ✅ Deployment checklist
+
+**Documentation:**
+- ✅ `DEPLOY_NOW.md` - Quick deployment guide
+- ✅ `docs/DEPLOYMENT_CHECKLIST.md` - Comprehensive deployment guide
+- ✅ `docs/TESTING_DATABASE_MIGRATIONS.md` - Test suite documentation
+- ✅ `docs/DATABASE_OPTIMIZATION_CODE_REVIEW.md` - Code review findings
+- ✅ `~/.claude/plans/kind-roaming-hedgehog.md` - Implementation plan
+
+**⚠️ DEPLOYMENT REQUIRED:**
+To deploy these optimizations, run:
+```bash
+supabase login
+supabase link --project-ref sthnezuadfbmbqlxiwtq
+supabase db push
+./scripts/verify-database-migrations.sh
+```
+
+See `DEPLOY_NOW.md` for detailed deployment instructions.
+
+---
+
 ## 📋 Remaining Phases
 
-### Phase 4: Testing ⏸️ READY TO START
+### Phase 4: Database Optimization Deployment ⏸️ READY TO DEPLOY
+- [ ] Authenticate with Supabase CLI (`supabase login`)
+- [ ] Deploy 14 optimization migrations (`supabase db push`)
+- [ ] Run bash verification script (18 checks)
+- [ ] Run TypeScript integration tests (17 test cases)
+- [ ] Monitor slow_queries view for performance improvements
+- [ ] Verify no regressions in application functionality
+
+**Guide:** See `DEPLOY_NOW.md` for quick start
+
+### Phase 5: Testing ⏸️ READY TO START
 - [ ] Complete comprehensive testing checklist
 - [ ] Verify all features working
 - [ ] Run Lighthouse performance tests
 
 **Guide:** See `docs/TESTING_CHECKLIST.md`
 
-### Phase 5: Cutover ⏸️ PENDING
+### Phase 6: Application Testing ⏸️ AFTER DATABASE DEPLOYMENT
+- [ ] Complete comprehensive testing checklist
+- [ ] Verify all features working
+- [ ] Run Lighthouse performance tests
+
+**Guide:** See `docs/TESTING_CHECKLIST.md`
+
+### Phase 7: Cutover ⏸️ PENDING
 - [ ] Complete pre-cutover checklist
 - [ ] Monitor for 24-48 hours
 - [ ] Verify stability
 
-### Phase 6: Cleanup ⏸️ PENDING (After 1-2 weeks)
+### Phase 8: Cleanup ⏸️ PENDING (After 1-2 weeks)
 - [ ] Archive old infrastructure
 - [ ] Update documentation
 
@@ -260,7 +323,14 @@ npm run dev
 
 **Production URL:** https://smart-agent-platform.vercel.app
 
-**Next steps (Phase 4 - Testing):**
+**Next steps (Phase 4 - Database Optimization Deployment):**
+1. Run: `supabase login`
+2. Run: `supabase link --project-ref sthnezuadfbmbqlxiwtq`
+3. Run: `supabase db push`
+4. Run: `./scripts/verify-database-migrations.sh`
+5. Run: `npm test database-migration-verification.test.ts`
+
+**Then Phase 5 (Testing):**
 1. Test authentication (login, signup, logout)
 2. Test AI chat with Anthropic Claude
 3. Test document upload and indexing
