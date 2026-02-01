@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical } from "lucide-react";
+import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { RoleBadge } from "./RoleBadge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +13,9 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 
 export function AppHeader() {
-  const [searchQuery, setSearchQuery] = useState("");
   const { user, profile, signOut } = useAuth();
   const { isAdmin, isOverrideActive } = useRole();
   const navigate = useNavigate();
@@ -35,18 +33,9 @@ export function AppHeader() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
-      {/* Search */}
+      {/* Global Search */}
       <div className="flex flex-1 items-center max-w-xl">
-        <div className="relative w-full">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search contacts, properties, documents..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
-          />
-        </div>
+        <GlobalSearch />
       </div>
 
       {/* Right Actions */}
