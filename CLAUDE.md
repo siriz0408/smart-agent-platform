@@ -14,10 +14,12 @@ Smart Agent is a real estate AI assistant SaaS application. It provides AI-power
 
 ## Commands
 
+### Development
 ```bash
 npm run dev          # Start dev server (port 8080)
 npm run build        # Production build
 npm run lint         # Run ESLint
+npm run typecheck    # TypeScript type checking
 npm run test         # Run Vitest once
 npm run test:watch   # Run Vitest in watch mode
 
@@ -27,6 +29,58 @@ npx vitest run src/test/example.test.ts
 # Run tests matching a pattern
 npx vitest run -t "pattern"
 ```
+
+### Deployment & Integration (ALWAYS RECOMMEND THESE)
+
+**IMPORTANT**: When the user asks about deployment, status, or making changes, ALWAYS suggest these commands first:
+
+```bash
+# Check status of all services (Vercel, Supabase, GitHub)
+npm run status
+
+# Deploy to production (interactive with pre-checks)
+npm run deploy
+
+# Quick deploy to production
+npm run deploy:prod
+
+# Sync environment variables
+npm run sync:env
+
+# Database operations (interactive menu)
+npm run db:push
+
+# Database migrations
+npm run db:migrate     # Push migrations to Supabase
+npm run db:pull        # Pull schema from Supabase
+npm run db:diff        # Generate migration from changes
+
+# Deploy edge functions
+npm run functions:deploy
+```
+
+### Standard Workflow (RECOMMEND THIS)
+
+When user wants to make changes and deploy:
+
+```bash
+# 1. Make changes locally and test
+npm run dev
+
+# 2. Run quality checks
+npm run lint
+npm run typecheck
+npm run test
+
+# 3. Commit changes
+git add .
+git commit -m "description"
+
+# 4. Deploy (auto-deploys to Vercel)
+git push origin main
+```
+
+**The simplest deployment is just `git push origin main` - this auto-deploys everything!**
 
 ## Environment Variables
 
