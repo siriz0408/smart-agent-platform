@@ -1,0 +1,52 @@
+name: Database Migrations
+
+on:
+  workflow_dispatch:
+    inputs:
+      migration_action:
+        description: 'Migration action'
+        required: true
+        default: 'push'
+        type: choice
+        options:
+          - push
+          - pull
+          - diff
+
+jobs:
+  migrate:
+    name: Run Database Migration
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Push migrations to Supabase
+        if: inputs.migration_action == 'push'
+        run: |
+          supabase db push --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --db-url ${{ secrets.SUPABASE_DB_URL }}
+
+      - name: Pull schema from Supabase
+        if: inputs.migration_action == 'pull'
+        run: |
+          supabase db pull --project-ref ${{ secrets.SUPABASE_PROJECT_REF }} --db-url ${{ secrets.SUPABASE_DB_URL }}
+
+      - name: Generate migration diff
+        if: inputs.migration_action == 'diff'
+        run: |
+          supabase db diff --use-migra --file migration_$(date +%Y%m%d_%H%M%S)
+
+      - name: Commit changes
+        if: inputs.migration_action == 'pull' || inputs.migration_action == 'diff'
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add supabase/migrations/
+          git commit -m "Update database migrations [automated]" || echo "No changes to commit"
+          git push
