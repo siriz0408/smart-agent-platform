@@ -4,7 +4,7 @@ import { logger } from "../_shared/logger.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders, callAnthropicAPI, extractTextFromResponse } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 
-// deno-lint-ignore no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GetDocumentFn = (options: { data: Uint8Array }) => { promise: Promise<any> };
 
 async function initPdfJs(): Promise<GetDocumentFn> {

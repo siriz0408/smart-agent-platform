@@ -171,7 +171,7 @@ export default function Chat() {
       conversation_id: conversationId,
       role,
       content,
-      embedded_components: embeddedComponents as any || null,
+      embedded_components: embeddedComponents as Record<string, unknown> | null || null,
     });
     if (error) throw error;
   };
