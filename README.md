@@ -17,7 +17,7 @@ Smart Agent is an AI-powered SaaS application designed for real estate professio
 - **Backend**: Supabase (PostgreSQL + pgvector + Edge Functions)
 - **Payments**: Stripe
 - **Deployment**: Vercel
-- **AI**: Lovable AI Gateway (Gemini Flash 3)
+- **AI**: Anthropic Claude API (Sonnet 4)
 
 ## Getting Started
 
@@ -124,14 +124,17 @@ supabase functions logs ai-chat --tail
 Configure these secrets in your Supabase project:
 
 ```bash
-supabase secrets set LOVABLE_API_KEY=<your-key>
-supabase secrets set STRIPE_SECRET_KEY=<your-key>
-supabase secrets set STRIPE_WEBHOOK_SECRET=<your-key>
-supabase secrets set RESEND_API_KEY=<your-key>
-supabase secrets set RAPIDAPI_KEY=<your-key>
+# Required for AI features
+supabase secrets set ANTHROPIC_API_KEY=<your-anthropic-api-key>
+
+# Required for payments
+supabase secrets set STRIPE_SECRET_KEY=<your-stripe-secret-key>
+supabase secrets set STRIPE_WEBHOOK_SECRET=<your-stripe-webhook-secret>
+
+# Optional - for additional features
+supabase secrets set RESEND_API_KEY=<your-resend-api-key>
+supabase secrets set RAPIDAPI_KEY=<your-rapidapi-key>
 supabase secrets set APP_URL=https://your-app.vercel.app
-supabase secrets set AI_GATEWAY_URL=https://ai.gateway.lovable.dev
-supabase secrets set AI_MODEL=google/gemini-3-flash-preview
 ```
 
 ## Deployment to Vercel

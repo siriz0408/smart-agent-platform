@@ -1,0 +1,108 @@
+name: Validate Configuration
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  validate-docs:
+    name: Validate Documentation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for outdated Lovable references
+        run: |
+          echo "🔍 Checking for LOVABLE_API_KEY references..."
+          if grep -r "LOVABLE_API_KEY" . \
+            --exclude-dir=node_modules \
+            --exclude-dir=.git \
+            --exclude-dir=dist \
+            --exclude="*.sh" \
+            --exclude="AI_DEPLOYMENT_TESTING.md" \
+            --exclude="DOCUMENTATION_UPDATE_CHECKLIST.md" \
+            --exclude="AI_ISSUE_ROOT_CAUSE.md" \
+            2>/dev/null; then
+            echo "❌ Found LOVABLE_API_KEY references (should be ANTHROPIC_API_KEY)"
+            exit 1
+          else
+            echo "✅ No LOVABLE_API_KEY references found"
+          fi
+
+      - name: Check for outdated Lovable gateway references
+        run: |
+          echo "🔍 Checking for lovable.dev gateway references..."
+          if grep -r "ai\.gateway\.lovable\.dev" . \
+            --exclude-dir=node_modules \
+            --exclude-dir=.git \
+            --exclude-dir=dist \
+            --exclude="*.sh" \
+            --exclude="AI_DEPLOYMENT_TESTING.md" \
+            --exclude="DOCUMENTATION_UPDATE_CHECKLIST.md" \
+            --exclude="AI_ISSUE_ROOT_CAUSE.md" \
+            2>/dev/null; then
+            echo "❌ Found lovable.dev gateway references (should use api.anthropic.com)"
+            exit 1
+          else
+            echo "✅ No lovable.dev gateway references found"
+          fi
+
+      - name: Verify ANTHROPIC_API_KEY documentation
+        run: |
+          echo "🔍 Checking documentation mentions ANTHROPIC_API_KEY..."
+          if ! grep -q "ANTHROPIC_API_KEY" CLAUDE.md; then
+            echo "❌ CLAUDE.md missing ANTHROPIC_API_KEY documentation"
+            exit 1
+          fi
+          if ! grep -q "ANTHROPIC_API_KEY" docs/SUPABASE_SETUP.md; then
+            echo "❌ SUPABASE_SETUP.md missing ANTHROPIC_API_KEY documentation"
+            exit 1
+          fi
+          echo "✅ ANTHROPIC_API_KEY properly documented"
+
+      - name: Verify critical files exist
+        run: |
+          echo "🔍 Checking critical documentation files..."
+          for file in CLAUDE.md README.md COMMON_COMMANDS.md docs/SUPABASE_SETUP.md; do
+            if [ ! -f "$file" ]; then
+              echo "❌ Missing critical file: $file"
+              exit 1
+            fi
+          done
+          echo "✅ All critical documentation files exist"
+
+      - name: Check for stream converter
+        run: |
+          echo "🔍 Checking stream-converter.ts exists..."
+          if [ ! -f "supabase/functions/_shared/stream-converter.ts" ]; then
+            echo "❌ Missing stream-converter.ts (required for AI streaming)"
+            exit 1
+          fi
+          echo "✅ stream-converter.ts found"
+
+      - name: Verify execute-agent uses ANTHROPIC_API_KEY
+        run: |
+          echo "🔍 Checking execute-agent uses ANTHROPIC_API_KEY..."
+          if grep -q "LOVABLE_API_KEY" supabase/functions/execute-agent/index.ts; then
+            echo "❌ execute-agent still references LOVABLE_API_KEY"
+            exit 1
+          fi
+          echo "✅ execute-agent correctly configured"
+
+      - name: Summary
+        if: success()
+        run: |
+          echo ""
+          echo "✅ All configuration validations passed!"
+          echo ""
+          echo "Summary:"
+          echo "- No outdated Lovable references"
+          echo "- ANTHROPIC_API_KEY properly documented"
+          echo "- Stream converter present"
+          echo "- Edge functions configured correctly"

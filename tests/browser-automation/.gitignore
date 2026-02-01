@@ -1,0 +1,14 @@
+# Test Results
+test-results/
+*.png
+*.json
+*.txt
+
+# Keep the directory structure
+!test-results/.gitkeep
+
+# Sensitive data
+auth-state.json
+
+# Logs
+*.log

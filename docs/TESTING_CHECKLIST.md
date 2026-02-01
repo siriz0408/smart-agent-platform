@@ -648,14 +648,14 @@ Test on real devices if available:
 Simulate edge function failure:
 
 ```bash
-# Temporarily break LOVABLE_API_KEY secret
-supabase secrets set LOVABLE_API_KEY=invalid_key_for_testing
+# Temporarily break ANTHROPIC_API_KEY secret
+supabase secrets set ANTHROPIC_API_KEY=invalid_key_for_testing
 
 # Try to upload document
 # Should fail gracefully
 
 # Restore correct key
-supabase secrets set LOVABLE_API_KEY=<correct-key>
+supabase secrets set ANTHROPIC_API_KEY=<correct-key>
 ```
 
 **Expected Results:**

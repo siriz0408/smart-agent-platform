@@ -82,14 +82,14 @@ supabase functions list  # All should say "deployed"
 
 ### Step 4: Configure Secrets (5 min)
 ```bash
-supabase secrets set LOVABLE_API_KEY=<your-key>
+supabase secrets set ANTHROPIC_API_KEY=<your-key>
 supabase secrets set STRIPE_SECRET_KEY=sk_test_...
 supabase secrets set STRIPE_WEBHOOK_SECRET=whsec_...
 supabase secrets set RESEND_API_KEY=re_...
 supabase secrets set RAPIDAPI_KEY=<your-key>
 supabase secrets set APP_URL=http://localhost:8080
-supabase secrets set AI_GATEWAY_URL=https://ai.gateway.lovable.dev
-supabase secrets set AI_MODEL=google/gemini-3-flash-preview
+supabase secrets set # AI_GATEWAY_URL no longer needed
+supabase secrets set # AI_MODEL no longer needed
 
 # Verify
 supabase secrets list

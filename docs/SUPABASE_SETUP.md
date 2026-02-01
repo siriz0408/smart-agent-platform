@@ -284,8 +284,8 @@ These secrets are required for edge functions to work properly.
 # Navigate to project directory
 cd /Users/sam.irizarry/Downloads/ReAgentOS_V1
 
-# 1. Lovable AI Gateway Key (for AI operations)
-supabase secrets set LOVABLE_API_KEY=<your-lovable-ai-key>
+# 1. Anthropic API Key (for AI operations)
+supabase secrets set ANTHROPIC_API_KEY=<your-anthropic-api-key>
 
 # 2. Stripe Test Mode Keys (for billing)
 supabase secrets set STRIPE_SECRET_KEY=sk_test_...
@@ -301,8 +301,8 @@ supabase secrets set RAPIDAPI_KEY=<your-rapidapi-key>
 supabase secrets set APP_URL=http://localhost:8080
 
 # 6. AI Gateway Configuration
-supabase secrets set AI_GATEWAY_URL=https://ai.gateway.lovable.dev
-supabase secrets set AI_MODEL=google/gemini-3-flash-preview
+# AI_GATEWAY_URL and AI_MODEL are no longer needed
+# The backend now uses Anthropic API directly
 ```
 
 ### Verify Secrets
@@ -311,15 +311,13 @@ supabase secrets set AI_MODEL=google/gemini-3-flash-preview
 # List all configured secrets
 supabase secrets list
 
-# Should show all 8 secrets (values are hidden for security)
-# LOVABLE_API_KEY: ********
+# Should show configured secrets (values are hidden for security)
+# ANTHROPIC_API_KEY: ********
 # STRIPE_SECRET_KEY: ********
 # STRIPE_WEBHOOK_SECRET: ********
 # RESEND_API_KEY: ********
 # RAPIDAPI_KEY: ********
 # APP_URL: http://localhost:8080
-# AI_GATEWAY_URL: https://ai.gateway.lovable.dev
-# AI_MODEL: google/gemini-3-flash-preview
 ```
 
 ### Update APP_URL After Vercel Deployment

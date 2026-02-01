@@ -103,9 +103,9 @@ A dedicated table tracks indexing progress with batch processing:
 ### 7. AI Model: Lovable Gateway
 
 The system uses the Lovable AI Gateway instead of direct OpenAI calls:
-- **Endpoint:** `https://ai.gateway.lovable.dev/v1/chat/completions`
+- **Endpoint:** `https://api.anthropic.com/v1/chat/completions`
 - **Model:** `google/gemini-3-flash-preview`
-- **Auth:** `LOVABLE_API_KEY` environment variable
+- **Auth:** `ANTHROPIC_API_KEY` environment variable
 
 ---
 

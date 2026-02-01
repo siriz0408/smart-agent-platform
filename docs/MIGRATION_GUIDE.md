@@ -130,14 +130,14 @@ supabase db push
 supabase functions deploy
 
 # Configure secrets
-supabase secrets set LOVABLE_API_KEY=<key>
+supabase secrets set ANTHROPIC_API_KEY=<key>
 supabase secrets set STRIPE_SECRET_KEY=<key>
 supabase secrets set STRIPE_WEBHOOK_SECRET=<key>
 supabase secrets set RESEND_API_KEY=<key>
 supabase secrets set RAPIDAPI_KEY=<key>
 supabase secrets set APP_URL=http://localhost:8080
-supabase secrets set AI_GATEWAY_URL=https://ai.gateway.lovable.dev
-supabase secrets set AI_MODEL=google/gemini-3-flash-preview
+supabase secrets set # AI_GATEWAY_URL no longer needed
+supabase secrets set # AI_MODEL no longer needed
 
 # Update local config
 # Edit supabase/config.toml: project_id = "<new-project-id>"
@@ -377,7 +377,7 @@ External Services:
 | Edge function timeout | Check function logs, verify secrets configured |
 | Stripe webhook fails | Verify webhook URL, check signing secret |
 | RLS denies access | Check policies, verify user has correct tenant_id |
-| Document upload fails | Check storage bucket permissions, verify LOVABLE_API_KEY |
+| Document upload fails | Check storage bucket permissions, verify ANTHROPIC_API_KEY |
 
 ### Getting Help
 

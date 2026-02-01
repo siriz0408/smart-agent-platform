@@ -109,14 +109,14 @@ VITE_SUPABASE_PROJECT_ID=<NEW_PROJECT_ID>
 Configure these via Supabase CLI:
 
 ```bash
-LOVABLE_API_KEY=<your-key>
+ANTHROPIC_API_KEY=<your-key>
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 RESEND_API_KEY=re_...
 RAPIDAPI_KEY=<your-key>
 APP_URL=https://smart-agent-platform.vercel.app
-AI_GATEWAY_URL=https://ai.gateway.lovable.dev
-AI_MODEL=google/gemini-3-flash-preview
+# AI_GATEWAY_URL no longer needed
+# AI_MODEL no longer needed
 ```
 
 ---

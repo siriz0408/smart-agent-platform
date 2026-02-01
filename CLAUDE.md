@@ -90,7 +90,10 @@ Frontend requires these in `.env` or `.env.local`:
 
 Edge functions use secrets configured in Supabase:
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` - Auto-injected
-- `LOVABLE_API_KEY` - For AI operations via Lovable gateway
+- `ANTHROPIC_API_KEY` - For AI operations via Anthropic Claude API
+- `STRIPE_SECRET_KEY` - For payment processing (optional)
+- `RESEND_API_KEY` - For email notifications (optional)
+- `RAPIDAPI_KEY` - For property data APIs (optional)
 
 ## Architecture
 
@@ -135,7 +138,7 @@ The `index-document` edge function processes real estate documents:
 5. **Structured extraction**: For financial/legal docs, extracts JSON data via AI (stored in `document_metadata`)
 6. **AI summary**: Document-type-specific prompts generate summaries
 
-AI operations use the Lovable AI Gateway (`ai.gateway.lovable.dev`) with `google/gemini-3-flash-preview` model.
+AI operations use Anthropic's Claude API (`api.anthropic.com`) with `claude-sonnet-4-20250514` model. The backend handles streaming format conversion to ensure compatibility with frontend expectations.
 
 See `.lovable/plan.md` for the document extraction enhancement plan.
 

@@ -246,3 +246,42 @@ For complete details, see:
 - `CLI_QUICKSTART.md` - Quick start guide
 - `INTEGRATION_GUIDE.md` - Comprehensive documentation
 - `SETUP_COMPLETE.md` - Setup summary
+
+## Edge Function Deployment
+
+```bash
+# Deploy all edge functions
+npm run functions:deploy
+# OR
+supabase functions deploy --project-ref sthnezuadfbmbqlxiwtq
+
+# Deploy specific function
+supabase functions deploy ai-chat --project-ref sthnezuadfbmbqlxiwtq
+supabase functions deploy execute-agent --project-ref sthnezuadfbmbqlxiwtq
+supabase functions deploy index-document --project-ref sthnezuadfbmbqlxiwtq
+
+# View function logs (real-time)
+supabase functions logs ai-chat --project-ref sthnezuadfbmbqlxiwtq --follow
+
+# List all functions
+supabase functions list --project-ref sthnezuadfbmbqlxiwtq
+```
+
+## AI Troubleshooting
+
+```bash
+# Check if AI features are working
+# 1. Test in browser: https://smart-agent-platform.vercel.app/
+# 2. Open DevTools console
+# 3. Send chat message
+# 4. Look for streaming data
+
+# Check backend AI function logs
+supabase functions logs ai-chat --project-ref sthnezuadfbmbqlxiwtq --follow
+
+# Check secrets are configured
+supabase secrets list --project-ref sthnezuadfbmbqlxiwtq | grep ANTHROPIC
+
+# Test document indexing
+supabase functions logs index-document --project-ref sthnezuadfbmbqlxiwtq --follow
+```
