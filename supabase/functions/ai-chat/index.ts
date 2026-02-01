@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { convertAnthropicStreamToOpenAI } from "../_shared/stream-converter.ts";
 
 // ====================================================================
 // CORS HEADERS
@@ -1440,11 +1441,7 @@ Keep your response SHORT and conversational - the calculator widget speaks for i
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -1549,11 +1546,7 @@ Keep your response SHORT and conversational - the calculator widget speaks for i
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -1670,11 +1663,7 @@ Keep your response SHORT and conversational - the calculator widget speaks for i
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -1799,11 +1788,7 @@ Keep your response SHORT and conversational - the calculator widget speaks for i
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -2085,11 +2070,7 @@ Keep your response SHORT and conversational - the CMA widget speaks for itself.`
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -2176,11 +2157,7 @@ Provide a brief, encouraging response:
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -2269,11 +2246,7 @@ Provide a brief, encouraging response:
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -2355,11 +2328,7 @@ Provide a brief, helpful response:
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -2446,11 +2415,7 @@ Provide a brief, helpful response:
             
             if (aiResponse.ok && aiResponse.body) {
               const reader = aiResponse.body.getReader();
-              while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                await writer.write(value);
-              }
+              await convertAnthropicStreamToOpenAI(reader, writer);
             }
             
             // Track usage
@@ -2658,12 +2623,7 @@ Provide a brief, helpful response:
                 
                 if (aiResponse.ok && aiResponse.body) {
                   const reader = aiResponse.body.getReader();
-                  
-                  while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    await writer.write(value);
-                  }
+                  await convertAnthropicStreamToOpenAI(reader, writer);
                 }
                 
                 // Track usage
@@ -2716,13 +2676,8 @@ Provide a brief, helpful response:
           
           if (regularAiResponse.ok && regularAiResponse.body) {
             const reader = regularAiResponse.body.getReader();
-            
-            while (true) {
-              const { done, value } = await reader.read();
-              if (done) break;
-              await writer.write(value);
-            }
-            
+            await convertAnthropicStreamToOpenAI(reader, writer);
+
             // Track usage
             if (userId && tenantId && SUPABASE_URL && SUPABASE_ANON_KEY) {
               const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
