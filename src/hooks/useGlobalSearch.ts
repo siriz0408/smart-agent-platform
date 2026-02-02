@@ -93,14 +93,21 @@ export function useGlobalSearch({
       }
 
       const data = await response.json();
+      const byType = data.results?.reduce((acc: Record<string, number>, r: SearchResult) => {
+        acc[r.entity_type] = (acc[r.entity_type] || 0) + 1;
+        return acc;
+      }, {});
       console.log('🔍 Search API Response:', {
         query,
         total: data.results?.length || 0,
-        byType: data.results?.reduce((acc: Record<string, number>, r: SearchResult) => {
-          acc[r.entity_type] = (acc[r.entity_type] || 0) + 1;
-          return acc;
-        }, {}),
-        firstResult: data.results?.[0]
+        documents: byType?.document || 0,
+        contacts: byType?.contact || 0,
+        properties: byType?.property || 0,
+        deals: byType?.deal || 0,
+        first5: data.results?.slice(0, 5).map((r: SearchResult) => ({
+          type: r.entity_type,
+          name: r.name
+        }))
       });
       return data.results as SearchResult[];
     },
