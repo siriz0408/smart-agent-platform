@@ -44,10 +44,12 @@ Searching for "sarah" returns only "922 Sharondale Dr" documents instead of cont
 6. Added debug logging to useGlobalSearch hook
 
 **Next Steps:**
-1. Check Supabase Edge Function logs for actual API responses
-2. Verify database RPC function returns correct results via direct SQL query
-3. Check if React Query is caching stale results
-4. Test API endpoint directly with curl/Postman
+1. ✅ Enhanced debug logging deployed (shows first 5 results and entity type breakdown)
+2. ⏳ Waiting for deployment propagation (15-20 seconds)
+3. Test in browser console to see actual API response
+4. If API returns correct data → frontend filtering bug
+5. If API returns wrong data → backend (database/Edge Function) bug
+6. Check Supabase Edge Function logs for RPC call results
 
 ---
 
