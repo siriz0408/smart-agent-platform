@@ -149,10 +149,11 @@ Deno.serve(async (req) => {
     // Get tenant ID from authenticated user
     // ========================================================================
 
+    const token = authHeader.replace("Bearer ", "");
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser();
+    } = await supabase.auth.getUser(token);
 
     if (authError || !user) {
       return new Response(
