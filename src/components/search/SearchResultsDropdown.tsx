@@ -61,6 +61,12 @@ export function SearchResultsDropdown({
   onViewAllResults,
   query,
 }: SearchResultsDropdownProps) {
+  console.log('🔍 SearchResultsDropdown render:', {
+    resultsCount: results.length,
+    hasMoreResults: results.length > 5,
+    onViewAllResults: typeof onViewAllResults,
+    query
+  });
   // Count results per entity type
   const resultCounts = results.reduce(
     (acc, result) => {

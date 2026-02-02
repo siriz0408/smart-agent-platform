@@ -72,6 +72,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
 
   // Navigate to full search results page
   const handleViewAllResults = useCallback(() => {
+    console.log('🔍 handleViewAllResults clicked:', { query });
     setIsOpen(false);
     navigate(`/search?q=${encodeURIComponent(query)}`);
   }, [navigate, query]);
