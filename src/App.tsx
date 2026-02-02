@@ -16,14 +16,18 @@ import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
 import Agents from "./pages/Agents";
 import Contacts from "./pages/Contacts";
+import ContactDetail from "./pages/ContactDetail";
 import Pipeline from "./pages/Pipeline";
 import Properties from "./pages/Properties";
+import PropertyDetail from "./pages/PropertyDetail";
 import PropertySearch from "./pages/PropertySearch";
 import SavedProperties from "./pages/SavedProperties";
 import MyListing from "./pages/MyListing";
 import MyJourney from "./pages/MyJourney";
 import Documents from "./pages/Documents";
+import DocumentDetail from "./pages/DocumentDetail";
 import DocumentChat from "./pages/DocumentChat";
+import SearchResults from "./pages/SearchResults";
 import Messages from "./pages/Messages";
 import Admin from "./pages/Admin";
 import Settings from "./pages/Settings";
@@ -53,7 +57,9 @@ const App = () => (
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
+              <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />
               <Route path="/documents/chat" element={<ProtectedRoute><DocumentChat /></ProtectedRoute>} />
+              <Route path="/search" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="/messages/:conversationId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -88,6 +94,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/contacts/:id"
+                element={
+                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
+                    <ContactDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/pipeline/:type"
                 element={
                   <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
@@ -100,6 +114,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
                     <Properties />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/properties/:id"
+                element={
+                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
+                    <PropertyDetail />
                   </ProtectedRoute>
                 }
               />

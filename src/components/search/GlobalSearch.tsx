@@ -52,21 +52,28 @@ export const GlobalSearch = memo(function GlobalSearch() {
       // Navigate to entity detail page
       switch (entityType) {
         case "document":
-          navigate(`/documents?id=${entityId}`);
+          navigate(`/documents/${entityId}`);
           break;
         case "contact":
-          navigate(`/contacts?id=${entityId}`);
+          navigate(`/contacts/${entityId}`);
           break;
         case "property":
-          navigate(`/properties?id=${entityId}`);
+          navigate(`/properties/${entityId}`);
           break;
         case "deal":
+          // Deals still use query param for now (modal behavior)
           navigate(`/pipeline/all?id=${entityId}`);
           break;
       }
     },
     [navigate]
   );
+
+  // Navigate to full search results page
+  const handleViewAllResults = useCallback(() => {
+    setIsOpen(false);
+    navigate(`/search?q=${encodeURIComponent(query)}`);
+  }, [navigate, query]);
 
   // client-passive-event-listeners: Close dropdown on outside click
   useEffect(() => {
@@ -138,6 +145,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
           selectedFilter={selectedFilter}
           onFilterChange={setSelectedFilter}
           onResultClick={handleResultClick}
+          onViewAllResults={handleViewAllResults}
           query={query}
         />
       )}

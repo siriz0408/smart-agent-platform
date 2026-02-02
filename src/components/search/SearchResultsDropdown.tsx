@@ -1,7 +1,9 @@
-import { FileText, User, Home, TrendingUp, Loader2 } from "lucide-react";
+import { FileText, User, Home, TrendingUp, Loader2, ArrowRight } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Button } from "@/components/ui/button";
 import { SearchResult } from "@/hooks/useGlobalSearch";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 interface SearchResultsDropdownProps {
   results: SearchResult[];
@@ -9,8 +11,12 @@ interface SearchResultsDropdownProps {
   selectedFilter: string;
   onFilterChange: (filter: string) => void;
   onResultClick: (entityType: string, entityId: string) => void;
+  onViewAllResults?: () => void;
   query: string;
 }
+
+// Maximum results to show per entity type in dropdown
+const MAX_RESULTS_PER_TYPE = 5;
 
 // Entity type configuration
 const ENTITY_CONFIG = {
@@ -52,6 +58,7 @@ export function SearchResultsDropdown({
   selectedFilter,
   onFilterChange,
   onResultClick,
+  onViewAllResults,
   query,
 }: SearchResultsDropdownProps) {
   // Count results per entity type
@@ -66,6 +73,37 @@ export function SearchResultsDropdown({
       number
     >
   );
+
+  // Limit results shown in dropdown
+  const limitedResults = useMemo(() => {
+    if (selectedFilter === "all") {
+      // For "all" filter, show limited results per entity type
+      const grouped: Record<string, SearchResult[]> = {
+        document: [],
+        contact: [],
+        property: [],
+        deal: [],
+      };
+
+      results.forEach((result) => {
+        if (grouped[result.entity_type]) {
+          grouped[result.entity_type].push(result);
+        }
+      });
+
+      // Limit each group and flatten
+      return Object.values(grouped)
+        .map((group) => group.slice(0, MAX_RESULTS_PER_TYPE))
+        .flat();
+    } else {
+      // For specific filter, show limited results
+      return results
+        .filter((r) => r.entity_type === selectedFilter)
+        .slice(0, MAX_RESULTS_PER_TYPE);
+    }
+  }, [results, selectedFilter]);
+
+  const hasMoreResults = results.length > limitedResults.length;
 
   return (
     <div
@@ -125,9 +163,9 @@ export function SearchResultsDropdown({
               <p className="text-sm mt-1">Try a different search term</p>
             </div>
           ) : (
-            // Results grouped by entity type
+            // Results grouped by entity type (limited)
             <div className="space-y-1">
-              {results.map((result) => {
+              {limitedResults.map((result) => {
                 const config = ENTITY_CONFIG[result.entity_type as keyof typeof ENTITY_CONFIG];
                 if (!config) return null;
 
@@ -207,10 +245,26 @@ export function SearchResultsDropdown({
         </div>
       </ScrollArea>
 
-      {/* Footer with count */}
+      {/* Footer with "See All Results" button */}
       {results.length > 0 && (
-        <div className="px-3 py-2 border-t border-border text-xs text-muted-foreground">
-          Showing {results.length} result{results.length !== 1 ? "s" : ""}
+        <div className="p-2 border-t border-border">
+          {hasMoreResults && onViewAllResults && (
+            <Button
+              variant="ghost"
+              className="w-full justify-between"
+              onClick={onViewAllResults}
+            >
+              <span className="text-sm">
+                See All Results ({resultCounts.all})
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+          {!hasMoreResults && (
+            <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+              Showing all {results.length} result{results.length !== 1 ? "s" : ""}
+            </div>
+          )}
         </div>
       )}
     </div>
