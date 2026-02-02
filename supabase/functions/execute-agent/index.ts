@@ -1,7 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
-import { AI_CONFIG, getAIApiKey } from "../_shared/ai-config.ts";
+import { AI_CONFIG, getAIApiKey, getAnthropicHeaders } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 
 const corsHeaders = {
@@ -268,17 +268,15 @@ serve(async (req) => {
     const systemPrompt = agent.system_prompt || "You are a helpful real estate AI assistant.";
     const userPrompt = contextData || "No specific context provided. Please provide general guidance.";
 
-    // Call AI Gateway with streaming
+    // Call Anthropic API with streaming
     const aiResponse = await fetch(AI_CONFIG.GATEWAY_URL, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${aiApiKey}`,
-        "Content-Type": "application/json",
-      },
+      headers: getAnthropicHeaders(aiApiKey),
       body: JSON.stringify({
         model: AI_CONFIG.DEFAULT_MODEL,
+        max_tokens: 4096,
+        system: systemPrompt,
         messages: [
-          { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         stream: true,
@@ -336,17 +334,17 @@ serve(async (req) => {
             const chunk = decoder.decode(value, { stream: true });
             controller.enqueue(encoder.encode(chunk));
 
-            // Parse SSE to extract content
+            // Parse Anthropic SSE to extract content
             const lines = chunk.split("\n");
             for (const line of lines) {
-              if (line.startsWith("data: ") && line !== "data: [DONE]") {
+              if (line.startsWith("data: ")) {
                 try {
                   const jsonStr = line.slice(6).trim();
-                  if (jsonStr && jsonStr !== "[DONE]") {
+                  if (jsonStr) {
                     const parsed = JSON.parse(jsonStr);
-                    const content = parsed.choices?.[0]?.delta?.content;
-                    if (content) {
-                      fullContent += content;
+                    // Anthropic format: content_block_delta with delta.text
+                    if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+                      fullContent += parsed.delta.text;
                     }
                   }
                 } catch {

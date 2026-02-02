@@ -92,17 +92,17 @@ export function useAgentExecution() {
 
           const chunk = decoder.decode(value, { stream: true });
           
-          // Parse SSE events
+          // Parse Anthropic SSE events
           const lines = chunk.split("\n");
           for (const line of lines) {
-            if (line.startsWith("data: ") && line !== "data: [DONE]") {
+            if (line.startsWith("data: ")) {
               try {
                 const jsonStr = line.slice(6).trim();
-                if (jsonStr && jsonStr !== "[DONE]") {
+                if (jsonStr) {
                   const parsed = JSON.parse(jsonStr);
-                  const content = parsed.choices?.[0]?.delta?.content;
-                  if (content) {
-                    accumulatedContent += content;
+                  // Anthropic format: content_block_delta with delta.text
+                  if (parsed.type === "content_block_delta" && parsed.delta?.text) {
+                    accumulatedContent += parsed.delta.text;
                     setResult((prev) => ({
                       ...prev,
                       content: accumulatedContent,
