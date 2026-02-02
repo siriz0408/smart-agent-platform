@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Search Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .result-item {
+            padding: 10px;
+            margin: 8px 0;
+            background: #f5f5f5;
+            border-radius: 4px;
+            border-left: 3px solid #2196F3;
+        }
+        .result-item strong {
+            color: #2196F3;
+        }
+        .error {
+            color: #f44336;
+            padding: 15px;
+            background: #ffebee;
+            border-radius: 6px;
+            border-left: 4px solid #f44336;
+            margin-top: 15px;
+        }
+        .success {
+            color: #4CAF50;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
+            margin-top: 15px;
+        }
+        .info {
+            color: #2196F3;
+            padding: 15px;
+            background: #e3f2fd;
+            border-radius: 6px;
+            border-left: 4px solid #2196F3;
+            margin-top: 15px;
+        }
+        pre {
+            background: #282c34;
+            color: #abb2bf;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 13px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.pending { background: #fff3cd; color: #856404; }
+        .status.running { background: #cfe2ff; color: #084298; }
+        .status.success { background: #d1e7dd; color: #0f5132; }
+        .status.error { background: #f8d7da; color: #842029; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Universal Search Diagnostic Tool</h1>
+        <p class="subtitle">Test the universal search edge function and diagnose issues</p>
+
+        <!-- Test 1: Login -->
+        <div class="test-section">
+            <h3>Step 1: Login <span id="status-login" class="status pending">Pending</span></h3>
+            <p>First, we need to login to get an auth token</p>
+            <input type="email" id="email" placeholder="Email" value="siriz04081@gmail.com" style="width: 300px; padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <input type="password" id="password" placeholder="Password" style="width: 200px; padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <button onclick="login()">Login</button>
+            <div id="login-results"></div>
+        </div>
+
+        <!-- Test 2: Check Profile -->
+        <div class="test-section">
+            <h3>Step 2: Check Profile <span id="status-profile" class="status pending">Pending</span></h3>
+            <p>Check if user has a profile with tenant_id</p>
+            <button onclick="checkProfile()" id="btn-profile" disabled>Check Profile</button>
+            <div id="profile-results"></div>
+        </div>
+
+        <!-- Test 3: Test Search -->
+        <div class="test-section">
+            <h3>Step 3: Test Search <span id="status-search" class="status pending">Pending</span></h3>
+            <p>Test the universal search edge function</p>
+            <input type="text" id="search-query" placeholder="Search query" value="sarah" style="width: 300px; padding: 10px; margin-right: 10px; border: 1px solid #ddd; border-radius: 4px;">
+            <button onclick="testSearch()" id="btn-search" disabled>Search</button>
+            <div id="search-results"></div>
+        </div>
+
+        <!-- Test 4: Check Test Data -->
+        <div class="test-section">
+            <h3>Step 4: Verify Test Data <span id="status-data" class="status pending">Pending</span></h3>
+            <p>Check if contacts with "sarah" exist in database</p>
+            <button onclick="checkTestData()" id="btn-data" disabled>Check Data</button>
+            <div id="data-results"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://sthnezuadfbmbqlxiwtq.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0aG5lenVhZGZibWJxbHhpd3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTQ3MjksImV4cCI6MjA1MTQzMDcyOX0.Ct7dL5Sl_rHBZXfHI-xXMlKNwcPY8Oj2xdCjBdqWgNw';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let session = null;
+        let userId = null;
+        let tenantId = null;
+
+        function setStatus(id, status, text) {
+            const el = document.getElementById(id);
+            el.className = `status ${status}`;
+            el.textContent = text || status.toUpperCase();
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultsDiv = document.getElementById('login-results');
+
+            setStatus('status-login', 'running', 'Logging in...');
+            resultsDiv.innerHTML = '<div class="info">⏳ Logging in...</div>';
+
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                session = data.session;
+                userId = data.user.id;
+
+                setStatus('status-login', 'success', '✅ Success');
+                resultsDiv.innerHTML = `
+                    <div class="success">
+                        ✅ Login successful!<br>
+                        <strong>User ID:</strong> ${userId}<br>
+                        <strong>Email:</strong> ${data.user.email}
+                    </div>
+                `;
+
+                // Enable next steps
+                document.getElementById('btn-profile').disabled = false;
+                document.getElementById('btn-search').disabled = false;
+                document.getElementById('btn-data').disabled = false;
+
+            } catch (error) {
+                setStatus('status-login', 'error', '❌ Failed');
+                resultsDiv.innerHTML = `
+                    <div class="error">
+                        ❌ Login failed: ${error.message}<br><br>
+                        <strong>Common issues:</strong><br>
+                        1. Wrong password<br>
+                        2. User doesn't exist<br>
+                        3. Email not confirmed
+                    </div>
+                `;
+            }
+        }
+
+        async function checkProfile() {
+            const resultsDiv = document.getElementById('profile-results');
+            setStatus('status-profile', 'running', 'Checking...');
+            resultsDiv.innerHTML = '<div class="info">⏳ Checking profile...</div>';
+
+            try {
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('id, user_id, tenant_id, full_name, email')
+                    .eq('user_id', userId)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (profile) {
+                    tenantId = profile.tenant_id;
+                    setStatus('status-profile', 'success', '✅ Found');
+                    resultsDiv.innerHTML = `
+                        <div class="success">
+                            ✅ Profile found!<br>
+                            <strong>Profile ID:</strong> ${profile.id}<br>
+                            <strong>User ID:</strong> ${profile.user_id}<br>
+                            <strong>Tenant ID:</strong> ${profile.tenant_id}<br>
+                            <strong>Name:</strong> ${profile.full_name || 'Not set'}
+                        </div>
+                    `;
+                } else {
+                    setStatus('status-profile', 'error', '⚠️ Not Found');
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            ⚠️ No profile found!<br><br>
+                            <strong>This is likely the issue!</strong><br>
+                            The edge function will fallback to user_id as tenant_id, which may not match your test data.<br><br>
+                            <strong>Fix:</strong> Create a profile with correct tenant_id.
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                setStatus('status-profile', 'error', '❌ Error');
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearch() {
+            const query = document.getElementById('search-query').value;
+            const resultsDiv = document.getElementById('search-results');
+            setStatus('status-search', 'running', 'Searching...');
+            resultsDiv.innerHTML = '<div class="info">⏳ Searching...</div>';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/universal-search`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                    },
+                    body: JSON.stringify({
+                        query: query,
+                        entityTypes: ['contact', 'property', 'deal', 'document'],
+                        matchThreshold: 0.0,
+                        matchCountPerType: 10
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+
+                if (data.results && data.results.length > 0) {
+                    setStatus('status-search', 'success', `✅ ${data.count} results`);
+                    let html = `<div class="success">✅ Found ${data.count} results!</div><div class="results">`;
+                    data.results.forEach((r, i) => {
+                        html += `
+                            <div class="result-item">
+                                <strong>${i + 1}. [${r.entity_type}]</strong> ${r.name}<br>
+                                <small>${r.subtitle || 'No subtitle'}</small><br>
+                                <small>RRF Score: ${r.rrf_score?.toFixed(4) || 'N/A'} | Similarity: ${r.similarity?.toFixed(4) || 'N/A'}</small>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    setStatus('status-search', 'error', '⚠️ No results');
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            ⚠️ No results found!<br><br>
+                            <strong>Possible causes:</strong><br>
+                            1. Wrong tenant_id being used<br>
+                            2. No test data for this tenant<br>
+                            3. Contacts don't have embeddings<br><br>
+                            Check the logs in Supabase Dashboard to see what tenant_id was used.
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                setStatus('status-search', 'error', '❌ Error');
+                resultsDiv.innerHTML = `<div class="error">❌ Search failed: ${error.message}</div>`;
+            }
+        }
+
+        async function checkTestData() {
+            const resultsDiv = document.getElementById('data-results');
+            setStatus('status-data', 'running', 'Checking...');
+            resultsDiv.innerHTML = '<div class="info">⏳ Checking database...</div>';
+
+            try {
+                const usedTenantId = tenantId || userId;
+
+                const { data: contacts, error } = await supabase
+                    .from('contacts')
+                    .select('id, first_name, last_name, tenant_id, embedding')
+                    .eq('tenant_id', usedTenantId)
+                    .ilike('first_name', '%sarah%');
+
+                if (error) throw error;
+
+                if (contacts && contacts.length > 0) {
+                    setStatus('status-data', 'success', `✅ ${contacts.length} found`);
+                    let html = `<div class="success">✅ Found ${contacts.length} contacts with "sarah"</div><div class="results">`;
+                    contacts.forEach((c, i) => {
+                        html += `
+                            <div class="result-item">
+                                <strong>${i + 1}.</strong> ${c.first_name} ${c.last_name}<br>
+                                <small>Tenant: ${c.tenant_id}</small><br>
+                                <small>Has embedding: ${c.embedding ? 'YES ✅' : 'NO ❌'}</small>
+                            </div>
+                        `;
+                    });
+                    html += '</div>';
+                    resultsDiv.innerHTML = html;
+                } else {
+                    setStatus('status-data', 'error', '⚠️ Not found');
+                    resultsDiv.innerHTML = `
+                        <div class="error">
+                            ⚠️ No contacts found with "sarah" for tenant_id: ${usedTenantId}<br><br>
+                            <strong>This confirms the issue!</strong><br>
+                            Test data exists for a different tenant_id.<br><br>
+                            Check the SQL diagnostic script: scripts/check-tenant-mapping.sql
+                        </div>
+                    `;
+                }
+
+            } catch (error) {
+                setStatus('status-data', 'error', '❌ Error');
+                resultsDiv.innerHTML = `<div class="error">❌ Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

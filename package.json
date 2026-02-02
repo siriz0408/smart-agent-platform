@@ -29,7 +29,10 @@
     "status": "npm run status:git && npm run status:vercel && npm run status:supabase",
     "status:git": "git status -s",
     "status:vercel": "vercel ls",
-    "status:supabase": "echo 'Supabase Project: sthnezuadfbmbqlxiwtq'"
+    "status:supabase": "echo 'Supabase Project: sthnezuadfbmbqlxiwtq'",
+    "test:integration": "npx tsx scripts/test-search-integration.ts",
+    "test:search-debug": "npx tsx scripts/test-search-debug.ts",
+    "seed:test-data": "/bin/bash /tmp/add-test-data.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

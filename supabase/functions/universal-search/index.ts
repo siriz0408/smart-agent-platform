@@ -164,7 +164,27 @@ Deno.serve(async (req) => {
       );
     }
 
-    const tenantId = user.id; // User ID is tenant ID in this schema
+    console.log("🔍 Auth user:", { user_id: user?.id });
+
+    // Get tenant ID from profiles table
+    // Use maybeSingle() instead of single() to avoid error if no profile found
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("tenant_id")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    // Use profile tenant_id if available, otherwise fallback to user.id
+    // For single-tenant-per-user setups, this works fine
+    const tenantId = profile?.tenant_id || user.id;
+
+    console.log("🔍 Profile lookup result:", {
+      profile_exists: !!profile,
+      profile_tenant_id: profile?.tenant_id,
+      using_tenant_id: tenantId,
+      fallback_used: !profile?.tenant_id,
+      profile_error: profileError?.message,
+    });
 
     // ========================================================================
     // Call unified search RPC function
@@ -183,7 +203,17 @@ Deno.serve(async (req) => {
     );
 
     if (searchError) {
-      console.error("Search error:", searchError);
+      console.error("❌ RPC error:", searchError);
+    } else {
+      console.log("✅ RPC results:", {
+        count: results?.length || 0,
+        query: query,
+        tenant_id: tenantId,
+        entity_types: entityTypes,
+      });
+    }
+
+    if (searchError) {
 
       return new Response(
         JSON.stringify({
