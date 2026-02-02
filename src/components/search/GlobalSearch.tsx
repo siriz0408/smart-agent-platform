@@ -25,6 +25,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   const { data: results = [], isLoading: isSearching } = useGlobalSearch({
@@ -78,7 +79,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
   // client-passive-event-listeners: Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (inputRef.current && !inputRef.current.contains(e.target as Node)) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -107,7 +108,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
   }, [isOpen]);
 
   return (
-    <div className="relative w-full max-w-xl">
+    <div ref={containerRef} className="relative w-full max-w-xl">
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground pointer-events-none" />
         <Input
