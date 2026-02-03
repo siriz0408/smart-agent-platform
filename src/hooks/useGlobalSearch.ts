@@ -11,9 +11,7 @@ export interface SearchResult {
   entity_id: string;
   name: string;
   subtitle: string;
-  similarity: number;
   text_rank: number;
-  rrf_score: number;
   metadata: Record<string, unknown>;
   updated_at: string;
 }
@@ -21,7 +19,6 @@ export interface SearchResult {
 interface UseGlobalSearchOptions {
   query: string;
   entityTypes?: string[];
-  matchThreshold?: number;
   matchCountPerType?: number;
   enabled?: boolean;
 }
@@ -34,6 +31,7 @@ interface UseGlobalSearchOptions {
  * - 30-second cache for performance
  * - Only fetches when query >= 2 chars
  * - Primitive dependencies in query key (no object refs)
+ * - Uses PostgreSQL full-text search for reliable results
  *
  * @example
  * const { data: results, isLoading } = useGlobalSearch({
@@ -44,8 +42,7 @@ interface UseGlobalSearchOptions {
 export function useGlobalSearch({
   query,
   entityTypes = ["document", "contact", "property", "deal"],
-  matchThreshold = 0.1,
-  matchCountPerType = 5,
+  matchCountPerType = 10,
   enabled = true,
 }: UseGlobalSearchOptions) {
   const { session } = useAuth();
@@ -59,7 +56,6 @@ export function useGlobalSearch({
       "global-search",
       query,
       entityTypesKey,
-      matchThreshold,
       matchCountPerType,
     ],
     queryFn: async () => {
@@ -79,7 +75,6 @@ export function useGlobalSearch({
           body: JSON.stringify({
             query,
             entityTypes,
-            matchThreshold,
             matchCountPerType,
           }),
         }

@@ -205,9 +205,11 @@ export function SearchResultsDropdown({
                           {result.name}
                         </p>
                         {/* Relevance score badge */}
-                        <span className="flex-shrink-0 text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
-                          {Math.round(result.rrf_score * 100)}%
-                        </span>
+                        {result.text_rank > 0 && (
+                          <span className="flex-shrink-0 text-xs bg-muted px-2 py-0.5 rounded-full text-muted-foreground">
+                            {Math.round(result.text_rank * 100)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-0.5 truncate">
                         {result.subtitle}

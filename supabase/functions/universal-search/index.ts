@@ -1,12 +1,11 @@
 /**
  * Universal Search Edge Function
  *
- * Provides unified semantic search across Documents, Contacts, Properties, and Deals
- * Uses RRF (Reciprocal Rank Fusion) hybrid search combining vector + keyword search
+ * Provides unified keyword search across Documents, Contacts, Properties, and Deals
+ * Uses PostgreSQL full-text search for reliable results
  */
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { generateDeterministicEmbedding } from "../_shared/embedding-utils.ts";
 
 // CORS headers for cross-origin requests
 const corsHeaders = {
@@ -18,7 +17,6 @@ const corsHeaders = {
 interface SearchRequest {
   query: string;
   entityTypes?: string[];
-  matchThreshold?: number;
   matchCountPerType?: number;
 }
 
@@ -27,9 +25,7 @@ interface SearchResult {
   entity_id: string;
   name: string;
   subtitle: string;
-  similarity: number;
   text_rank: number;
-  rrf_score: number;
   metadata: Record<string, unknown>;
   updated_at: string;
 }
@@ -64,8 +60,7 @@ Deno.serve(async (req) => {
     const {
       query,
       entityTypes = ["document", "contact", "property", "deal"],
-      matchThreshold = 0.1,
-      matchCountPerType = 5,
+      matchCountPerType = 10,
     } = requestBody;
 
     // ========================================================================
@@ -126,12 +121,6 @@ Deno.serve(async (req) => {
     }
 
     // ========================================================================
-    // Generate query embedding
-    // ========================================================================
-
-    const queryEmbedding = generateDeterministicEmbedding(query);
-
-    // ========================================================================
     // Create Supabase client with user's auth token
     // ========================================================================
 
@@ -188,17 +177,15 @@ Deno.serve(async (req) => {
     });
 
     // ========================================================================
-    // Call unified search RPC function
+    // Call simplified keyword search RPC function
     // ========================================================================
 
     const { data: results, error: searchError } = await supabase.rpc(
-      "search_all_entities_hybrid",
+      "search_all_entities",
       {
         p_query: query,
-        p_query_embedding: queryEmbedding,
         p_tenant_id: tenantId,
         p_entity_types: entityTypes,
-        p_match_threshold: matchThreshold,
         p_match_count_per_type: matchCountPerType,
       }
     );

@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/contexts/RoleContext";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
@@ -16,6 +17,7 @@ export default function AdminAgentEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useRole();
 
   const { data: agent, isLoading, error } = useQuery({
     queryKey: ["ai_agent", id],
@@ -42,8 +44,8 @@ export default function AdminAgentEdit() {
     navigate("/admin/agents");
   };
 
-  // Check ownership - even admins can only edit agents they created
-  const isOwner = agent?.created_by === user?.id;
+  // Admins can edit any agent, others need to be the owner
+  const canEdit = isAdmin || agent?.created_by === user?.id;
 
   if (isLoading) {
     return (
@@ -85,7 +87,7 @@ export default function AdminAgentEdit() {
     );
   }
 
-  if (!isOwner) {
+  if (!canEdit) {
     return (
       <AppLayout>
         <div className="p-6 space-y-6 max-w-3xl mx-auto">
@@ -99,7 +101,7 @@ export default function AdminAgentEdit() {
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Unauthorized</AlertTitle>
             <AlertDescription>
-              You can only edit agents that you created. This agent was created by another user.
+              You don't have permission to edit this agent.
             </AlertDescription>
           </Alert>
           <div className="p-4 rounded-lg border bg-muted/50">

@@ -37,6 +37,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/contexts/RoleContext";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
@@ -54,6 +55,7 @@ export default function AdminAgents() {
   const [searchQuery, setSearchQuery] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useRole();
 
   const { data: agents = [], isLoading } = useQuery({
     queryKey: ["admin_ai_agents"],
@@ -77,7 +79,8 @@ export default function AdminAgents() {
     );
   });
 
-  const canEdit = (agent: AIAgent) => agent.created_by === user?.id;
+  // Admins can edit any agent, others can only edit their own
+  const canEdit = (agent: AIAgent) => isAdmin || agent.created_by === user?.id;
 
   return (
     <AppLayout>
