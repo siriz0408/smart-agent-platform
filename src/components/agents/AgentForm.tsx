@@ -2,7 +2,25 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Bot, PenLine, FileText, Zap, Sparkles, MessageSquare, Loader2 } from "lucide-react";
+import { 
+  Bot, 
+  PenLine, 
+  FileText, 
+  Zap, 
+  Sparkles, 
+  MessageSquare, 
+  Loader2,
+  PenTool,
+  BarChart2,
+  FileSearch,
+  Mail,
+  Share2,
+  Home,
+  Users,
+  DollarSign,
+  Calendar,
+  Search
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,11 +61,21 @@ type AgentFormData = z.infer<typeof agentFormSchema>;
 
 const iconOptions = [
   { value: "bot", label: "Bot", icon: Bot },
-  { value: "penline", label: "Writing", icon: PenLine },
+  { value: "pen-tool", label: "Writing", icon: PenTool },
+  { value: "penline", label: "Pen", icon: PenLine },
   { value: "filetext", label: "Documents", icon: FileText },
+  { value: "file-search", label: "File Search", icon: FileSearch },
+  { value: "bar-chart-2", label: "Analytics", icon: BarChart2 },
+  { value: "mail", label: "Email", icon: Mail },
+  { value: "share-2", label: "Social", icon: Share2 },
   { value: "zap", label: "Automation", icon: Zap },
   { value: "sparkles", label: "AI", icon: Sparkles },
   { value: "messagesquare", label: "Communication", icon: MessageSquare },
+  { value: "home", label: "Property", icon: Home },
+  { value: "users", label: "Contacts", icon: Users },
+  { value: "dollar-sign", label: "Finance", icon: DollarSign },
+  { value: "calendar", label: "Calendar", icon: Calendar },
+  { value: "search", label: "Search", icon: Search },
 ];
 
 const categoryOptions = [

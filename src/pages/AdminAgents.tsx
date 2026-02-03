@@ -14,7 +14,16 @@ import {
   Pencil,
   MoreHorizontal,
   CheckCircle,
-  XCircle
+  XCircle,
+  PenTool,
+  BarChart2,
+  FileSearch,
+  Mail,
+  Share2,
+  Home,
+  Users,
+  DollarSign,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,12 +52,21 @@ import type { Tables } from "@/integrations/supabase/types";
 type AIAgent = Tables<"ai_agents">;
 
 const iconMap: Record<string, React.ElementType> = {
+  bot: Bot,
+  "pen-tool": PenTool,
   penline: PenLine,
   filetext: FileText,
+  "file-search": FileSearch,
+  "bar-chart-2": BarChart2,
+  mail: Mail,
+  "share-2": Share2,
   zap: Zap,
   sparkles: Sparkles,
   messagesquare: MessageSquare,
-  bot: Bot,
+  home: Home,
+  users: Users,
+  "dollar-sign": DollarSign,
+  calendar: Calendar,
 };
 
 export default function AdminAgents() {

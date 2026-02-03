@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Search, Star, Filter, Bot, Sparkles, FileText, PenLine, MessageSquare, Zap, Pencil } from "lucide-react";
+import { Plus, Search, Star, Filter, Bot, Sparkles, FileText, PenLine, MessageSquare, Zap, Pencil, PenTool, BarChart2, FileSearch, Mail, Share2, Home, Users, DollarSign, Calendar } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +17,21 @@ import type { Tables } from "@/integrations/supabase/types";
 type AIAgent = Tables<"ai_agents">;
 
 const iconMap: Record<string, React.ElementType> = {
+  bot: Bot,
+  "pen-tool": PenTool,
   penline: PenLine,
   filetext: FileText,
+  "file-search": FileSearch,
+  "bar-chart-2": BarChart2,
+  mail: Mail,
+  "share-2": Share2,
   zap: Zap,
   sparkles: Sparkles,
   messagesquare: MessageSquare,
-  bot: Bot,
+  home: Home,
+  users: Users,
+  "dollar-sign": DollarSign,
+  calendar: Calendar,
 };
 
 export default function Agents() {
