@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { RoleBadge } from "./RoleBadge";
+import { GlobalSearch } from "@/components/search/GlobalSearch";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -32,11 +33,9 @@ export function AppHeader() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
-      {/* Brand/Logo area - search is now on individual pages */}
-      <div className="flex flex-1 items-center">
-        <span className="text-sm text-muted-foreground">
-          Search within Documents, Properties, Contacts, or Deals pages
-        </span>
+      {/* Global Search Bar */}
+      <div className="flex flex-1 items-center max-w-2xl">
+        <GlobalSearch />
       </div>
 
       {/* Right Actions */}
