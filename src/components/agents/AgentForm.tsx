@@ -395,14 +395,27 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
                       return (
                         <div
                           key={option.value}
+                          role="button"
+                          tabIndex={0}
                           className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                             isChecked ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                           }`}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
                             const newValue = isChecked
                               ? field.value.filter((v: string) => v !== option.value)
                               : [...(field.value || []), option.value];
                             field.onChange(newValue);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              const newValue = isChecked
+                                ? field.value.filter((v: string) => v !== option.value)
+                                : [...(field.value || []), option.value];
+                              field.onChange(newValue);
+                            }
                           }}
                         >
                           <Checkbox
@@ -413,6 +426,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
                                 : field.value.filter((v: string) => v !== option.value);
                               field.onChange(newValue);
                             }}
+                            onClick={(e) => e.stopPropagation()}
                             className="mt-0.5"
                           />
                           <div className="flex-1 min-w-0">
