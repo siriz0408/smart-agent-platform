@@ -99,6 +99,7 @@ export function useGlobalSearch({
         contacts: byType?.contact || 0,
         properties: byType?.property || 0,
         deals: byType?.deal || 0,
+        debug: data.debug, // Show debug info from backend
         first5: data.results?.slice(0, 5).map((r: SearchResult) => ({
           type: r.entity_type,
           name: r.name

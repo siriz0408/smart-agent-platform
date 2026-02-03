@@ -216,12 +216,27 @@ Deno.serve(async (req) => {
     }
 
     // ========================================================================
-    // Return results
+    // Return results with debug info
     // ========================================================================
 
-    const response: { results: SearchResult[]; count: number } = {
+    const response: { 
+      results: SearchResult[]; 
+      count: number;
+      debug?: {
+        query: string;
+        tenant_id: string;
+        entity_types: string[];
+        profile_found: boolean;
+      };
+    } = {
       results: results || [],
       count: results?.length || 0,
+      debug: {
+        query,
+        tenant_id: tenantId,
+        entity_types: entityTypes,
+        profile_found: !!profile,
+      },
     };
 
     return new Response(JSON.stringify(response), {
