@@ -50,11 +50,11 @@ The system prompt should:
 Write ONLY the system prompt content, no explanations or meta-commentary. Start directly with "You are..." or similar.`;
 
     // Call Anthropic API
-    const response = await fetch(AI_CONFIG.gatewayUrl, {
+    const response = await fetch(AI_CONFIG.GATEWAY_URL, {
       method: "POST",
       headers: getAnthropicHeaders(aiApiKey),
       body: JSON.stringify({
-        model: AI_CONFIG.defaultModel,
+        model: AI_CONFIG.DEFAULT_MODEL,
         max_tokens: 1024,
         system: "You are an expert prompt engineer. Generate clear, effective system prompts for AI agents.",
         messages: [
