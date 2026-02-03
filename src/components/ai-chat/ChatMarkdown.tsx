@@ -1,10 +1,140 @@
 import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { FileText, User, Home, Briefcase, FolderOpen } from "lucide-react";
 
 interface ChatMarkdownProps {
   content: string;
   className?: string;
+}
+
+// Convert mention and collection patterns to clickable links with icons
+function processMentions(content: string): string {
+  // Match @type:uuid[name] pattern and convert to markdown link with custom protocol
+  const mentionRegex = /@(doc|contact|property|deal):([a-f0-9-]+)\[([^\]]+)\]/g;
+  
+  let result = content.replace(mentionRegex, (_match, type, id, name) => {
+    // Create a special link format that we'll intercept in the link component
+    return `[mention:${type}:${id}:${name}](mention://${type}/${id})`;
+  });
+  
+  // Match #Collection pattern and convert to markdown link with custom protocol
+  const collectionRegex = /#(Properties|Contacts|Deals|Documents)/gi;
+  
+  result = result.replace(collectionRegex, (_match, collection) => {
+    // Normalize collection name
+    const normalizedCollection = collection.charAt(0).toUpperCase() + collection.slice(1).toLowerCase();
+    return `[collection:${normalizedCollection}](collection://${normalizedCollection.toLowerCase()})`;
+  });
+  
+  return result;
+}
+
+// Mention link component with icon
+function MentionLink({ type, id, name }: { type: string; id: string; name: string }) {
+  const getIcon = () => {
+    switch (type) {
+      case "doc":
+        return <FileText className="h-3.5 w-3.5" />;
+      case "contact":
+        return <User className="h-3.5 w-3.5" />;
+      case "property":
+        return <Home className="h-3.5 w-3.5" />;
+      case "deal":
+        return <Briefcase className="h-3.5 w-3.5" />;
+      default:
+        return <FileText className="h-3.5 w-3.5" />;
+    }
+  };
+
+  const getPath = () => {
+    switch (type) {
+      case "doc":
+        return `/documents/${id}`;
+      case "contact":
+        return `/contacts/${id}`;
+      case "property":
+        return `/properties/${id}`;
+      case "deal":
+        return `/pipeline`;  // Deals don't have individual pages, go to pipeline
+      default:
+        return "#";
+    }
+  };
+
+  const getTypeLabel = () => {
+    switch (type) {
+      case "doc":
+        return "Document";
+      case "contact":
+        return "Contact";
+      case "property":
+        return "Property";
+      case "deal":
+        return "Deal";
+      default:
+        return "Item";
+    }
+  };
+
+  return (
+    <Link
+      to={getPath()}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-md text-sm font-medium transition-colors"
+      title={`View ${getTypeLabel()}: ${name}`}
+    >
+      {getIcon()}
+      <span>{name}</span>
+    </Link>
+  );
+}
+
+// Collection link component with icon
+function CollectionLink({ collection }: { collection: string }) {
+  const getIcon = () => {
+    switch (collection.toLowerCase()) {
+      case "properties":
+        return <Home className="h-3.5 w-3.5" />;
+      case "contacts":
+        return <User className="h-3.5 w-3.5" />;
+      case "deals":
+        return <Briefcase className="h-3.5 w-3.5" />;
+      case "documents":
+        return <FileText className="h-3.5 w-3.5" />;
+      default:
+        return <FolderOpen className="h-3.5 w-3.5" />;
+    }
+  };
+
+  const getPath = () => {
+    switch (collection.toLowerCase()) {
+      case "properties":
+        return `/properties`;
+      case "contacts":
+        return `/contacts`;
+      case "deals":
+        return `/pipeline`;
+      case "documents":
+        return `/documents`;
+      default:
+        return "#";
+    }
+  };
+
+  // Normalize collection name for display
+  const displayName = collection.charAt(0).toUpperCase() + collection.slice(1).toLowerCase();
+
+  return (
+    <Link
+      to={getPath()}
+      className="inline-flex items-center gap-1.5 px-2 py-0.5 bg-orange-100 hover:bg-orange-200 text-orange-700 dark:bg-orange-900/40 dark:hover:bg-orange-900/60 dark:text-orange-300 rounded-md text-sm font-medium transition-colors"
+      title={`Browse all ${displayName}`}
+    >
+      {getIcon()}
+      <span>{displayName}</span>
+    </Link>
+  );
 }
 
 // Custom component overrides for enhanced formatting
@@ -38,17 +168,36 @@ const markdownComponents: Components = {
     </p>
   ),
 
-  // Styled links with primary color
-  a: ({ href, children }) => (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-primary font-medium underline underline-offset-2 hover:text-primary/80 transition-colors"
-    >
-      {children}
-    </a>
-  ),
+  // Styled links with primary color - intercept mention and collection links
+  a: ({ href, children }) => {
+    // Check if this is a mention link
+    if (href?.startsWith("mention://")) {
+      const [, type, id] = href.replace("mention://", "").split("/");
+      // Extract name from children (format: "mention:type:id:name")
+      const childText = typeof children === "string" ? children : 
+        Array.isArray(children) ? children.join("") : "";
+      const nameMatch = childText.match(/^mention:[^:]+:[^:]+:(.+)$/);
+      const name = nameMatch ? nameMatch[1] : childText;
+      return <MentionLink type={type} id={id} name={name} />;
+    }
+    
+    // Check if this is a collection link
+    if (href?.startsWith("collection://")) {
+      const collection = href.replace("collection://", "");
+      return <CollectionLink collection={collection} />;
+    }
+    
+    return (
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-primary font-medium underline underline-offset-2 hover:text-primary/80 transition-colors"
+      >
+        {children}
+      </a>
+    );
+  },
 
   // Strong/bold text
   strong: ({ children }) => (
@@ -143,10 +292,13 @@ const markdownComponents: Components = {
 };
 
 export function ChatMarkdown({ content, className }: ChatMarkdownProps) {
+  // Pre-process content to convert mentions to special markdown links
+  const processedContent = processMentions(content);
+  
   return (
     <div className={cn("prose-ai", className)}>
       <ReactMarkdown components={markdownComponents}>
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );

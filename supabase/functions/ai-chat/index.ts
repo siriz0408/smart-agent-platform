@@ -439,6 +439,47 @@ const AGENT_COMMISSION_CALCULATOR_TOOL = {
   }
 };
 
+// Query Collection tool definition for AI - search across user's CRM data collections
+const QUERY_COLLECTION_TOOL = {
+  type: "function",
+  function: {
+    name: "query_collection",
+    description: `Search across user's CRM data collections (contacts, properties, deals, documents). Call this when:
+- User references a collection using # syntax (e.g., #Contacts, #Properties, #Deals, #Documents)
+- User asks to "search all contacts", "find in my properties", "look through my deals"
+- User wants to query their entire collection of a specific entity type
+- User asks about "all my contacts who..." or "properties that match..."
+- User mentions filtering or searching within their CRM data
+This tool provides context from the user's own data to answer queries.`,
+    parameters: {
+      type: "object",
+      properties: {
+        collection: {
+          type: "string",
+          enum: ["contacts", "properties", "deals", "documents"],
+          description: "The type of collection to search: contacts, properties, deals, or documents"
+        },
+        query: {
+          type: "string",
+          description: "Search query or criteria to find matching items in the collection"
+        },
+        limit: {
+          type: "number",
+          description: "Maximum number of results to return. Default 20."
+        }
+      },
+      required: ["collection", "query"]
+    }
+  }
+};
+
+// Collection query params interface
+interface CollectionQueryParams {
+  collection: "contacts" | "properties" | "deals" | "documents";
+  query: string;
+  limit?: number;
+}
+
 // Mortgage calculator params interface
 interface MortgageCalculatorParams {
   price: number;
@@ -551,7 +592,7 @@ function enhanceLocation(location: string): string {
 
 // Combined intent detection result
 interface IntentDetectionResult {
-  type: "property_search" | "mortgage_calculator" | "affordability_calculator" | "closing_costs_calculator" | "rent_vs_buy_calculator" | "cma_comparison" | "home_buying_checklist" | "home_selling_checklist" | "seller_net_sheet" | "agent_commission_calculator" | "none";
+  type: "property_search" | "mortgage_calculator" | "affordability_calculator" | "closing_costs_calculator" | "rent_vs_buy_calculator" | "cma_comparison" | "home_buying_checklist" | "home_selling_checklist" | "seller_net_sheet" | "agent_commission_calculator" | "collection_query" | "none";
   propertySearchParams?: PropertySearchParams;
   mortgageCalculatorParams?: MortgageCalculatorParams;
   affordabilityCalculatorParams?: AffordabilityCalculatorParams;
@@ -562,6 +603,7 @@ interface IntentDetectionResult {
   homeSellingChecklistParams?: HomeSellingChecklistParams;
   sellerNetSheetParams?: SellerNetSheetParams;
   agentCommissionCalculatorParams?: AgentCommissionCalculatorParams;
+  collectionQueryParams?: CollectionQueryParams;
 }
 
 // AI-powered intent detection using tool calling (supports both property search and mortgage calculator)
@@ -705,6 +747,16 @@ async function detectIntentWithAI(
 - Wants to project yearly earnings based on transactions
 - This is for AGENTS, not sellers - if user mentions selling their own home and proceeds, use seller_net_sheet instead
 
+### Call query_collection when the user:
+- References a collection using # syntax (e.g., #Contacts, #Properties, #Deals, #Documents)
+- Wants to search across their entire collection of contacts, properties, deals, or documents
+- Asks to "find all contacts who...", "search my properties", "filter my deals"
+- Wants to analyze or query their CRM data as a whole
+- Asks questions like "which of my contacts are first-time buyers?" or "show me properties under 500k"
+- Uses phrases like "in my contacts", "among my properties", "from my deals"
+- The query parameter should extract the user's search criteria
+- Example: "Find properties under $500k for #Contacts who are first-time buyers" → collection: "contacts", query: "first-time buyers"
+
 ## PARSING RULES
 - Convert price shorthand: "400k" = 400000, "500K" = 500000, "1M" = 1000000
 - "under X" or "below X" means price_max/price = X
@@ -720,7 +772,7 @@ async function detectIntentWithAI(
         messages: [
           { role: "user", content: message }
         ],
-        tools: convertToAnthropicTools([PROPERTY_SEARCH_TOOL, MORTGAGE_CALCULATOR_TOOL, AFFORDABILITY_CALCULATOR_TOOL, CLOSING_COSTS_CALCULATOR_TOOL, RENT_VS_BUY_CALCULATOR_TOOL, CMA_COMPARISON_TOOL, HOME_BUYING_CHECKLIST_TOOL, HOME_SELLING_CHECKLIST_TOOL, SELLER_NET_SHEET_TOOL, AGENT_COMMISSION_CALCULATOR_TOOL]),
+        tools: convertToAnthropicTools([PROPERTY_SEARCH_TOOL, MORTGAGE_CALCULATOR_TOOL, AFFORDABILITY_CALCULATOR_TOOL, CLOSING_COSTS_CALCULATOR_TOOL, RENT_VS_BUY_CALCULATOR_TOOL, CMA_COMPARISON_TOOL, HOME_BUYING_CHECKLIST_TOOL, HOME_SELLING_CHECKLIST_TOOL, SELLER_NET_SHEET_TOOL, AGENT_COMMISSION_CALCULATOR_TOOL, QUERY_COLLECTION_TOOL]),
         tool_choice: { type: "auto" },
       }),
     });
@@ -869,6 +921,17 @@ async function detectIntentWithAI(
           total_commission: args.total_commission,
           listing_buyer_split: args.listing_buyer_split,
           broker_split: args.broker_split,
+        }
+      };
+    }
+
+    if (toolUseBlock.name === "query_collection") {
+      return {
+        type: "collection_query",
+        collectionQueryParams: {
+          collection: args.collection,
+          query: args.query,
+          limit: args.limit || 20,
         }
       };
     }
@@ -1176,6 +1239,91 @@ The following documents have structured data extracted for precision. When answe
 
 `;
 
+const MENTION_CONTEXT_PROMPT = `
+## Referenced Data Context
+
+The user has mentioned specific contacts, properties, or documents using @mentions. You have access to their full data below. Use this information to provide relevant, personalized responses.
+
+`;
+
+// Helper to build mention context from mentionData
+interface MentionDataItem {
+  type: "contact" | "property" | "doc" | "deal";
+  id: string;
+  name: string;
+  data: Record<string, unknown>;
+}
+
+function buildMentionContext(mentionData: MentionDataItem[]): string {
+  if (!mentionData || mentionData.length === 0) return "";
+  
+  const sections: string[] = [];
+  
+  const contacts = mentionData.filter(m => m.type === "contact");
+  const properties = mentionData.filter(m => m.type === "property");
+  const documents = mentionData.filter(m => m.type === "doc");
+  const deals = mentionData.filter(m => m.type === "deal");
+  
+  if (contacts.length > 0) {
+    sections.push("### Contacts\n" + contacts.map(c => {
+      const d = c.data;
+      return `**${c.name}** (ID: ${c.id})
+- Email: ${d.email || "Not provided"}
+- Phone: ${d.phone || "Not provided"}
+- Company: ${d.company || "Not provided"}
+- Type: ${d.contact_type || "Not specified"}
+- Stage: ${d.pipeline_stage || "Not specified"}
+- Notes: ${d.notes || "None"}
+- Created: ${d.created_at ? new Date(d.created_at as string).toLocaleDateString() : "Unknown"}`;
+    }).join("\n\n"));
+  }
+  
+  if (properties.length > 0) {
+    sections.push("### Properties\n" + properties.map(p => {
+      const d = p.data;
+      return `**${p.name}** (ID: ${p.id})
+- Address: ${d.address || ""}, ${d.city || ""}, ${d.state || ""} ${d.zip_code || ""}
+- Price: ${d.price ? `$${Number(d.price).toLocaleString()}` : "Not listed"}
+- Beds/Baths: ${d.bedrooms || "?"} bed / ${d.bathrooms || "?"} bath
+- Sqft: ${d.square_feet ? `${Number(d.square_feet).toLocaleString()} sqft` : "Not provided"}
+- Year Built: ${d.year_built || "Unknown"}
+- Property Type: ${d.property_type || "Not specified"}
+- Status: ${d.status || "Unknown"}
+- Description: ${d.description || "No description"}`;
+    }).join("\n\n"));
+  }
+  
+  if (documents.length > 0) {
+    sections.push("### Documents\n" + documents.map(doc => {
+      const d = doc.data;
+      return `**${doc.name}** (ID: ${doc.id})
+- Category: ${d.category || "General"}
+- Summary: ${d.summary || "No summary available"}
+- Created: ${d.created_at ? new Date(d.created_at as string).toLocaleDateString() : "Unknown"}`;
+    }).join("\n\n"));
+  }
+  
+  if (deals.length > 0) {
+    sections.push("### Deals/Pipeline\n" + deals.map(deal => {
+      const d = deal.data;
+      return `**${deal.name}** (ID: ${deal.id})
+- Deal Type: ${d.deal_type || "Not specified"}
+- Stage: ${d.stage || d.buyer_stage || d.seller_stage || "New"}
+- Estimated Value: ${d.estimated_value ? `$${Number(d.estimated_value).toLocaleString()}` : "TBD"}
+- Commission Rate: ${d.commission_rate ? `${d.commission_rate}%` : "Not set"}
+- Contact: ${d.contact_name || "None assigned"}
+- Contact Details: ${d.contact_info ? JSON.stringify(d.contact_info) : "N/A"}
+- Property: ${d.property_address || "None"}
+- Property Details: ${d.property_info ? JSON.stringify(d.property_info) : "N/A"}
+- Expected Close: ${d.expected_close_date ? new Date(d.expected_close_date as string).toLocaleDateString() : "Not set"}
+- Notes: ${d.notes || "None"}
+- Created: ${d.created_at ? new Date(d.created_at as string).toLocaleDateString() : "Unknown"}`;
+    }).join("\n\n"));
+  }
+  
+  return MENTION_CONTEXT_PROMPT + sections.join("\n\n---\n\n");
+}
+
 // ====================================================================
 // DOCUMENT SEARCH HELPERS
 // ====================================================================
@@ -1278,7 +1426,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationId, includeDocuments, documentIds } = await req.json();
+    const { messages, conversationId, includeDocuments, documentIds, mentionData, collectionRefs } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
@@ -1317,9 +1465,28 @@ serve(async (req) => {
     }
 
     // ====================================================================
-    // CHECK USAGE LIMITS BEFORE PROCESSING
+    // CHECK USAGE LIMITS BEFORE PROCESSING (Skip for super_admin)
     // ====================================================================
-    if (tenantId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+    let isSuperAdmin = false;
+    
+    // Check if user is a super_admin (they have unlimited usage)
+    if (userId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      
+      const { data: userRoles } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      
+      isSuperAdmin = userRoles?.some(r => r.role === "super_admin") || false;
+      
+      if (isSuperAdmin) {
+        console.log(`User ${userId} is super_admin - skipping usage limits`);
+      }
+    }
+    
+    // Only check usage limits for non-super_admin users
+    if (!isSuperAdmin && tenantId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       
       const { data: usageData, error: usageError } = await supabaseAdmin.rpc(
@@ -1369,7 +1536,174 @@ serve(async (req) => {
           
           console.log("Analyzing message for intent:", lastUserMessage.content);
           
-          // Use combined intent detection
+          // ================================================================
+          // HANDLE MULTIPLE COLLECTION REFS (from frontend # syntax)
+          // When user includes multiple #Collections, fetch ALL and synthesize
+          // ================================================================
+          if (collectionRefs && Array.isArray(collectionRefs) && collectionRefs.length > 0) {
+            console.log("[MULTI-COLLECTION] Processing", collectionRefs.length, "collections:", collectionRefs.map((c: {collection: string}) => c.collection));
+            
+            const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+            const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+            
+            if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY && tenantId) {
+              // Use service role key to bypass RLS, then filter by tenant_id in queries
+              const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+              
+              // Fetch data from ALL collections in parallel
+              const collectionDataPromises = collectionRefs.map(async (ref: {collection: string}) => {
+                const collName = ref.collection.toLowerCase();
+                let results: any[] = [];
+                
+                await writeStatus(writer, encoder, "searching", `Searching your ${ref.collection}...`);
+                
+                try {
+                  if (collName === "contacts") {
+                    const { data, error } = await supabase
+                      .from("contacts")
+                      .select("id, first_name, last_name, email, company, contact_type, notes")
+                      .eq("tenant_id", tenantId)
+                      .order("updated_at", { ascending: false })
+                      .limit(25);
+                    if (!error && data) {
+                      results = data.map(c => ({
+                        type: "contact",
+                        id: c.id,
+                        name: [c.first_name, c.last_name].filter(Boolean).join(" ") || c.email || "Unknown",
+                        email: c.email,
+                        company: c.company,
+                        contact_type: c.contact_type,
+                        notes: c.notes
+                      }));
+                    }
+                  } else if (collName === "properties") {
+                    const { data, error } = await supabase
+                      .from("properties")
+                      .select("id, address, city, state, zip_code, price, status, property_type, bedrooms, bathrooms, square_feet, description")
+                      .eq("tenant_id", tenantId)
+                      .order("updated_at", { ascending: false })
+                      .limit(25);
+                    if (!error && data) {
+                      results = data.map(p => ({
+                        type: "property",
+                        id: p.id,
+                        address: p.address,
+                        city: p.city,
+                        state: p.state,
+                        zip: p.zip_code,
+                        price: p.price,
+                        status: p.status,
+                        property_type: p.property_type,
+                        bedrooms: p.bedrooms,
+                        bathrooms: p.bathrooms,
+                        sqft: p.square_feet,
+                        notes: p.description
+                      }));
+                    }
+                  } else if (collName === "deals") {
+                    const { data, error } = await supabase
+                      .from("deals")
+                      .select("id, deal_type, stage, estimated_value, notes, property_id")
+                      .eq("tenant_id", tenantId)
+                      .order("updated_at", { ascending: false })
+                      .limit(25);
+                    if (!error && data) {
+                      results = data.map(d => ({
+                        type: "deal",
+                        id: d.id,
+                        deal_type: d.deal_type,
+                        stage: d.stage,
+                        value: d.estimated_value,
+                        notes: d.notes
+                      }));
+                    }
+                  } else if (collName === "documents") {
+                    const { data, error } = await supabase
+                      .from("documents")
+                      .select("id, name, category, ai_summary")
+                      .eq("tenant_id", tenantId)
+                      .order("created_at", { ascending: false })
+                      .limit(25);
+                    if (!error && data) {
+                      results = data.map(d => ({
+                        type: "document",
+                        id: d.id,
+                        name: d.name,
+                        category: d.category,
+                        summary: d.ai_summary?.slice(0, 300)
+                      }));
+                    }
+                  }
+                } catch (err) {
+                  console.error(`Error fetching ${collName}:`, err);
+                }
+                
+                return { collection: ref.collection, data: results };
+              });
+              
+              const allCollectionData = await Promise.all(collectionDataPromises);
+              console.log("[MULTI-COLLECTION] Fetched data from all collections:", allCollectionData.map(c => `${c.collection}: ${c.data.length} items`));
+              
+              // Build combined context for AI
+              let multiCollectionContext = `## User's CRM Data (from explicitly referenced collections)\n\n`;
+              multiCollectionContext += `The user has referenced the following collections in their query. Use ALL of this data to provide a comprehensive, synthesized response.\n\n`;
+              
+              for (const collData of allCollectionData) {
+                multiCollectionContext += `### ${collData.collection} (${collData.data.length} items)\n`;
+                if (collData.data.length === 0) {
+                  multiCollectionContext += `No ${collData.collection.toLowerCase()} found.\n\n`;
+                } else {
+                  multiCollectionContext += "```json\n" + JSON.stringify(collData.data, null, 2) + "\n```\n\n";
+                }
+              }
+              
+              multiCollectionContext += `\n## Instructions\n`;
+              multiCollectionContext += `- The user explicitly referenced ${collectionRefs.length} collections: ${collectionRefs.map((c: {collection: string}) => c.collection).join(", ")}\n`;
+              multiCollectionContext += `- Analyze and synthesize data from ALL collections to answer their question\n`;
+              multiCollectionContext += `- Find relationships, matches, or insights across the data\n`;
+              multiCollectionContext += `- Be specific and reference actual items from the data\n`;
+              
+              await writeStatus(writer, encoder, "generating", "Analyzing your data...");
+              
+              // Stream AI response with multi-collection context
+              const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                  "x-api-key": ANTHROPIC_API_KEY,
+                  "anthropic-version": "2023-06-01",
+                  "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "claude-sonnet-4-20250514",
+                  max_tokens: 4096,
+                  system: BASE_SYSTEM_PROMPT + "\n\n" + multiCollectionContext,
+                  messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
+                  stream: true,
+                }),
+              });
+              
+              if (aiResponse.ok && aiResponse.body) {
+                const reader = aiResponse.body.getReader();
+                await convertAnthropicStreamToOpenAI(reader, writer);
+              }
+              
+              // Track usage (using service role key already available in scope)
+              if (userId && tenantId) {
+                await supabase.from("usage_records").insert({
+                  tenant_id: tenantId,
+                  user_id: userId,
+                  action_type: "ai_chat_multi_collection",
+                  metadata: { collections: collectionRefs.map((c: {collection: string}) => c.collection), items_fetched: allCollectionData.map(c => c.data.length).reduce((a, b) => a + b, 0) },
+                });
+              }
+              
+              await writeStreamEnd(writer, encoder);
+              await writer.close();
+              return; // Early return - we handled the multi-collection query
+            }
+          }
+          
+          // Use combined intent detection (for single collection or other intents)
           const intentResult = await detectIntentWithAI(lastUserMessage.content, ANTHROPIC_API_KEY);
           console.log("Intent detection result:", intentResult.type);
           
@@ -2435,6 +2769,245 @@ Provide a brief, helpful response:
           }
           
           // ================================================================
+          // HANDLE COLLECTION QUERY INTENT
+          // ================================================================
+          if (intentResult.type === "collection_query" && intentResult.collectionQueryParams) {
+            const collParams = intentResult.collectionQueryParams;
+            console.log("Collection query params:", collParams);
+            
+            await writeStatus(writer, encoder, "searching", `Searching your ${collParams.collection}...`);
+            
+            try {
+              // Get auth header for Supabase client
+              const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+              const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
+              
+              if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !tenantId) {
+                throw new Error("Missing Supabase configuration or tenant ID");
+              }
+              
+              const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                global: { headers: authHeader ? { Authorization: authHeader } : {} },
+              });
+              
+              // Map collection type to entity type and table name
+              const entityTypeMap: Record<string, string> = {
+                "contacts": "contact",
+                "properties": "property",
+                "deals": "deal",
+                "documents": "document",
+              };
+              const tableNameMap: Record<string, string> = {
+                "contacts": "contacts",
+                "properties": "properties",
+                "deals": "deals",
+                "documents": "documents",
+              };
+              const entityType = entityTypeMap[collParams.collection] || collParams.collection;
+              const tableName = tableNameMap[collParams.collection] || collParams.collection;
+              
+              // Detect if this is a "list all" request (generic query that won't work with full-text search)
+              const genericQueryPatterns = [
+                /^all\s*/i,
+                /^list\s*/i,
+                /^show\s*/i,
+                /^my\s*/i,
+                /^get\s*/i,
+                /^\*$/,
+                /^$/,
+              ];
+              const queryLower = (collParams.query || "").toLowerCase().trim();
+              const isGenericListQuery = genericQueryPatterns.some(p => p.test(queryLower)) ||
+                queryLower === collParams.collection ||
+                queryLower === entityType ||
+                queryLower.includes("all " + collParams.collection) ||
+                queryLower.includes("all " + entityType) ||
+                queryLower.includes("my " + collParams.collection) ||
+                queryLower.length < 2;
+              
+              let searchResults: any[] = [];
+              let searchError: any = null;
+              
+              if (isGenericListQuery) {
+                // For generic "list all" queries, fetch directly from table instead of full-text search
+                const limit = collParams.limit || 20;
+                
+                if (tableName === "contacts") {
+                  const { data, error } = await supabase
+                    .from("contacts")
+                    .select("id, first_name, last_name, email, company, contact_type")
+                    .eq("tenant_id", tenantId)
+                    .order("updated_at", { ascending: false })
+                    .limit(limit);
+                  
+                  if (!error && data) {
+                    searchResults = data.map(c => ({
+                      entity_type: "contact",
+                      entity_id: c.id,
+                      name: [c.first_name, c.last_name].filter(Boolean).join(" ") || c.email || "Unknown",
+                      subtitle: c.company || c.contact_type || "",
+                      metadata: { email: c.email, company: c.company }
+                    }));
+                  }
+                  searchError = error;
+                } else if (tableName === "properties") {
+                  const { data, error } = await supabase
+                    .from("properties")
+                    .select("id, address, city, state, price, status, property_type")
+                    .eq("tenant_id", tenantId)
+                    .order("updated_at", { ascending: false })
+                    .limit(limit);
+                  
+                  if (!error && data) {
+                    searchResults = data.map(p => ({
+                      entity_type: "property",
+                      entity_id: p.id,
+                      name: p.address || "Unknown Property",
+                      subtitle: [p.city, p.state].filter(Boolean).join(", ") || p.property_type || "",
+                      metadata: { price: p.price, status: p.status, property_type: p.property_type }
+                    }));
+                  }
+                  searchError = error;
+                } else if (tableName === "deals") {
+                  const { data, error } = await supabase
+                    .from("deals")
+                    .select("id, deal_type, stage, estimated_value, property_id")
+                    .eq("tenant_id", tenantId)
+                    .order("updated_at", { ascending: false })
+                    .limit(limit);
+                  
+                  if (!error && data) {
+                    searchResults = data.map(d => ({
+                      entity_type: "deal",
+                      entity_id: d.id,
+                      name: `${d.deal_type || "Deal"} - ${d.stage || "Unknown Stage"}`,
+                      subtitle: d.estimated_value ? `$${d.estimated_value.toLocaleString()}` : "",
+                      metadata: { stage: d.stage, value: d.estimated_value, deal_type: d.deal_type }
+                    }));
+                  }
+                  searchError = error;
+                } else if (tableName === "documents") {
+                  const { data, error } = await supabase
+                    .from("documents")
+                    .select("id, name, category, ai_summary")
+                    .eq("tenant_id", tenantId)
+                    .order("created_at", { ascending: false })
+                    .limit(limit);
+                  
+                  if (!error && data) {
+                    searchResults = data.map(d => ({
+                      entity_type: "document",
+                      entity_id: d.id,
+                      name: d.name || "Untitled Document",
+                      subtitle: d.category || "Document",
+                      metadata: { category: d.category, ai_summary: d.ai_summary?.slice(0, 200) }
+                    }));
+                  }
+                  searchError = error;
+                }
+              } else {
+                // For specific search queries, use full-text search RPC
+                const { data, error } = await supabase.rpc(
+                  "search_all_entities",
+                  {
+                    p_query: collParams.query,
+                    p_tenant_id: tenantId,
+                    p_entity_types: [entityType],
+                    p_match_count_per_type: collParams.limit || 20,
+                  }
+                );
+                searchResults = data || [];
+                searchError = error;
+              }
+              
+              if (searchError) {
+                console.error("Collection search error:", searchError);
+                throw searchError;
+              }
+              
+              console.log(`Found ${searchResults?.length || 0} results in ${collParams.collection}`);
+              
+              console.log(`Found ${searchResults?.length || 0} results in ${collParams.collection}`);
+              
+              // Build context with search results
+              let collectionContext = `## Collection Query Results
+
+The user asked to search their ${collParams.collection} collection for: "${collParams.query}"
+
+`;
+              
+              if (!searchResults || searchResults.length === 0) {
+                collectionContext += `No matching ${collParams.collection} were found for the search query.
+
+Provide a helpful response:
+1. Let them know the search returned no results
+2. Suggest they try different search terms
+3. Ask if they'd like to search for something else`;
+              } else {
+                collectionContext += `Found ${searchResults.length} matching ${collParams.collection}:
+
+`;
+                // Format results based on entity type
+                for (const result of searchResults) {
+                  collectionContext += `### ${result.name || "Unknown"}\n`;
+                  if (result.subtitle) {
+                    collectionContext += `- ${result.subtitle}\n`;
+                  }
+                  if (result.entity_id) {
+                    collectionContext += `- ID: ${result.entity_id}\n`;
+                  }
+                  collectionContext += "\n";
+                }
+                
+                collectionContext += `
+Use this data to answer the user's question. Be specific and reference the actual data found.`;
+              }
+              
+              await writeStatus(writer, encoder, "generating", "Processing results...");
+              
+              // Stream AI response with collection context
+              const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                  "x-api-key": ANTHROPIC_API_KEY,
+                  "anthropic-version": "2023-06-01",
+                  "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "claude-sonnet-4-20250514",
+                  max_tokens: 2048,
+                  system: BASE_SYSTEM_PROMPT + collectionContext,
+                  messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
+                  stream: true,
+                }),
+              });
+              
+              if (aiResponse.ok && aiResponse.body) {
+                const reader = aiResponse.body.getReader();
+                await convertAnthropicStreamToOpenAI(reader, writer);
+              }
+              
+              // Track usage
+              if (userId && tenantId && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                const usageSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                  global: { headers: authHeader ? { Authorization: authHeader } : {} },
+                });
+                await usageSupabase.from("usage_records").insert({
+                  tenant_id: tenantId,
+                  record_type: "ai_query",
+                  quantity: 1,
+                });
+              }
+            } catch (err) {
+              console.error("Collection query error:", err);
+              await writeStatus(writer, encoder, "error", "Failed to search collection. Please try again.");
+            }
+            
+            await writer.close();
+            return;
+          }
+          
+          // ================================================================
           // HANDLE PROPERTY SEARCH INTENT
           // ================================================================
           if (intentResult.type === "property_search" && intentResult.propertySearchParams) {
@@ -2657,6 +3230,14 @@ Provide a brief, helpful response:
           // Send status so user sees we're responding
           await writeStatus(writer, encoder, "generating", "Processing your request...");
           
+          // Build system prompt with mention context if available
+          let streamSystemPrompt = BASE_SYSTEM_PROMPT;
+          const streamMentionContext = buildMentionContext(mentionData as MentionDataItem[] || []);
+          if (streamMentionContext) {
+            console.log("Adding mention context to streaming system prompt");
+            streamSystemPrompt += streamMentionContext;
+          }
+          
           // Call the regular AI API for a general response
           const regularAiResponse = await fetch("https://api.anthropic.com/v1/messages", {
             method: "POST",
@@ -2668,7 +3249,7 @@ Provide a brief, helpful response:
             body: JSON.stringify({
               model: "claude-sonnet-4-20250514",
               max_tokens: 1024,
-              system: BASE_SYSTEM_PROMPT,
+              system: streamSystemPrompt,
               messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
               stream: true,
             }),
@@ -2715,6 +3296,13 @@ Provide a brief, helpful response:
     let documentContext = "";
     let structuredDataContext = "";
     const sourceDocs: { id: string; name: string; category: string; chunkCount: number }[] = [];
+    
+    // Build mention context if mentionData was provided
+    const mentionContext = buildMentionContext(mentionData as MentionDataItem[] || []);
+    if (mentionContext) {
+      console.log("Adding mention context to system prompt");
+      systemPrompt += mentionContext;
+    }
 
     if (includeDocuments && tenantId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {

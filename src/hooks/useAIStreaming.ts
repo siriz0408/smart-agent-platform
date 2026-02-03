@@ -23,6 +23,18 @@ export interface StatusUpdate {
   details?: Record<string, unknown>;
 }
 
+interface MentionData {
+  type: "contact" | "property" | "doc";
+  id: string;
+  name: string;
+  data: Record<string, unknown>;
+}
+
+/** Collection reference for #Collection syntax */
+interface CollectionRef {
+  collection: "Properties" | "Contacts" | "Deals" | "Documents";
+}
+
 interface StreamOptions {
   /** The messages history to send */
   messages: StreamMessage[];
@@ -32,6 +44,10 @@ interface StreamOptions {
   includeDocuments?: boolean;
   /** Optional conversation ID */
   conversationId?: string;
+  /** Optional mention data with full entity details */
+  mentionData?: MentionData[];
+  /** Optional collection references for bulk queries */
+  collectionRefs?: CollectionRef[];
   /** Called when a new content chunk arrives */
   onChunk?: (content: string, fullContent: string) => void;
   /** Called when streaming completes */
@@ -82,6 +98,8 @@ export function useAIStreaming(): UseAIStreamingReturn {
       documentIds,
       includeDocuments,
       conversationId,
+      mentionData,
+      collectionRefs,
       onChunk,
       onComplete,
       onError,
@@ -106,6 +124,18 @@ export function useAIStreaming(): UseAIStreamingReturn {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData?.session?.access_token;
 
+      const requestBody = {
+        messages: messages.map((m) => ({
+          role: m.role,
+          content: m.content,
+        })),
+        ...(documentIds?.length && { documentIds }),
+        ...(includeDocuments !== undefined && { includeDocuments }),
+        ...(conversationId && { conversationId }),
+        ...(mentionData?.length && { mentionData }),
+        ...(collectionRefs?.length && { collectionRefs }),
+      };
+
       const response = await fetch(AI_CHAT_URL, {
         method: "POST",
         headers: {
@@ -113,15 +143,7 @@ export function useAIStreaming(): UseAIStreamingReturn {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({
-          messages: messages.map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          ...(documentIds?.length && { documentIds }),
-          ...(includeDocuments !== undefined && { includeDocuments }),
-          ...(conversationId && { conversationId }),
-        }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal,
       });
 

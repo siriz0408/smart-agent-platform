@@ -12,3 +12,4 @@ export { SellerNetSheet } from "./SellerNetSheet";
 export { AgentCommissionCalculator } from "./AgentCommissionCalculator";
 export { MentionInput } from "./MentionInput";
 export { ChatMarkdown } from "./ChatMarkdown";
+export { UserMessageContent } from "./UserMessageContent";

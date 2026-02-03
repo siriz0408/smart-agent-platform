@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft, Settings, Plus, SlidersHorizontal, Lightbulb, Mic, ArrowUp } from "lucide-react";
 import { useAIStreaming, type UsageLimitInfo, type StatusUpdate } from "@/hooks/useAIStreaming";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import { MentionInput } from "@/components/ai-chat";
+import { parseMentions, parseCollectionMentions, fetchMentionData, type Mention, type CollectionType } from "@/hooks/useMentionSearch";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { PropertyCardGrid, ChatMarkdown, MortgageCalculator, AffordabilityCalculator, ClosingCostsCalculator, RentVsBuyCalculator, CMAComparisonWidget, HomeBuyingChecklist, HomeSellingChecklist, SellerNetSheet, AgentCommissionCalculator } from "@/components/ai-chat";
+import { PropertyCardGrid, ChatMarkdown, MortgageCalculator, AffordabilityCalculator, ClosingCostsCalculator, RentVsBuyCalculator, CMAComparisonWidget, HomeBuyingChecklist, HomeSellingChecklist, SellerNetSheet, AgentCommissionCalculator, UserMessageContent } from "@/components/ai-chat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -62,7 +63,17 @@ export default function Chat() {
   const [limitInfo, setLimitInfo] = useState<UsageLimitInfo | null>(null);
   const [currentStatus, setCurrentStatus] = useState<StatusUpdate | null>(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  // Persist sidebar collapsed state
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    const saved = localStorage.getItem("chat-sidebar-collapsed");
+    return saved === "true";
+  });
+  const [activeMentions, setActiveMentions] = useState<Mention[]>([]);
+  
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem("chat-sidebar-collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Fetch conversations
@@ -180,6 +191,29 @@ export default function Chat() {
     e.preventDefault();
     if (!input.trim() || isStreaming) return;
 
+    // Parse mentions from the input to extract entity references
+    const { mentions } = parseMentions(input);
+    
+    // Parse collection references (#Properties, #Contacts, etc.)
+    const { collections } = parseCollectionMentions(input);
+
+    // Fetch full data for all mentioned entities
+    let mentionData: Awaited<ReturnType<typeof fetchMentionData>> = [];
+    if (mentions.length > 0) {
+      try {
+        mentionData = await fetchMentionData(mentions, supabase);
+        console.log("Fetched mention data:", mentionData);
+      } catch (err) {
+        console.error("Error fetching mention data:", err);
+      }
+    }
+    
+    // Convert collection references to the format expected by the API
+    const collectionRefs = collections.map(c => ({ collection: c.collection }));
+    if (collectionRefs.length > 0) {
+      console.log("Collection references:", collectionRefs);
+    }
+
     let convId = selectedConversation;
 
     // Create new conversation if none selected
@@ -198,6 +232,7 @@ export default function Chat() {
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setActiveMentions([]); // Clear mentions after sending
 
     // Save user message
     await saveMessage(convId, "user", userMessage.content);
@@ -208,6 +243,8 @@ export default function Chat() {
     const result = await streamMessage({
       messages: [...messages, userMessage],
       conversationId: convId,
+      mentionData: mentionData.length > 0 ? mentionData : undefined,
+      collectionRefs: collectionRefs.length > 0 ? collectionRefs : undefined,
       onChunk: (_chunk, fullContent) => {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -293,12 +330,63 @@ export default function Chat() {
     c.title?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Group conversations by date
+  const groupConversationsByDate = (convs: Conversation[]) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const lastWeek = new Date(today);
+    lastWeek.setDate(lastWeek.getDate() - 7);
+
+    const groups: { label: string; conversations: Conversation[] }[] = [
+      { label: "Today", conversations: [] },
+      { label: "Yesterday", conversations: [] },
+      { label: "Previous 7 days", conversations: [] },
+      { label: "Older", conversations: [] },
+    ];
+
+    convs.forEach((conv) => {
+      const date = new Date(conv.updated_at);
+      date.setHours(0, 0, 0, 0);
+
+      if (date.getTime() === today.getTime()) {
+        groups[0].conversations.push(conv);
+      } else if (date.getTime() === yesterday.getTime()) {
+        groups[1].conversations.push(conv);
+      } else if (date > lastWeek) {
+        groups[2].conversations.push(conv);
+      } else {
+        groups[3].conversations.push(conv);
+      }
+    });
+
+    return groups.filter((g) => g.conversations.length > 0);
+  };
+
+  const groupedConversations = groupConversationsByDate(filteredConversations);
+
   // Sidebar content component (reused in desktop and mobile)
   const SidebarContent = () => (
-    <>
-      <div className="p-4 border-b border-border">
+    <div className="flex flex-col h-full">
+      {/* Header with title and toggle */}
+      <div className="flex items-center justify-between p-4 border-b border-border">
+        <span className="font-semibold text-base">Chat</span>
         <Button
-          className="w-full justify-start gap-2 bg-glean-purple hover:bg-glean-purple-hover text-white"
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground hover:text-foreground md:hidden"
+          onClick={() => setMobileDrawerOpen(false)}
+        >
+          <PanelLeftClose className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* New Chat Button */}
+      <div className="p-3">
+        <Button
+          variant="outline"
+          className="w-full justify-center gap-2"
           onClick={() => {
             handleNewChat();
             setMobileDrawerOpen(false);
@@ -309,114 +397,171 @@ export default function Chat() {
         </Button>
       </div>
 
-      <div className="p-3">
+      {/* Search */}
+      <div className="px-3 pb-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by title"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9 bg-muted/50 border-muted"
+            className="pl-9 h-9 text-sm bg-muted/50 border-0"
           />
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-2 pr-4 pb-20 space-y-1">
+      {/* Conversation List */}
+      <ScrollArea className="flex-1 min-h-0 overflow-hidden">
+        <div className="px-2 pb-4 overflow-hidden">
           {conversationsLoading ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="p-3">
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-            ))
-          ) : filteredConversations.length === 0 ? (
+            <div className="space-y-2 p-2">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-8 w-full" />
+              ))}
+            </div>
+          ) : groupedConversations.length === 0 ? (
             <p className="text-sm text-muted-foreground p-4 text-center">
               No conversations yet
             </p>
           ) : (
-            filteredConversations.map((conversation) => {
-              const displayTitle = conversation.title || "New conversation";
-              return (
-                <div key={conversation.id} className="relative group">
-                  {/* Row selection button - reserves right gutter for menu */}
-                  <button
-                    type="button"
-                    className={cn(
-                      "w-full text-left p-3 pr-12 rounded-lg transition-colors overflow-hidden",
-                      selectedConversation === conversation.id
-                        ? "bg-muted"
-                        : "hover:bg-muted/50"
-                    )}
-                    onClick={() => {
-                      setSelectedConversation(conversation.id);
-                      setMobileDrawerOpen(false);
-                    }}
-                  >
-                    <div className="min-w-0">
-                      <div 
-                        className="font-medium text-sm truncate"
-                        title={displayTitle}
-                      >
-                        {displayTitle}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(conversation.updated_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </button>
-                  
-                  {/* Actions menu - positioned absolutely, outside the button */}
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="z-50">
-                        <DropdownMenuItem
-                          className="text-destructive cursor-pointer"
-                          onClick={() => deleteConversation.mutate(conversation.id)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-2" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
+            groupedConversations.map((group) => (
+              <div key={group.label} className="mb-3">
+                <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {group.label}
                 </div>
-              );
-            })
+                <div className="space-y-0.5">
+                  {group.conversations.map((conversation) => {
+                    const displayTitle = conversation.title || "New conversation";
+                    return (
+                      <div 
+                        key={conversation.id} 
+                        className={cn(
+                          "group flex items-center gap-1 rounded-md transition-colors",
+                          selectedConversation === conversation.id
+                            ? "bg-muted"
+                            : "hover:bg-muted/50"
+                        )}
+                      >
+                        {/* Conversation title button */}
+                        <button
+                          type="button"
+                          className={cn(
+                            "flex-1 min-w-0 text-left px-2 py-2 text-sm",
+                            selectedConversation === conversation.id && "font-medium"
+                          )}
+                          onClick={() => {
+                            setSelectedConversation(conversation.id);
+                            setMobileDrawerOpen(false);
+                          }}
+                        >
+                          <span className="block truncate" title={displayTitle}>
+                            {displayTitle}
+                          </span>
+                        </button>
+                        
+                        {/* Actions menu - visible on hover (desktop) or always subtle (mobile) */}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 shrink-0 mr-1 text-muted-foreground/50 hover:text-foreground group-hover:text-muted-foreground"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" sideOffset={4} className="w-40">
+                            <DropdownMenuItem
+                              className="text-destructive cursor-pointer"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteConversation.mutate(conversation.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete chat
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
           )}
         </div>
       </ScrollArea>
-    </>
+
+      {/* Footer with delete option and user profile */}
+      <div className="mt-auto border-t border-border">
+        <div className="px-3 py-2 text-xs text-muted-foreground">
+          <p>Chats are saved up to 30 days.</p>
+          <p className="mt-1">
+            <button 
+              type="button"
+              onClick={() => {
+                if (selectedConversation) {
+                  deleteConversation.mutate(selectedConversation);
+                }
+              }}
+              disabled={!selectedConversation}
+              className="text-primary hover:underline disabled:text-muted-foreground disabled:no-underline disabled:cursor-not-allowed"
+            >
+              Delete
+            </button>
+            {" or "}
+            <button 
+              type="button"
+              className="text-muted-foreground cursor-not-allowed"
+              title="Coming soon"
+            >
+              Disable
+            </button>
+          </p>
+        </div>
+        {/* User profile section */}
+        {profile && (
+          <div className="flex items-center gap-3 p-3 border-t border-border hover:bg-muted/50 cursor-pointer"
+               onClick={() => navigate("/settings")}>
+            <div className="h-9 w-9 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-medium text-sm shrink-0">
+              {profile.full_name?.charAt(0)?.toUpperCase() || user?.email?.charAt(0)?.toUpperCase() || "U"}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">
+                {profile.full_name || user?.email?.split("@")[0] || "User"}
+              </p>
+              <p className="text-xs text-muted-foreground">Go to profile</p>
+            </div>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); navigate("/settings"); }}>
+              <Settings className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 
   return (
     <AppLayout>
-      <div className="flex h-full">
-        {/* Desktop Sidebar - Collapsible with slide animation */}
+      <div className="flex h-full overflow-hidden">
+        {/* Desktop Sidebar - Collapsible */}
         <div 
           className={cn(
-            "hidden md:flex border-r border-border flex-col bg-background transition-all duration-300 ease-in-out overflow-hidden",
-            sidebarCollapsed ? "w-0 border-r-0" : "w-[350px]"
+            "hidden md:flex border-r border-border flex-col bg-background transition-all duration-200 ease-in-out overflow-hidden",
+            sidebarCollapsed ? "w-0 border-r-0" : "w-[280px] min-w-[280px]"
           )}
         >
-          <div className="w-[350px] h-full flex flex-col">
+          <div className="w-[280px] h-full overflow-hidden">
             <SidebarContent />
           </div>
         </div>
 
         {/* Mobile Drawer */}
         <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
-          <SheetContent side="left" className="w-[85vw] max-w-sm p-0">
-            <div className="flex flex-col h-full pt-10">
+          <SheetContent side="left" className="w-[85vw] max-w-[320px] p-0">
+            <div className="flex flex-col h-full pt-6">
               <SidebarContent />
             </div>
           </SheetContent>
@@ -425,38 +570,55 @@ export default function Chat() {
         {/* Chat Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Desktop Header with toggle */}
-          <div className="hidden md:flex h-14 items-center gap-3 px-4 border-b bg-background">
+          <div className="hidden md:flex h-12 items-center gap-2 px-3 border-b bg-background">
             <Button
               size="icon"
               variant="ghost"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+              aria-label={sidebarCollapsed ? "Show chat history" : "Hide chat history"}
               className="h-9 w-9"
-            >
-              {sidebarCollapsed ? (
-                <PanelLeft className="h-5 w-5" />
-              ) : (
-                <PanelLeftClose className="h-5 w-5" />
-              )}
-            </Button>
-            <h1 className="text-base font-semibold">AI Chat</h1>
-          </div>
-
-          {/* Mobile Header */}
-          <div className="md:hidden h-14 flex items-center gap-3 px-4 border-b bg-background">
-            <Button
-              size="icon-lg"
-              variant="ghost"
-              onClick={() => setMobileDrawerOpen(true)}
-              aria-label="Open conversations"
+              title={sidebarCollapsed ? "Show chat history" : "Hide chat history"}
             >
               <Menu className="h-5 w-5" />
             </Button>
-            <h1 className="text-base font-semibold">AI Chat</h1>
+            {sidebarCollapsed && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleNewChat}
+                aria-label="New chat"
+                className="h-9 w-9"
+                title="New chat"
+              >
+                <PenSquare className="h-5 w-5" />
+              </Button>
+            )}
           </div>
 
-          {/* Chat Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 md:px-8">
+          {/* Mobile Header */}
+          <div className="md:hidden h-12 flex items-center gap-2 px-3 border-b bg-background">
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => setMobileDrawerOpen(true)}
+              aria-label="Open conversations"
+              className="h-9 w-9"
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={handleNewChat}
+              aria-label="New chat"
+              className="h-9 w-9"
+            >
+              <PenSquare className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Chat Messages Area - responsive padding */}
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
             {messagesLoading ? (
               <div className="max-w-3xl mx-auto space-y-4">
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -467,13 +629,30 @@ export default function Chat() {
                 ))}
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex h-full items-center justify-center">
-                <div className="text-center">
-                  <Bot className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h2 className="text-lg font-medium mb-2">Start a conversation</h2>
-                  <p className="text-muted-foreground text-sm">
-                    Ask me anything about real estate
-                  </p>
+              <div className="flex h-full flex-col items-center justify-center">
+                {/* Glean-style greeting */}
+                <h2 className="text-2xl md:text-3xl font-medium mb-8 text-center">
+                  Good {getTimeOfDay()}, {profile?.full_name?.split(" ")[0] || "there"}
+                </h2>
+                
+                {/* Horizontal scrolling agent cards - Glean style */}
+                <div className="w-full max-w-lg overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+                  <div className="flex gap-3 min-w-max">
+                    {[
+                      { id: 1, title: "Property Search Assistant", subtitle: "Find your dream home" },
+                      { id: 2, title: "Market Analysis Agent", subtitle: "Get market insights" },
+                      { id: 3, title: "Document Helper", subtitle: "Review contracts" },
+                    ].map((card) => (
+                      <Card 
+                        key={card.id} 
+                        className="w-44 p-4 cursor-pointer hover:shadow-md transition-shadow flex-shrink-0"
+                        onClick={() => setInput(`Help me with ${card.title.toLowerCase()}`)}
+                      >
+                        <p className="text-sm font-medium mb-1">{card.title}</p>
+                        <p className="text-xs text-muted-foreground">{card.subtitle}</p>
+                      </Card>
+                    ))}
+                  </div>
                 </div>
               </div>
             ) : (
@@ -606,7 +785,7 @@ export default function Chat() {
                           )}
                         </div>
                       ) : (
-                        <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                        <UserMessageContent content={message.content} />
                       )}
                     </Card>
                     {message.role === "user" && (
@@ -644,28 +823,76 @@ export default function Chat() {
             )}
           </div>
 
-          {/* Input Area */}
-          <div className="border-t border-border bg-background p-4">
+          {/* Input Area - Glean style */}
+          <div className="border-t border-border bg-background p-3 sm:p-4 lg:p-6">
             <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-              <div className="flex gap-2">
-                <Textarea
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask me anything..."
-                  className="min-h-[44px] max-h-32 resize-none"
-                  rows={1}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                />
-                <Button type="submit" size="icon" disabled={!input.trim() || isStreaming}>
-                  <Send className="h-5 w-5" />
-                </Button>
+              {/* Input container - Glean style rounded (no overflow-hidden to allow dropdown) */}
+              <div className="border border-border rounded-2xl bg-card shadow-sm">
+                {/* Text input area */}
+                <div className="p-3 md:p-4">
+                  <MentionInput
+                    value={input}
+                    onChange={setInput}
+                    onMentionsChange={setActiveMentions}
+                    placeholder="Explore a topic..."
+                    disabled={isStreaming}
+                    onSubmit={() => handleSubmit(new Event('submit') as unknown as React.FormEvent)}
+                  />
+                </div>
+                {/* Action bar with Glean-style icons */}
+                <div className="flex items-center justify-between px-3 py-2 border-t border-border/50 rounded-b-2xl">
+                  <div className="flex items-center gap-0.5">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      onClick={handleNewChat}
+                      title="New conversation"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="Settings"
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="AI thinking mode"
+                    >
+                      <Lightbulb className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <Button 
+                      type="button" 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="Voice input"
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      size="icon" 
+                      disabled={!input.trim() || isStreaming} 
+                      className="h-8 w-8 rounded-full"
+                    >
+                      <ArrowUp className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground text-center mt-2">
+              <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-2">
                 AI responses are informational only. Not legal, financial, or professional advice.
               </p>
             </form>
@@ -708,4 +935,11 @@ export default function Chat() {
       </Dialog>
     </AppLayout>
   );
+}
+
+function getTimeOfDay() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 17) return "afternoon";
+  return "evening";
 }

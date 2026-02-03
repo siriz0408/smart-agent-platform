@@ -253,22 +253,26 @@ export function SearchResultsDropdown({
         </div>
       </ScrollArea>
 
-      {/* Footer with "See All Results" button - always show when there are results */}
-      {results.length > 0 && onViewAllResults && (
+      {/* Footer with "See All Results" button */}
+      {results.length > 0 && (
         <div className="p-2 border-t border-border">
-          <Button
-            variant="ghost"
-            className="w-full justify-between"
-            onClick={onViewAllResults}
-          >
-            <span className="text-sm">
-              {hasMoreResults 
-                ? `See All Results (${resultCounts.all})`
-                : `View Results Page (${resultCounts.all})`
-              }
-            </span>
-            <ArrowRight className="h-4 w-4" />
-          </Button>
+          {hasMoreResults && onViewAllResults && (
+            <Button
+              variant="ghost"
+              className="w-full justify-between"
+              onClick={onViewAllResults}
+            >
+              <span className="text-sm">
+                See All Results ({resultCounts.all})
+              </span>
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          )}
+          {!hasMoreResults && (
+            <div className="px-3 py-2 text-xs text-muted-foreground text-center">
+              Showing all {results.length} result{results.length !== 1 ? "s" : ""}
+            </div>
+          )}
         </div>
       )}
     </div>

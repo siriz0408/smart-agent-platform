@@ -1,4 +1,4 @@
-import { FileText, User, Building2 } from "lucide-react";
+import { FileText, User, Building2, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Mention, MentionType } from "@/hooks/useMentionSearch";
 
@@ -14,12 +14,14 @@ const iconMap: Record<MentionType, React.ElementType> = {
   doc: FileText,
   contact: User,
   property: Building2,
+  deal: Briefcase,
 };
 
 const labelMap: Record<MentionType, string> = {
   doc: "Document",
   contact: "Contact",
   property: "Property",
+  deal: "Deal",
 };
 
 export function MentionAutocomplete({
@@ -62,7 +64,8 @@ export function MentionAutocomplete({
                   "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
                   result.type === "doc" && "bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-300",
                   result.type === "contact" && "bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-300",
-                  result.type === "property" && "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300"
+                  result.type === "property" && "bg-purple-100 text-purple-600 dark:bg-purple-900 dark:text-purple-300",
+                  result.type === "deal" && "bg-amber-100 text-amber-600 dark:bg-amber-900 dark:text-amber-300"
                 )}
               >
                 <Icon className="h-4 w-4" />

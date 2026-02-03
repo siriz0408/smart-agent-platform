@@ -1,13 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Sparkles, Bot, User, Plus, History, Paperclip } from "lucide-react";
+import { Sparkles, Bot, User, Plus, SlidersHorizontal, Lightbulb, Mic, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useAIChat } from "@/hooks/useAIChat";
 import { cn } from "@/lib/utils";
-import ReactMarkdown from "react-markdown";
+import { MentionInput, ChatMarkdown, UserMessageContent } from "@/components/ai-chat";
+import { parseMentions, fetchMentionData, type Mention } from "@/hooks/useMentionSearch";
+import { supabase } from "@/integrations/supabase/client";
 
 const quickActions = [
   { label: "Featured", icon: Sparkles },
@@ -19,6 +20,7 @@ export default function Home() {
   const { profile } = useAuth();
   const { messages, isLoading, sendMessage, clearMessages } = useAIChat();
   const [input, setInput] = useState("");
+  const [activeMentions, setActiveMentions] = useState<Mention[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -42,8 +44,8 @@ export default function Home() {
   return (
     <AppLayout>
       <div className="flex h-full flex-col">
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto p-6">
+        {/* Chat Area - responsive padding */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {messages.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center max-w-2xl mx-auto text-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary mb-6">
@@ -95,11 +97,11 @@ export default function Home() {
                     )}
                   >
                     {message.role === "assistant" ? (
-                      <div className="prose prose-sm dark:prose-invert max-w-none">
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      <div className="max-w-none">
+                        <ChatMarkdown content={message.content} />
                       </div>
                     ) : (
-                      <p className="whitespace-pre-wrap text-sm">{message.content}</p>
+                      <UserMessageContent content={message.content} />
                     )}
                   </Card>
                   {message.role === "user" && (
@@ -128,45 +130,84 @@ export default function Home() {
           )}
         </div>
 
-        {/* Input Area */}
-        <div className="border-t border-border bg-background p-4">
+        {/* Input Area - Glean style */}
+        <div className="border-t border-border bg-background p-3 sm:p-4 lg:p-6">
           <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
-            <div className="flex gap-2">
-              <div className="flex gap-1">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="icon" 
-                  className="shrink-0"
-                  onClick={clearMessages}
-                  title="New conversation"
-                >
-                  <Plus className="h-5 w-5" />
-                </Button>
-                <Button type="button" variant="ghost" size="icon" className="shrink-0">
-                  <Paperclip className="h-5 w-5" />
-                </Button>
-                <Button type="button" variant="ghost" size="icon" className="shrink-0">
-                  <History className="h-5 w-5" />
-                </Button>
+            {/* Input container - Glean style rounded (no overflow-hidden to allow dropdown) */}
+            <div className="border border-border rounded-2xl bg-card shadow-sm">
+              {/* Text input area */}
+              <div className="p-3 md:p-4">
+                <MentionInput
+                  value={input}
+                  onChange={setInput}
+                  onMentionsChange={setActiveMentions}
+                  placeholder="Explore a topic..."
+                  disabled={isLoading}
+                  onSubmit={() => {
+                    if (input.trim() && !isLoading) {
+                      const message = input;
+                      setInput("");
+                      sendMessage(message);
+                    }
+                  }}
+                />
               </div>
-              <Textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ask me anything about your real estate business..."
-                className="min-h-[44px] max-h-32 resize-none"
-                rows={1}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit(e);
-                  }
-                }}
-              />
-              <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
-                <Send className="h-5 w-5" />
-              </Button>
+              {/* Action bar with Glean-style icons */}
+              <div className="flex items-center justify-between px-3 py-2 border-t border-border/50 rounded-b-2xl">
+                <div className="flex items-center gap-0.5">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    onClick={clearMessages}
+                    title="New conversation"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="Settings"
+                  >
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="AI thinking mode"
+                  >
+                    <Lightbulb className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-0.5">
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                    title="Voice input"
+                  >
+                    <Mic className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    size="icon" 
+                    disabled={!input.trim() || isLoading}
+                    className="h-8 w-8 rounded-full"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
+            <p className="text-[10px] md:text-xs text-muted-foreground text-center mt-2">
+              AI responses are informational only. Not legal, financial, or professional advice.
+            </p>
           </form>
         </div>
       </div>

@@ -1,4 +1,4 @@
-import { X, FileText, User, Building2 } from "lucide-react";
+import { X, FileText, User, Building2, Briefcase } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Mention, MentionType } from "@/hooks/useMentionSearch";
 
@@ -12,12 +12,14 @@ const iconMap: Record<MentionType, React.ElementType> = {
   doc: FileText,
   contact: User,
   property: Building2,
+  deal: Briefcase,
 };
 
 const colorMap: Record<MentionType, string> = {
   doc: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   contact: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
   property: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  deal: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200",
 };
 
 export function MentionPill({ mention, onRemove, className }: MentionPillProps) {

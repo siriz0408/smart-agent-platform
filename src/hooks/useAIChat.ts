@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from "@/lib/logger";
+import { parseMentions, parseCollectionMentions, fetchMentionData, type MentionData } from "@/hooks/useMentionSearch";
 
 export interface Message {
   id: string;
@@ -19,6 +20,29 @@ export function useAIChat() {
 
   const sendMessage = useCallback(async (input: string) => {
     if (!input.trim() || isLoading) return;
+
+    // Parse mentions from the input
+    const { mentions } = parseMentions(input);
+    
+    // Parse collection references (#Properties, #Contacts, etc.)
+    const { collections } = parseCollectionMentions(input);
+    
+    // Fetch full data for all mentioned entities
+    let mentionData: MentionData[] = [];
+    if (mentions.length > 0) {
+      try {
+        mentionData = await fetchMentionData(mentions, supabase);
+        console.log("Fetched mention data for Home chat:", mentionData);
+      } catch (err) {
+        console.error("Error fetching mention data:", err);
+      }
+    }
+    
+    // Convert collection references to the format expected by the API
+    const collectionRefs = collections.map(c => ({ collection: c.collection }));
+    if (collectionRefs.length > 0) {
+      console.log("Collection references for Home chat:", collectionRefs);
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -69,6 +93,8 @@ export function useAIChat() {
             role: m.role,
             content: m.content,
           })),
+          ...(mentionData.length > 0 && { mentionData }),
+          ...(collectionRefs.length > 0 && { collectionRefs }),
         }),
       });
 
