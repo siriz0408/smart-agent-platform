@@ -121,9 +121,16 @@ Deno.serve(async (req) => {
     }
 
     // ========================================================================
-    // Create Supabase client with user's auth token
+    // Create Supabase clients
     // ========================================================================
 
+    // Service role client for profile lookup (bypasses RLS)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
+    // User client for auth validation
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",
@@ -156,31 +163,45 @@ Deno.serve(async (req) => {
 
     console.log("🔍 Auth user:", { user_id: user?.id });
 
-    // Get tenant ID from profiles table
-    // Use maybeSingle() instead of single() to avoid error if no profile found
-    const { data: profile, error: profileError } = await supabase
+    // Get tenant ID from profiles table using admin client (bypasses RLS)
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("tenant_id")
       .eq("user_id", user.id)
       .maybeSingle();
 
-    // Use profile tenant_id if available, otherwise fallback to user.id
-    // For single-tenant-per-user setups, this works fine
-    const tenantId = profile?.tenant_id || user.id;
+    if (profileError) {
+      console.error("❌ Profile lookup error:", profileError);
+    }
+
+    // Use profile tenant_id - this should always exist for authenticated users
+    const tenantId = profile?.tenant_id;
+
+    if (!tenantId) {
+      console.error("❌ No tenant_id found for user:", user.id);
+      return new Response(
+        JSON.stringify({ 
+          error: "User profile not found", 
+          details: "No tenant_id associated with this user",
+          debug: { user_id: user.id, profile_error: profileError?.message }
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     console.log("🔍 Profile lookup result:", {
       profile_exists: !!profile,
-      profile_tenant_id: profile?.tenant_id,
-      using_tenant_id: tenantId,
-      fallback_used: !profile?.tenant_id,
-      profile_error: profileError?.message,
+      tenant_id: tenantId,
     });
 
     // ========================================================================
-    // Call simplified keyword search RPC function
+    // Call simplified keyword search RPC function (using admin client)
     // ========================================================================
 
-    const { data: results, error: searchError } = await supabase.rpc(
+    const { data: results, error: searchError } = await supabaseAdmin.rpc(
       "search_all_entities",
       {
         p_query: query,
