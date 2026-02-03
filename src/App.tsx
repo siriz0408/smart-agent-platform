@@ -15,6 +15,10 @@ import Signup from "./pages/Signup";
 import ResetPassword from "./pages/ResetPassword";
 import Chat from "./pages/Chat";
 import Agents from "./pages/Agents";
+import AgentCreate from "./pages/AgentCreate";
+import AgentEdit from "./pages/AgentEdit";
+import AdminAgents from "./pages/AdminAgents";
+import AdminAgentEdit from "./pages/AdminAgentEdit";
 import Contacts from "./pages/Contacts";
 import ContactDetail from "./pages/ContactDetail";
 import Pipeline from "./pages/Pipeline";
@@ -75,6 +79,22 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/agents"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <AdminAgents />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/agents/:id/edit"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <AdminAgentEdit />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Protected routes - Agent/Admin */}
               <Route
@@ -82,6 +102,22 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
                     <Agents />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/agents/create"
+                element={
+                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
+                    <AgentCreate />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/agents/:id/edit"
+                element={
+                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
+                    <AgentEdit />
                   </ProtectedRoute>
                 }
               />

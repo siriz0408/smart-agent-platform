@@ -1,5 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
-import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink } from "lucide-react";
+import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +53,7 @@ export default function Admin() {
         </div>
 
         {/* Quick Links */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5">
           <Link to="/admin/teammates">
             <Card className="cursor-pointer hover:border-primary/50 transition-colors">
               <CardContent className="p-4 flex items-center gap-3">
@@ -63,6 +63,21 @@ export default function Admin() {
                 <div className="flex-1">
                   <div className="font-medium">Teammates</div>
                   <div className="text-sm text-muted-foreground">Manage team members</div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/admin/agents">
+            <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
+                  <Bot className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">AI Agents</div>
+                  <div className="text-sm text-muted-foreground">Manage agent prompts</div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </CardContent>

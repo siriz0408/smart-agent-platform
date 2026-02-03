@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Plus, Search, Star, Filter, Bot, Sparkles, FileText, PenLine, MessageSquare, Zap } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Plus, Search, Star, Filter, Bot, Sparkles, FileText, PenLine, MessageSquare, Zap, Pencil } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,6 +171,7 @@ export default function Agents() {
               favoriteAgentIds={favoriteAgentIds}
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onAgentClick={handleAgentClick}
+              currentUserId={user?.id}
             />
           </TabsContent>
           <TabsContent value="certified" className="mt-6">
@@ -180,6 +181,7 @@ export default function Agents() {
               favoriteAgentIds={favoriteAgentIds}
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onAgentClick={handleAgentClick}
+              currentUserId={user?.id}
             />
           </TabsContent>
           <TabsContent value="favorites" className="mt-6">
@@ -189,6 +191,7 @@ export default function Agents() {
               favoriteAgentIds={favoriteAgentIds}
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onAgentClick={handleAgentClick}
+              currentUserId={user?.id}
             />
           </TabsContent>
         </Tabs>
@@ -209,9 +212,11 @@ interface AgentGridProps {
   favoriteAgentIds: Set<string>;
   onToggleFavorite: (agentId: string) => void;
   onAgentClick: (agent: AIAgent) => void;
+  currentUserId?: string;
 }
 
-function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAgentClick }: AgentGridProps) {
+function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAgentClick, currentUserId }: AgentGridProps) {
+  const navigate = useNavigate();
   if (isLoading) {
     return (
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -253,6 +258,7 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
         const iconKey = (agent.icon || "bot").toLowerCase();
         const Icon = iconMap[iconKey] || Bot;
         const isFavorite = favoriteAgentIds.has(agent.id);
+        const isOwner = currentUserId && agent.created_by === currentUserId;
         
         return (
           <Card key={agent.id} className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => onAgentClick(agent)}>
@@ -267,6 +273,20 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
                       <Sparkles className="h-3 w-3" />
                       Certified
                     </Badge>
+                  )}
+                  {isOwner && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/agents/${agent.id}/edit`);
+                      }}
+                      title="Edit agent"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                   )}
                   <Button
                     variant="ghost"
