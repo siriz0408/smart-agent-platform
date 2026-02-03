@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -80,6 +80,19 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
       system_prompt: agent?.system_prompt || "",
     },
   });
+
+  // Reset form when agent data changes (for edit mode)
+  useEffect(() => {
+    if (agent) {
+      form.reset({
+        name: agent.name || "",
+        description: agent.description || "",
+        icon: agent.icon || "bot",
+        category: agent.category || "general",
+        system_prompt: agent.system_prompt || "",
+      });
+    }
+  }, [agent, form]);
 
   const systemPromptValue = form.watch("system_prompt") || "";
 
@@ -211,7 +224,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Icon</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select an icon" />
@@ -243,7 +256,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
