@@ -106,7 +106,7 @@ interface AgentFormProps {
 export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const isEditMode = !!agent;
 
@@ -193,7 +193,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
   };
 
   const onSubmit = async (data: AgentFormData) => {
-    if (!user?.id) {
+    if (!user?.id || !profile?.tenant_id) {
       toast({
         title: "Error",
         description: "You must be logged in to save an agent",
@@ -229,6 +229,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
       } else {
         // Create new agent
         const { error } = await supabase.from("ai_agents").insert({
+          tenant_id: profile.tenant_id,
           name: data.name,
           description: data.description || null,
           icon: data.icon,
