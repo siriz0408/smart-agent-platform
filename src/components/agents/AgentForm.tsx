@@ -19,7 +19,8 @@ import {
   Users,
   DollarSign,
   Calendar,
-  Search
+  Search,
+  Wand2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +95,7 @@ interface AgentFormProps {
 
 export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const isEditMode = !!agent;
@@ -123,6 +125,60 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
   }, [agent, form]);
 
   const systemPromptValue = form.watch("system_prompt") || "";
+
+  // Generate AI-suggested prompt
+  const handleGeneratePrompt = async () => {
+    const name = form.getValues("name");
+    const description = form.getValues("description");
+    const category = form.getValues("category");
+
+    if (!name) {
+      toast({
+        title: "Name required",
+        description: "Please enter an agent name first so AI can generate relevant instructions.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingPrompt(true);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-agent-prompt`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ name, description, category }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to generate prompt");
+      }
+
+      const data = await response.json();
+      
+      if (data.prompt) {
+        form.setValue("system_prompt", data.prompt);
+        toast({
+          title: "Prompt generated",
+          description: "AI has suggested a system prompt. Feel free to edit it!",
+        });
+      }
+    } catch (error) {
+      console.error("Error generating prompt:", error);
+      toast({
+        title: "Generation failed",
+        description: "Could not generate prompt. Please try again or write your own.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
+  };
 
   const onSubmit = async (data: AgentFormData) => {
     if (!user?.id) {
@@ -310,7 +366,29 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
               name="system_prompt"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>System Prompt</FormLabel>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>System Prompt</FormLabel>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleGeneratePrompt}
+                      disabled={isGeneratingPrompt}
+                      className="gap-1.5 text-xs h-7"
+                    >
+                      {isGeneratingPrompt ? (
+                        <>
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <Wand2 className="h-3.5 w-3.5" />
+                          AI Suggest
+                        </>
+                      )}
+                    </Button>
+                  </div>
                   <FormControl>
                     <Textarea
                       placeholder="You are a helpful AI assistant that..."
