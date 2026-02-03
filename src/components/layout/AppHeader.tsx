@@ -13,7 +13,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
-import { GlobalSearch } from "@/components/search/GlobalSearch";
 
 export function AppHeader() {
   const { user, profile, signOut } = useAuth();
@@ -33,9 +32,11 @@ export function AppHeader() {
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
-      {/* Global Search */}
-      <div className="flex flex-1 items-center max-w-xl">
-        <GlobalSearch />
+      {/* Brand/Logo area - search is now on individual pages */}
+      <div className="flex flex-1 items-center">
+        <span className="text-sm text-muted-foreground">
+          Search within Documents, Properties, Contacts, or Deals pages
+        </span>
       </div>
 
       {/* Right Actions */}
