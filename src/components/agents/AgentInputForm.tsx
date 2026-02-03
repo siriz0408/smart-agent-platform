@@ -7,12 +7,19 @@ import type { AgentContext } from "@/hooks/useAgentExecution";
 
 interface AgentInputFormProps {
   agentType: string;
+  dataSources?: string[];
   context: AgentContext;
   onContextChange: (context: AgentContext) => void;
   disabled?: boolean;
 }
 
-export function AgentInputForm({ agentType, context, onContextChange, disabled }: AgentInputFormProps) {
+export function AgentInputForm({ agentType, dataSources = [], context, onContextChange, disabled }: AgentInputFormProps) {
+  // Determine which data sources to show based on dataSources prop or fallback to agentType pattern matching
+  const needsProperty = dataSources.includes("property") || agentType === "listing_writer" || agentType === "cma_analyst";
+  const needsContact = dataSources.includes("contact") || agentType === "followup_assistant";
+  const needsDocument = dataSources.includes("document") || agentType === "contract_reviewer";
+  const needsDeal = dataSources.includes("deal") || agentType === "offer_analyzer";
+
   // Fetch properties for property-related agents
   const { data: properties = [] } = useQuery({
     queryKey: ["properties-for-agent"],
@@ -25,10 +32,10 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
       if (error) throw error;
       return data;
     },
-    enabled: agentType === "listing_writer" || agentType === "cma_analyst",
+    enabled: needsProperty,
   });
 
-  // Fetch contacts for follow-up agent
+  // Fetch contacts for contact-related agents
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts-for-agent"],
     queryFn: async () => {
@@ -40,41 +47,25 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
       if (error) throw error;
       return data;
     },
-    enabled: agentType === "followup_assistant",
+    enabled: needsContact,
   });
 
-  // Fetch documents for contract reviewer
+  // Fetch documents for document-related agents
   const { data: documents = [] } = useQuery({
     queryKey: ["documents-for-agent"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("documents")
         .select("id, name, category")
-        .eq("category", "contract")
         .order("created_at", { ascending: false })
         .limit(50);
       if (error) throw error;
       return data;
     },
-    enabled: agentType === "contract_reviewer",
+    enabled: needsDocument,
   });
 
-  // Fetch all documents if no contracts found
-  const { data: allDocuments = [] } = useQuery({
-    queryKey: ["all-documents-for-agent"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("documents")
-        .select("id, name, category")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw error;
-      return data;
-    },
-    enabled: agentType === "contract_reviewer" && documents.length === 0,
-  });
-
-  // Fetch deals for offer analyzer
+  // Fetch deals for deal-related agents
   const { data: deals = [] } = useQuery({
     queryKey: ["deals-for-agent"],
     queryFn: async () => {
@@ -86,15 +77,13 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
       if (error) throw error;
       return data;
     },
-    enabled: agentType === "offer_analyzer",
+    enabled: needsDeal,
   });
-
-  const docsToShow = documents.length > 0 ? documents : allDocuments;
 
   return (
     <div className="space-y-4">
-      {/* Property selector for Listing Writer and CMA Analyst */}
-      {(agentType === "listing_writer" || agentType === "cma_analyst") && (
+      {/* Property selector */}
+      {needsProperty && (
         <div className="space-y-2">
           <Label>Select Property</Label>
           <Select
@@ -127,8 +116,8 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
         </div>
       )}
 
-      {/* Contact selector for Follow-Up Assistant */}
-      {agentType === "followup_assistant" && (
+      {/* Contact selector */}
+      {needsContact && (
         <div className="space-y-2">
           <Label>Select Contact</Label>
           <Select
@@ -162,8 +151,8 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
         </div>
       )}
 
-      {/* Document selector for Contract Reviewer */}
-      {agentType === "contract_reviewer" && (
+      {/* Document selector */}
+      {needsDocument && (
         <div className="space-y-2">
           <Label>Select Document</Label>
           <Select
@@ -175,12 +164,12 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
               <SelectValue placeholder="Choose a document..." />
             </SelectTrigger>
             <SelectContent>
-              {docsToShow.length === 0 ? (
+              {documents.length === 0 ? (
                 <SelectItem value="none" disabled>
                   No documents found
                 </SelectItem>
               ) : (
-                docsToShow.map((doc) => (
+                documents.map((doc) => (
                   <SelectItem key={doc.id} value={doc.id}>
                     {doc.name} {doc.category && `(${doc.category})`}
                   </SelectItem>
@@ -188,16 +177,16 @@ export function AgentInputForm({ agentType, context, onContextChange, disabled }
               )}
             </SelectContent>
           </Select>
-          {docsToShow.length === 0 && (
+          {documents.length === 0 && (
             <p className="text-sm text-muted-foreground">
-              Upload a contract document first to use this agent.
+              Upload a document first to use this agent.
             </p>
           )}
         </div>
       )}
 
-      {/* Deal selector for Offer Analyzer */}
-      {agentType === "offer_analyzer" && (
+      {/* Deal selector */}
+      {needsDeal && (
         <div className="space-y-2">
           <Label>Select Deal</Label>
           <Select

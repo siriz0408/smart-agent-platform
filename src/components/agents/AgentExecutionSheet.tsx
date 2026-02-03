@@ -98,6 +98,7 @@ export function AgentExecutionSheet({ agent, open, onOpenChange }: AgentExecutio
             {/* Input Form */}
             <AgentInputForm
               agentType={agentType}
+              dataSources={(agent as any)?.data_sources || []}
               context={context}
               onContextChange={setContext}
               disabled={isExecuting || result.isStreaming}

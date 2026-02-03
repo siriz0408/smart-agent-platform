@@ -20,12 +20,14 @@ import {
   DollarSign,
   Calendar,
   Search,
-  Wand2
+  Wand2,
+  Database
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -55,10 +57,18 @@ const agentFormSchema = z.object({
   description: z.string().max(500, "Description must be 500 characters or less").optional(),
   icon: z.string().default("bot"),
   category: z.string().default("general"),
+  data_sources: z.array(z.string()).default([]),
   system_prompt: z.string().max(10000, "System prompt must be 10,000 characters or less").optional(),
 });
 
 type AgentFormData = z.infer<typeof agentFormSchema>;
+
+const dataSourceOptions = [
+  { value: "property", label: "Properties", description: "Access property listings and details", icon: Home },
+  { value: "contact", label: "Contacts", description: "Access contact information and history", icon: Users },
+  { value: "document", label: "Documents", description: "Access uploaded documents", icon: FileText },
+  { value: "deal", label: "Deals", description: "Access deal/transaction data", icon: DollarSign },
+];
 
 const iconOptions = [
   { value: "bot", label: "Bot", icon: Bot },
@@ -107,6 +117,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
       description: agent?.description || "",
       icon: agent?.icon || "bot",
       category: agent?.category || "general",
+      data_sources: (agent as any)?.data_sources || [],
       system_prompt: agent?.system_prompt || "",
     },
   });
@@ -119,6 +130,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
         description: agent.description || "",
         icon: agent.icon || "bot",
         category: agent.category || "general",
+        data_sources: (agent as any)?.data_sources || [],
         system_prompt: agent.system_prompt || "",
       });
     }
@@ -202,9 +214,10 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
             description: data.description || null,
             icon: data.icon,
             category: data.category,
+            data_sources: data.data_sources || [],
             system_prompt: data.system_prompt || null,
             updated_at: new Date().toISOString(),
-          })
+          } as any)
           .eq("id", agent.id);
 
         if (error) throw error;
@@ -220,11 +233,12 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
           description: data.description || null,
           icon: data.icon,
           category: data.category,
+          data_sources: data.data_sources || [],
           system_prompt: data.system_prompt || null,
           created_by: user.id,
           is_public: false,
           is_certified: false,
-        });
+        } as any);
 
         if (error) throw error;
 
@@ -359,6 +373,64 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
                 )}
               />
             </div>
+
+            {/* Data Sources */}
+            <FormField
+              control={form.control}
+              name="data_sources"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <FormLabel>Data Sources</FormLabel>
+                  </div>
+                  <FormDescription className="mb-3">
+                    Select which data the agent can access when running
+                  </FormDescription>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {dataSourceOptions.map((option) => {
+                      const Icon = option.icon;
+                      const isChecked = field.value?.includes(option.value);
+                      return (
+                        <div
+                          key={option.value}
+                          className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                            isChecked ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
+                          }`}
+                          onClick={() => {
+                            const newValue = isChecked
+                              ? field.value.filter((v: string) => v !== option.value)
+                              : [...(field.value || []), option.value];
+                            field.onChange(newValue);
+                          }}
+                        >
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={(checked) => {
+                              const newValue = checked
+                                ? [...(field.value || []), option.value]
+                                : field.value.filter((v: string) => v !== option.value);
+                              field.onChange(newValue);
+                            }}
+                            className="mt-0.5"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium text-sm">{option.label}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {option.description}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             {/* System Prompt */}
             <FormField
