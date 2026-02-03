@@ -12,6 +12,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AgentExecutionSheet } from "@/components/agents/AgentExecutionSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useRole } from "@/contexts/RoleContext";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
@@ -40,6 +41,7 @@ export default function Agents() {
   const [selectedAgent, setSelectedAgent] = useState<AIAgent | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const { user } = useAuth();
+  const { isAdmin } = useRole();
   const queryClient = useQueryClient();
 
   // Fetch agents
@@ -181,6 +183,7 @@ export default function Agents() {
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onAgentClick={handleAgentClick}
               currentUserId={user?.id}
+              isAdmin={isAdmin}
             />
           </TabsContent>
           <TabsContent value="certified" className="mt-6">
@@ -191,6 +194,7 @@ export default function Agents() {
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onAgentClick={handleAgentClick}
               currentUserId={user?.id}
+              isAdmin={isAdmin}
             />
           </TabsContent>
           <TabsContent value="favorites" className="mt-6">
@@ -201,6 +205,7 @@ export default function Agents() {
               onToggleFavorite={(id) => toggleFavorite.mutate(id)}
               onAgentClick={handleAgentClick}
               currentUserId={user?.id}
+              isAdmin={isAdmin}
             />
           </TabsContent>
         </Tabs>
@@ -222,9 +227,10 @@ interface AgentGridProps {
   onToggleFavorite: (agentId: string) => void;
   onAgentClick: (agent: AIAgent) => void;
   currentUserId?: string;
+  isAdmin?: boolean;
 }
 
-function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAgentClick, currentUserId }: AgentGridProps) {
+function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAgentClick, currentUserId, isAdmin }: AgentGridProps) {
   const navigate = useNavigate();
   if (isLoading) {
     return (
@@ -268,6 +274,7 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
         const Icon = iconMap[iconKey] || Bot;
         const isFavorite = favoriteAgentIds.has(agent.id);
         const isOwner = currentUserId && agent.created_by === currentUserId;
+        const canEdit = isOwner || isAdmin;
         
         return (
           <Card key={agent.id} className="hover:border-primary/50 transition-colors cursor-pointer" onClick={() => onAgentClick(agent)}>
@@ -283,7 +290,7 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
                       Certified
                     </Badge>
                   )}
-                  {isOwner && (
+                  {canEdit && (
                     <Button
                       variant="ghost"
                       size="icon"
