@@ -130,8 +130,8 @@ export function DealDetailSheet({
           escrow_officer_name,
           escrow_officer_phone,
           title_policy_type,
-          contacts(id, first_name, last_name, email, phone),
-          properties(id, address, city, state, price)
+          contacts!contact_id(id, first_name, last_name, email, phone),
+          properties!property_id(id, address, city, state, price)
         `)
         .eq("id", dealId)
         .single();

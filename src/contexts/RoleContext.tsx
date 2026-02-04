@@ -24,7 +24,7 @@ const ROLE_STORAGE_KEY = "smart_agent_active_role";
 const ROLE_OVERRIDE_KEY = "smart_agent_role_override";
 
 export function RoleProvider({ children }: { children: ReactNode }) {
-  const { user, profile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
   const [baseRole, setBaseRole] = useState<AppRole>("agent");
   const [availableRoles, setAvailableRoles] = useState<AppRole[]>([]);
   const [canSwitchRoles, setCanSwitchRoles] = useState(false);
@@ -42,11 +42,22 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   // Fetch user roles when user changes
   useEffect(() => {
     const fetchRoles = async () => {
-      if (!user || !profile) {
+      // Wait for auth to finish loading before making decisions
+      if (authLoading) {
+        return; // Keep loading=true until auth is done
+      }
+      
+      // No user means no roles needed - safe to stop loading
+      if (!user) {
         setAvailableRoles([]);
         setCanSwitchRoles(false);
         setLoading(false);
         return;
+      }
+      
+      // User exists but profile not yet loaded - wait for it
+      if (!profile) {
+        return; // Keep loading=true until profile arrives
       }
 
       try {
@@ -93,7 +104,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
     };
 
     fetchRoles();
-  }, [user, profile]);
+  }, [user, profile, authLoading]);
 
   const switchRole = async (role: AppRole) => {
     if (!availableRoles.includes(role)) {

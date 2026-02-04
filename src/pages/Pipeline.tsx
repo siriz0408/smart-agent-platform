@@ -72,8 +72,8 @@ export default function Pipeline() {
           stage,
           estimated_value,
           expected_close_date,
-          contacts(first_name, last_name),
-          properties(address)
+          contacts!contact_id(first_name, last_name),
+          properties!property_id(address)
         `)
         .eq("deal_type", dealType)
         .order("created_at", { ascending: false });
