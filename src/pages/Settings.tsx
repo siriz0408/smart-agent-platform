@@ -10,13 +10,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { DataExportDialog } from "@/components/settings/DataExportDialog";
 import { KeyboardShortcutsDialog } from "@/components/settings/KeyboardShortcutsDialog";
+import { ProfileExtensions } from "@/components/settings/ProfileExtensions";
+import { PrivacySettings } from "@/components/settings/PrivacySettings";
+import { CredentialsManagement } from "@/components/settings/CredentialsManagement";
+import { SocialLinksManagement } from "@/components/settings/SocialLinksManagement";
+import { PhotoGalleryManagement } from "@/components/settings/PhotoGalleryManagement";
+import { Progress } from "@/components/ui/progress";
 
 export default function Settings() {
   const { user, profile } = useAuth();
   const { preferences, updatePreference } = useUserPreferences();
+  const { data: profileCompletion } = useProfileCompletion();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
@@ -32,7 +40,22 @@ export default function Settings() {
       <div className="p-4 md:p-6 max-w-4xl">
         {/* Header */}
         <div className="mb-4 md:mb-6">
-          <h1 className="text-xl sm:text-2xl font-semibold">Settings</h1>
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-xl sm:text-2xl font-semibold">Settings</h1>
+            {profileCompletion && (
+              <div className="text-sm text-muted-foreground">
+                Profile {profileCompletion.percentage}% complete
+              </div>
+            )}
+          </div>
+          {profileCompletion && profileCompletion.percentage < 80 && (
+            <div className="mb-2">
+              <Progress value={profileCompletion.percentage} className="h-2" />
+              <p className="text-xs text-muted-foreground mt-1">
+                Complete your profile to unlock all features
+              </p>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground">
             Manage your account and preferences
           </p>
@@ -203,6 +226,21 @@ export default function Settings() {
             open={isShortcutsOpen}
             onOpenChange={setIsShortcutsOpen}
           />
+
+          {/* Professional Profile Extensions */}
+          <ProfileExtensions />
+
+          {/* Credentials & Certifications */}
+          <CredentialsManagement />
+
+          {/* Social Media Links */}
+          <SocialLinksManagement />
+
+          {/* Photo Gallery */}
+          <PhotoGalleryManagement />
+
+          {/* Privacy Settings */}
+          <PrivacySettings />
 
           <div className="grid gap-4 md:grid-cols-2">
             <Link to="/settings/billing">
