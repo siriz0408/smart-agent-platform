@@ -12,6 +12,40 @@ export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
+  // Structured data for Contact page
+  const contactSchema = {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contact Smart Agent",
+    "description": "Get in touch with Smart Agent for support, sales inquiries, or general questions about our AI-powered real estate platform.",
+    "datePublished": "2026-02-04",
+    "dateModified": "2026-02-04",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Smart Agent",
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "telephone": "+1-800-762-7824",
+          "contactType": "Customer Support",
+          "areaServed": "US",
+          "availableLanguage": "English",
+          "hoursAvailable": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "opens": "09:00",
+            "closes": "21:00"
+          }
+        },
+        {
+          "@type": "ContactPoint",
+          "email": "support@smartagent.ai",
+          "contactType": "Customer Support"
+        }
+      ]
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -30,6 +64,11 @@ export default function Contact() {
   return (
     <AppLayout>
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(contactSchema) }}
+        />
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center space-y-4">

@@ -6,6 +6,25 @@ export default function About() {
   return (
     <AppLayout>
       <main className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Structured Data */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "AboutPage",
+              "name": "About Smart Agent",
+              "description": "Learn about Smart Agent's mission to revolutionize how real estate professionals manage documents, relationships, and deals with AI-powered technology.",
+              "datePublished": "2026-02-04",
+              "dateModified": "2026-02-04",
+              "publisher": {
+                "@type": "Organization",
+                "name": "Smart Agent",
+                "url": "https://smart-agent-platform-jt2xuthgb-sams-projects-2a2b7e20.vercel.app"
+              }
+            })
+          }}
+        />
         <div className="space-y-8">
           {/* Hero Section */}
           <div className="text-center space-y-4">
