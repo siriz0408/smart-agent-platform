@@ -20,6 +20,8 @@ import AgentEdit from "./pages/AgentEdit";
 import ActionQueue from "./pages/ActionQueue";
 import AdminAgents from "./pages/AdminAgents";
 import AdminAgentEdit from "./pages/AdminAgentEdit";
+import AdminTeammates from "./pages/AdminTeammates";
+import AdminDataSources from "./pages/AdminDataSources";
 import Contacts from "./pages/Contacts";
 import ContactDetail from "./pages/ContactDetail";
 import Pipeline from "./pages/Pipeline";
@@ -110,6 +112,22 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                     <AdminAgentEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/teammates"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <AdminTeammates />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/data-sources"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <AdminDataSources />
                   </ProtectedRoute>
                 }
               />
