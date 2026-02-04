@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2, Upload } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { PresenceDot } from "@/components/messages/PresenceDot";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -319,12 +320,15 @@ export default function Contacts() {
                 >
                   <CardContent className="p-4">
                     <div className="flex items-start gap-3">
-                      <Avatar className="h-12 w-12 flex-shrink-0">
-                        <AvatarFallback className="bg-primary/10 text-primary text-lg">
-                          {contact.first_name[0]}
-                          {contact.last_name[0]}
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="h-12 w-12 flex-shrink-0">
+                          <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                            {contact.first_name[0]}
+                            {contact.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <ContactPresence userId={contact.user_id} />
+                      </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
@@ -461,12 +465,15 @@ export default function Contacts() {
                   <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
                     <TableCell onClick={() => handleViewDetails(contact)}>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9">
-                          <AvatarFallback className="bg-primary/10 text-primary">
-                            {contact.first_name[0]}
-                            {contact.last_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {contact.first_name[0]}
+                              {contact.last_name[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          <ContactPresence userId={contact.user_id} />
+                        </div>
                         <div>
                           <div className="font-medium">
                             {contact.first_name} {contact.last_name}
@@ -610,5 +617,31 @@ export default function Contacts() {
         />
       </div>
     </AppLayout>
+  );
+}
+
+// Helper component to show presence for a contact
+function ContactPresence({ userId }: { userId: string | null }) {
+  const { data: presence } = useQuery({
+    queryKey: ["presence", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data } = await supabase
+        .from("user_presence")
+        .select("status")
+        .eq("user_id", userId)
+        .single();
+      return data;
+    },
+    enabled: !!userId,
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  if (!presence) return null;
+
+  return (
+    <div className="absolute bottom-0 right-0">
+      <PresenceDot status={presence.status} showPulse={true} />
+    </div>
   );
 }
