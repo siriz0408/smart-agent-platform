@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
+import { checkRateLimit, rateLimitResponse, AGENT_EXECUTION_LIMITS } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -77,6 +78,12 @@ serve(async (req) => {
     }
 
     const tenantId = profile.tenant_id;
+
+    // Apply rate limiting per user
+    const rateLimitResult = checkRateLimit(userId, AGENT_EXECUTION_LIMITS);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
 
     // Check usage limits first
     const { data: usageData } = await serviceClient.rpc("check_and_increment_ai_usage", {

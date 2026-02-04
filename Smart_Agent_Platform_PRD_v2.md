@@ -100,12 +100,12 @@ A dedicated table tracks indexing progress with batch processing:
 - Supports retry on failure
 - Progress bars displayed in UI
 
-### 7. AI Model: Lovable Gateway
+### 7. AI Model: Anthropic Claude API
 
-The system uses the Lovable AI Gateway instead of direct OpenAI calls:
-- **Endpoint:** `https://api.anthropic.com/v1/chat/completions`
-- **Model:** `google/gemini-3-flash-preview`
-- **Auth:** `ANTHROPIC_API_KEY` environment variable
+The system uses Anthropic's Claude API for AI operations:
+- **Endpoint:** `https://api.anthropic.com/v1/messages`
+- **Model:** `claude-sonnet-4-20250514`
+- **Auth:** `ANTHROPIC_API_KEY` environment variable (server-side only)
 
 ---
 
@@ -826,7 +826,7 @@ Estimated: 8-12 sprints
 - [x] Basic user profiles (Agent, Buyer, Seller roles)
 - [x] Simple property listing CRUD (complete - full view/edit/delete)
 - [x] Basic property search (not NLP yet)
-- [x] Basic AI chat interface (using Lovable AI Gateway)
+- [x] Basic AI chat interface (using Anthropic Claude API)
 - [x] Document upload and storage
 - [x] Stripe subscription setup (Free + Starter tiers)
 - [x] Basic UI shell with navigation

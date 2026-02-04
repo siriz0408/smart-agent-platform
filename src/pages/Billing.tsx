@@ -170,16 +170,16 @@ export default function Billing() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">Billing & Subscription</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-semibold">Billing & Subscription</h1>
+            <p className="text-sm text-muted-foreground">
               Manage your subscription and view usage
             </p>
           </div>
-          <Button variant="outline" asChild>
+          <Button variant="outline" size="sm" asChild className="w-full sm:w-auto">
             <Link to="/settings">Back to Settings</Link>
           </Button>
         </div>
@@ -293,7 +293,7 @@ export default function Billing() {
         {/* Plans */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Available Plans</h2>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
             {plans.map((plan) => {
               const isCurrent = plan.id === currentPlan;
               const isUpgrading = upgradeLoading === plan.id;

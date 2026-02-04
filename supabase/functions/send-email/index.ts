@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getEmailTemplate } from "../_shared/email-templates.ts";
 import { logger } from "../_shared/logger.ts";
+import { checkRateLimit, rateLimitResponse, EMAIL_LIMITS } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,6 +65,14 @@ serve(async (req) => {
 
     if (recipientError || !recipient) {
       throw new Error("Recipient not found");
+    }
+
+    // Apply rate limiting per tenant
+    if (recipient.tenant_id) {
+      const rateLimitResult = checkRateLimit(recipient.tenant_id, EMAIL_LIMITS);
+      if (!rateLimitResult.allowed) {
+        return rateLimitResponse(rateLimitResult);
+      }
     }
 
     // Get recipient email from auth

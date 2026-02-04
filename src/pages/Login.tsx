@@ -154,6 +154,11 @@ export default function Login() {
                 Sign up
               </Link>
             </p>
+            <p className="text-center text-xs text-muted-foreground">
+              <Link to="/terms" className="hover:underline">Terms of Service</Link>
+              {" · "}
+              <Link to="/privacy" className="hover:underline">Privacy Policy</Link>
+            </p>
           </CardFooter>
         </form>
       </Card>

@@ -1,0 +1,45 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)"/>
+  
+  <!-- Subtle pattern -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f172a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e293b;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8b5cf6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Decorative circles -->
+  <circle cx="1100" cy="100" r="200" fill="#3b82f6" opacity="0.1"/>
+  <circle cx="100" cy="530" r="150" fill="#8b5cf6" opacity="0.1"/>
+  
+  <!-- Logo circle -->
+  <circle cx="600" cy="200" r="70" fill="url(#accent-gradient)"/>
+  
+  <!-- Bot icon (simplified) -->
+  <rect x="570" y="175" width="60" height="40" rx="8" fill="white"/>
+  <circle cx="585" cy="195" r="6" fill="#3b82f6"/>
+  <circle cx="615" cy="195" r="6" fill="#3b82f6"/>
+  <rect x="580" y="208" width="40" height="4" rx="2" fill="#3b82f6"/>
+  
+  <!-- Main text -->
+  <text x="600" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="72" font-weight="700" fill="white" text-anchor="middle">Smart Agent</text>
+  
+  <!-- Tagline -->
+  <text x="600" y="390" font-family="system-ui, -apple-system, sans-serif" font-size="28" fill="#94a3b8" text-anchor="middle">AI-Powered Real Estate CRM</text>
+  
+  <!-- Features -->
+  <text x="600" y="470" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#64748b" text-anchor="middle">Document Intelligence " AI Chat " Pipeline Management</text>
+  
+  <!-- Accent line -->
+  <rect x="450" y="420" width="300" height="4" rx="2" fill="url(#accent-gradient)"/>
+  
+  <!-- Data ownership badge -->
+  <rect x="480" y="520" width="240" height="40" rx="20" fill="#22c55e" opacity="0.2"/>
+  <text x="600" y="547" font-family="system-ui, -apple-system, sans-serif" font-size="16" font-weight="600" fill="#22c55e" text-anchor="middle">Your Data, Your Property</text>
+</svg>

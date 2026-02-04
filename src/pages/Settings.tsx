@@ -29,47 +29,48 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <div className="p-6 max-w-4xl">
+      <div className="p-4 md:p-6 max-w-4xl">
         {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <p className="text-muted-foreground">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-xl sm:text-2xl font-semibold">Settings</h1>
+          <p className="text-sm text-muted-foreground">
             Manage your account and preferences
           </p>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {/* Profile Section */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
                 <User className="h-5 w-5" />
                 Profile
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs sm:text-sm">
                 Your personal information and account details
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center gap-4">
-                <Avatar className="h-16 w-16">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
                   <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-xl">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-lg sm:text-xl">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div>
-                  <div className="font-medium text-lg">
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-base sm:text-lg truncate">
                     {profile?.full_name || "User"}
                   </div>
-                  <div className="text-muted-foreground">{user?.email}</div>
+                  <div className="text-sm text-muted-foreground truncate">{user?.email}</div>
                   {profile?.title && (
-                    <div className="text-sm text-muted-foreground">{profile.title}</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground truncate">{profile.title}</div>
                   )}
                 </div>
                 <Button
                   variant="outline"
-                  className="ml-auto"
+                  size="sm"
+                  className="w-full sm:w-auto mt-2 sm:mt-0"
                   onClick={() => setIsEditProfileOpen(true)}
                 >
                   Edit Profile

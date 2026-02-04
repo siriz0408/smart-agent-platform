@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2 } from "lucide-react";
+import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2, Upload } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { CreateContactDialog } from "@/components/contacts/CreateContactDialog";
 import { ContactDetailSheet } from "@/components/contacts/ContactDetailSheet";
 import { AddToPipelineDialog } from "@/components/contacts/AddToPipelineDialog";
+import { ImportContactsDialog } from "@/components/contacts/ImportContactsDialog";
 import { useConversation } from "@/hooks/useConversation";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
@@ -64,6 +65,7 @@ export default function Contacts() {
   const [detailSheetTab, setDetailSheetTab] = useState<"details" | "edit">("details");
   const [isPipelineDialogOpen, setIsPipelineDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -195,7 +197,7 @@ export default function Contacts() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
@@ -204,10 +206,18 @@ export default function Contacts() {
               Manage your clients, leads, and business contacts
             </p>
           </div>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Contact
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+              <Upload className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Import CSV</span>
+              <span className="sm:hidden">Import</span>
+            </Button>
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Add Contact</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </div>
 
         <CreateContactDialog
@@ -592,6 +602,12 @@ export default function Contacts() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Import Contacts Dialog */}
+        <ImportContactsDialog
+          open={isImportDialogOpen}
+          onOpenChange={setIsImportDialogOpen}
+        />
       </div>
     </AppLayout>
   );

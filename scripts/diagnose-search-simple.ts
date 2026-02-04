@@ -4,6 +4,15 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Type for search results
+interface SearchResult {
+  entity_type: string;
+  name: string;
+  similarity?: number;
+  text_rank?: number;
+  rrf_score?: number;
+}
+
 const SUPABASE_URL = 'https://sthnezuadfbmbqlxiwtq.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -117,7 +126,7 @@ async function diagnoseSearch() {
 
     if (rpcResults && rpcResults.length > 0) {
       console.log('\n   Top results:');
-      rpcResults.slice(0, 5).forEach((r: any, i: number) => {
+      rpcResults.slice(0, 5).forEach((r: SearchResult, i: number) => {
         console.log(`\n   ${i + 1}. ${r.name} (${r.entity_type})`);
         console.log(`      Similarity: ${r.similarity}`);
         console.log(`      Text Rank: ${r.text_rank}`);

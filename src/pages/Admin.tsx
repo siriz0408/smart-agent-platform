@@ -38,22 +38,22 @@ export default function Admin() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-semibold">Admin Console</h1>
-            <p className="text-muted-foreground">
-              Manage your team, data sources, and platform settings
+            <h1 className="text-xl sm:text-2xl font-semibold">Admin Console</h1>
+            <p className="text-sm text-muted-foreground">
+              Manage your team, data sources, and settings
             </p>
           </div>
-          <Badge className="bg-purple-600 text-white border-0">
+          <Badge className="bg-purple-600 text-white border-0 w-fit">
             {actualAdminRole === 'super_admin' ? 'Super Admin' : 'Admin'}
           </Badge>
         </div>
 
         {/* Quick Links */}
-        <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-5">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           <Link to="/admin/teammates">
             <Card className="cursor-pointer hover:border-primary/50 transition-colors">
               <CardContent className="p-4 flex items-center gap-3">
@@ -134,15 +134,15 @@ export default function Admin() {
 
         {/* Data Sources Section */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h2 className="text-lg font-semibold">Connected Data Sources</h2>
-            <Button variant="outline">
+            <Button variant="outline" size="sm" className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Source
             </Button>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-3">
             {dataSources.map((source) => (
               <Card key={source.id} className="hover:border-primary/50 transition-colors">
                 <CardHeader className="pb-3">
@@ -188,23 +188,23 @@ export default function Admin() {
         {/* Team Stats */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold">Team Overview</h2>
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-3 grid-cols-3">
             <Card>
-              <CardContent className="p-6">
-                <div className="text-3xl font-semibold">5</div>
-                <div className="text-sm text-muted-foreground">Team Members</div>
+              <CardContent className="p-4 md:p-6">
+                <div className="text-2xl md:text-3xl font-semibold">5</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Team Members</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-6">
-                <div className="text-3xl font-semibold">3</div>
-                <div className="text-sm text-muted-foreground">Active Agents</div>
+              <CardContent className="p-4 md:p-6">
+                <div className="text-2xl md:text-3xl font-semibold">3</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Active Agents</div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-6">
-                <div className="text-3xl font-semibold">1,250</div>
-                <div className="text-sm text-muted-foreground">AI Queries This Month</div>
+              <CardContent className="p-4 md:p-6">
+                <div className="text-2xl md:text-3xl font-semibold">1,250</div>
+                <div className="text-xs md:text-sm text-muted-foreground">AI Queries</div>
               </CardContent>
             </Card>
           </div>

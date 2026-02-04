@@ -10,15 +10,17 @@ type AppRole = Database["public"]["Enums"]["app_role"];
 interface ProtectedRouteProps {
   children: ReactNode;
   allowExpiredTrial?: boolean;
-  requiredRoles?: AppRole[];  // NEW: Role-based access control
+  requiredRoles?: AppRole[];  // Role-based access control
+  skipOnboardingCheck?: boolean; // Skip onboarding redirect (for onboarding page itself)
 }
 
 export function ProtectedRoute({
   children,
   allowExpiredTrial = false,
-  requiredRoles
+  requiredRoles,
+  skipOnboardingCheck = false
 }: ProtectedRouteProps) {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const { activeRole, availableRoles, loading: roleLoading } = useRole();
   const { isTrialExpired, isLoading: subscriptionLoading } = useSubscription();
   const location = useLocation();
@@ -33,6 +35,16 @@ export function ProtectedRoute({
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  // Onboarding check - redirect new users to onboarding
+  // Skip this check for the onboarding page itself and certain settings paths
+  const onboardingExemptPaths = ["/onboarding", "/settings", "/logout"];
+  const isOnboardingExempt = skipOnboardingCheck || 
+    onboardingExemptPaths.some(path => location.pathname.startsWith(path));
+  
+  if (!isOnboardingExempt && profile && profile.onboarding_completed === false) {
+    return <Navigate to="/onboarding" replace />;
   }
 
   // Role-based access control
@@ -50,7 +62,7 @@ export function ProtectedRoute({
   }
 
   // Allow access to billing and trial-expired pages even when trial is expired
-  const allowedPaths = ["/billing", "/trial-expired", "/settings/billing"];
+  const allowedPaths = ["/billing", "/trial-expired", "/settings/billing", "/onboarding"];
   const isAllowedPath = allowedPaths.some(path => location.pathname.startsWith(path));
 
   // Redirect to trial-expired page if trial has expired (unless allowed)

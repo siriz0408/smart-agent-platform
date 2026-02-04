@@ -6,6 +6,15 @@
 
 import { createClient } from '@supabase/supabase-js';
 
+// Type for search results
+interface SearchResult {
+  entity_type: string;
+  name: string;
+  similarity?: number;
+  text_rank?: number;
+  rrf_score?: number;
+}
+
 const SUPABASE_URL = 'https://sthnezuadfbmbqlxiwtq.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0aG5lenVhZGZibWJxbHhpd3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTQ3MjksImV4cCI6MjA1MTQzMDcyOX0.Ct7dL5Sl_rHBZXfHI-xXMlKNwcPY8Oj2xdCjBdqWgNw';
 
@@ -100,7 +109,7 @@ async function testSearch() {
   } else {
     console.log(`✅ RPC returned ${rpcResults?.length || 0} results`);
     if (rpcResults && rpcResults.length > 0) {
-      rpcResults.slice(0, 3).forEach((r: any, i: number) => {
+      rpcResults.slice(0, 3).forEach((r: SearchResult, i: number) => {
         console.log(`   ${i + 1}. ${r.name} (${r.entity_type})`);
         console.log(`      Similarity: ${r.similarity}`);
         console.log(`      Text Rank: ${r.text_rank}`);
@@ -138,7 +147,7 @@ async function testSearch() {
       const data = await response.json();
       console.log(`✅ Edge function returned ${data.count} results`);
       if (data.results && data.results.length > 0) {
-        data.results.slice(0, 3).forEach((r: any, i: number) => {
+        data.results.slice(0, 3).forEach((r: SearchResult, i: number) => {
           console.log(`   ${i + 1}. ${r.name} (${r.entity_type})`);
         });
       }

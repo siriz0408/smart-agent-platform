@@ -50,7 +50,7 @@ export default function SearchResults() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
+    <div className="container mx-auto p-4 md:p-6 max-w-6xl">
       {/* Search Header */}
       <div className="mb-8 space-y-4">
         <h1 className="text-3xl font-bold">Search Results</h1>

@@ -73,10 +73,10 @@ export default function MyListing() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">My Listing</h1>
-          <p className="text-muted-foreground mt-1">View and manage your property listing</p>
+      <div className="container mx-auto p-4 md:p-6">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">My Listing</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">View and manage your property listing</p>
         </div>
 
           {isLoading && (
@@ -147,26 +147,26 @@ export default function MyListing() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-4 gap-4 py-4 border-y">
+                    <div className="grid grid-cols-4 gap-2 md:gap-4 py-4 border-y">
                       <div className="text-center">
-                        <Bed className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                        <p className="text-2xl font-bold">{property.bedrooms || "-"}</p>
-                        <p className="text-sm text-muted-foreground">Beds</p>
+                        <Bed className="h-5 w-5 md:h-6 md:w-6 mx-auto text-muted-foreground mb-1" />
+                        <p className="text-lg md:text-2xl font-bold">{property.bedrooms || "-"}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Beds</p>
                       </div>
                       <div className="text-center">
-                        <Bath className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                        <p className="text-2xl font-bold">{property.bathrooms || "-"}</p>
-                        <p className="text-sm text-muted-foreground">Baths</p>
+                        <Bath className="h-5 w-5 md:h-6 md:w-6 mx-auto text-muted-foreground mb-1" />
+                        <p className="text-lg md:text-2xl font-bold">{property.bathrooms || "-"}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Baths</p>
                       </div>
                       <div className="text-center">
-                        <Square className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                        <p className="text-2xl font-bold">{property.square_feet?.toLocaleString() || "-"}</p>
-                        <p className="text-sm text-muted-foreground">Sq Ft</p>
+                        <Square className="h-5 w-5 md:h-6 md:w-6 mx-auto text-muted-foreground mb-1" />
+                        <p className="text-lg md:text-2xl font-bold">{property.square_feet?.toLocaleString() || "-"}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Sq Ft</p>
                       </div>
                       <div className="text-center">
-                        <Calendar className="h-6 w-6 mx-auto text-muted-foreground mb-1" />
-                        <p className="text-2xl font-bold">{property.year_built || "-"}</p>
-                        <p className="text-sm text-muted-foreground">Built</p>
+                        <Calendar className="h-5 w-5 md:h-6 md:w-6 mx-auto text-muted-foreground mb-1" />
+                        <p className="text-lg md:text-2xl font-bold">{property.year_built || "-"}</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Built</p>
                       </div>
                     </div>
 

@@ -20,6 +20,10 @@ dist-ssr
 # Vercel
 .vercel
 
+# Test artifacts - sensitive traces (keep reports)
+test-artifacts/playwright-output/
+test-artifacts/.playwright-artifacts*/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -31,3 +35,7 @@ dist-ssr
 *.sln
 *.sw?
 .env*.local
+
+# Capacitor native projects (regenerated from web)
+ios/
+android/

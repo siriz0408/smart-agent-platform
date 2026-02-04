@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login } from './auth.spec';
+import { login, navigateTo } from './fixtures/helpers';
 
 /**
  * Properties Tests - P0/P1
@@ -9,8 +9,8 @@ import { login } from './auth.spec';
 test.describe('Properties', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByRole('link', { name: /properties/i }).click();
-    await page.waitForLoadState('networkidle');
+    await navigateTo(page, /properties/i, 'properties');
+    await expect(page.getByRole('button', { name: /add property/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display properties list', async ({ page }) => {

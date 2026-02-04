@@ -69,7 +69,7 @@ export default function TrialExpired() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 md:p-6">
       <div className="max-w-4xl w-full text-center space-y-6">
         {/* Header */}
         <div className="space-y-2">

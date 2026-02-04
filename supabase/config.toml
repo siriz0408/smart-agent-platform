@@ -27,9 +27,6 @@ verify_jwt = false
 [functions.execute-agent]
 verify_jwt = false
 
-[functions.create-test-users]
-verify_jwt = false
-
 [functions.zillow-search]
 verify_jwt = false
 
@@ -58,4 +55,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.send-invite]
+verify_jwt = false
+
+[functions.send-drip-email]
 verify_jwt = false

@@ -3,6 +3,12 @@
  */
 import { createClient } from "npm:@supabase/supabase-js@2";
 
+// Type for search results
+interface SearchResult {
+  entity_type: string;
+  name: string;
+}
+
 const supabaseUrl = "https://sthnezuadfbmbqlxiwtq.supabase.co";
 const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -77,7 +83,7 @@ if (profileError) {
     console.log(`✅ RPC returned ${searchResults?.length || 0} results`);
     if (searchResults && searchResults.length > 0) {
       console.log("   Sample results:");
-      searchResults.slice(0, 3).forEach((r: any) => {
+      searchResults.slice(0, 3).forEach((r: SearchResult) => {
         console.log(`   - ${r.name} (${r.entity_type})`);
       });
     }

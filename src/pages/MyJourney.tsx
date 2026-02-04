@@ -102,10 +102,10 @@ export default function MyJourney() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">My {isBuyer ? "Buying" : "Selling"} Journey</h1>
-          <p className="text-muted-foreground mt-1">
+      <div className="container mx-auto p-4 md:p-6">
+        <div className="mb-4 md:mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold">My {isBuyer ? "Buying" : "Selling"} Journey</h1>
+          <p className="text-sm md:text-base text-muted-foreground mt-1">
             Track your progress through the {isBuyer ? "home buying" : "home selling"} process
           </p>
         </div>
@@ -140,13 +140,13 @@ export default function MyJourney() {
           )}
 
           {deal && (
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Property Summary */}
               {property && (
                 <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden shrink-0">
+                  <CardContent className="p-3 md:p-4">
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <div className="w-20 h-20 md:w-24 md:h-24 bg-muted rounded-lg overflow-hidden shrink-0">
                         {property.photos && property.photos.length > 0 ? (
                           <img
                             src={property.photos[0]}
@@ -155,17 +155,17 @@ export default function MyJourney() {
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
-                            <MapPin className="h-8 w-8 text-muted-foreground" />
+                            <MapPin className="h-6 w-6 md:h-8 md:w-8 text-muted-foreground" />
                           </div>
                         )}
                       </div>
-                      <div>
-                        <h3 className="font-semibold">{property.address}</h3>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-semibold text-sm md:text-base truncate">{property.address}</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground truncate">
                           {property.city}, {property.state} {property.zip_code}
                         </p>
                         {property.price && (
-                          <p className="text-lg font-bold text-primary mt-1">
+                          <p className="text-base md:text-lg font-bold text-primary mt-1">
                             {new Intl.NumberFormat("en-US", {
                               style: "currency",
                               currency: "USD",

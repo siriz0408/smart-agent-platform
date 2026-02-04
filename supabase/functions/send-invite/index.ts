@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
+import { checkRateLimit, rateLimitResponse, EMAIL_LIMITS } from "../_shared/rateLimit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,6 +60,13 @@ serve(async (req: Request): Promise<Response> => {
       .single();
 
     const senderName = senderProfile?.full_name || senderProfile?.email || "A team member";
+
+    // Apply rate limiting per user
+    const userId = claimsData.claims.sub as string;
+    const rateLimitResult = checkRateLimit(userId, EMAIL_LIMITS);
+    if (!rateLimitResult.allowed) {
+      return rateLimitResponse(rateLimitResult);
+    }
 
     const { contactId, contactEmail, contactName }: InviteRequest = await req.json();
 

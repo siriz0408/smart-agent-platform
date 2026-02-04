@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { login } from './auth.spec';
+import { login, navigateTo } from './fixtures/helpers';
 
 /**
  * Deals/Pipeline Tests - P0/P1
@@ -9,8 +9,8 @@ import { login } from './auth.spec';
 test.describe('Deals Pipeline', () => {
   test.beforeEach(async ({ page }) => {
     await login(page);
-    await page.getByRole('link', { name: /pipeline/i }).click();
-    await page.waitForLoadState('networkidle');
+    await navigateTo(page, /pipeline/i, 'pipeline');
+    await expect(page.getByRole('button', { name: /add deal/i })).toBeVisible({ timeout: 10000 });
   });
 
   test('should display pipeline view', async ({ page }) => {

@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, LayoutGrid, List } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -59,7 +59,22 @@ export default function Pipeline() {
   const [movingDealId, setMovingDealId] = useState<string | null>(null);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
+  const [isMobileView, setIsMobileView] = useState(false);
+  const [viewMode, setViewMode] = useState<"auto" | "list" | "kanban">("auto");
   const queryClient = useQueryClient();
+
+  // Detect mobile screen size
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  // Determine if we should use mobile accordion layout
+  const useMobileLayout = viewMode === "list" || (viewMode === "auto" && isMobileView);
 
   const { data: deals = [], isLoading } = useQuery({
     queryKey: ["deals", dealType],
@@ -177,21 +192,45 @@ export default function Pipeline() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 h-full flex flex-col">
+      <div className="p-4 md:p-6 space-y-4 md:space-y-6 h-full flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">
+            <h1 className="text-xl sm:text-2xl font-semibold">
               {type === "sellers" ? "Seller" : "Buyer"} Pipeline
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm text-muted-foreground">
               Track and manage your {type === "sellers" ? "listing" : "buyer"} deals
             </p>
           </div>
-          <Button onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Add Deal
-          </Button>
+          <div className="flex items-center gap-2">
+            {/* View toggle - only show on larger screens */}
+            <div className="hidden sm:flex border rounded-lg p-0.5">
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setViewMode(viewMode === "list" ? "auto" : "list")}
+                title="List view"
+              >
+                <List className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "kanban" ? "secondary" : "ghost"}
+                size="sm"
+                className="h-8 px-2"
+                onClick={() => setViewMode(viewMode === "kanban" ? "auto" : "kanban")}
+                title="Kanban view"
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+            </div>
+            <Button onClick={() => setDialogOpen(true)} size="sm" className="h-9">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Add Deal</span>
+              <span className="sm:hidden">Add</span>
+            </Button>
+          </div>
         </div>
 
         <CreateDealDialog
@@ -209,16 +248,16 @@ export default function Pipeline() {
 
         {/* Pipeline Tabs */}
         <Tabs defaultValue={type} className="flex-1 flex flex-col">
-          <div className="flex items-center justify-between">
-            <TabsList>
-              <TabsTrigger value="buyers" asChild>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="buyers" asChild className="flex-1 sm:flex-initial">
                 <Link to="/pipeline/buyers">Buyers</Link>
               </TabsTrigger>
-              <TabsTrigger value="sellers" asChild>
+              <TabsTrigger value="sellers" asChild className="flex-1 sm:flex-initial">
                 <Link to="/pipeline/sellers">Sellers</Link>
               </TabsTrigger>
             </TabsList>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-sm text-muted-foreground text-center sm:text-right">
               Pipeline Value:{" "}
               <span className="font-semibold text-foreground">
                 ${totalValue.toLocaleString()}
@@ -226,23 +265,46 @@ export default function Pipeline() {
             </div>
           </div>
 
-          <TabsContent value={type} className="flex-1 mt-6">
-            {/* Kanban Board */}
-            <div className="flex gap-4 h-full overflow-x-auto pb-4">
-              {stages.map((stage) => (
-                <StageColumn
-                  key={stage.id}
-                  stage={stage}
-                  deals={getDealsByStage(stage.id)}
-                  allStages={stages}
-                  isLoading={isLoading}
-                  movingDealId={movingDealId}
-                  onMoveToStage={handleMoveToStage}
-                  onOpenDetail={handleOpenDetail}
-                  milestoneIndicators={milestoneIndicators}
-                />
-              ))}
-            </div>
+          <TabsContent value={type} className="flex-1 mt-4 md:mt-6">
+            {/* Pipeline Board - Responsive layout */}
+            {useMobileLayout ? (
+              // Mobile: Accordion/List view
+              <div className="space-y-2">
+                {stages.map((stage, index) => (
+                  <StageColumn
+                    key={stage.id}
+                    stage={stage}
+                    deals={getDealsByStage(stage.id)}
+                    allStages={stages}
+                    isLoading={isLoading}
+                    movingDealId={movingDealId}
+                    onMoveToStage={handleMoveToStage}
+                    onOpenDetail={handleOpenDetail}
+                    milestoneIndicators={milestoneIndicators}
+                    isMobileView={true}
+                    defaultOpen={index === 0} // First stage open by default
+                  />
+                ))}
+              </div>
+            ) : (
+              // Desktop: Kanban Board
+              <div className="flex gap-4 h-full overflow-x-auto pb-4">
+                {stages.map((stage) => (
+                  <StageColumn
+                    key={stage.id}
+                    stage={stage}
+                    deals={getDealsByStage(stage.id)}
+                    allStages={stages}
+                    isLoading={isLoading}
+                    movingDealId={movingDealId}
+                    onMoveToStage={handleMoveToStage}
+                    onOpenDetail={handleOpenDetail}
+                    milestoneIndicators={milestoneIndicators}
+                    isMobileView={false}
+                  />
+                ))}
+              </div>
+            )}
           </TabsContent>
         </Tabs>
       </div>

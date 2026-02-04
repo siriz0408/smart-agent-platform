@@ -1,5 +1,14 @@
 import { createClient } from '@supabase/supabase-js';
 
+// Type for search results
+interface SearchResult {
+  entity_type: string;
+  name: string;
+  similarity?: number;
+  text_rank?: number;
+  rrf_score?: number;
+}
+
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -62,7 +71,7 @@ async function testSearchAPI() {
 
   if (results && results.length > 0) {
     console.log('\n   Results:');
-    results.forEach((r: any, i: number) => {
+    results.forEach((r: SearchResult, i: number) => {
       console.log(`   ${i + 1}. [${r.entity_type}] ${r.name}`);
       console.log(`      Similarity: ${r.similarity?.toFixed(4) || 'N/A'}`);
       console.log(`      Text rank: ${r.text_rank?.toFixed(4) || 'N/A'}`);

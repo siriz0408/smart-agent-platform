@@ -47,7 +47,7 @@ export default function ContactDetail() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 md:p-6">
         <div className="flex items-center justify-center min-h-[400px]">
           <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
@@ -57,7 +57,7 @@ export default function ContactDetail() {
 
   if (error || !contact) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 md:p-6">
         <div className="flex flex-col items-center justify-center min-h-[400px] space-y-4">
           <div className="text-center space-y-2">
             <h2 className="text-2xl font-semibold">Contact Not Found</h2>

@@ -4,6 +4,7 @@ import { Bot, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -14,6 +15,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
@@ -28,6 +30,16 @@ export default function Signup() {
         variant: "destructive",
         title: "Password too short",
         description: "Password must be at least 6 characters.",
+      });
+      setLoading(false);
+      return;
+    }
+
+    if (!acceptedTerms) {
+      toast({
+        variant: "destructive",
+        title: "Terms required",
+        description: "Please accept the Terms of Service to continue.",
       });
       setLoading(false);
       return;
@@ -119,9 +131,27 @@ export default function Signup() {
                 Must be at least 6 characters
               </p>
             </div>
+            <div className="flex items-start space-x-2">
+              <Checkbox
+                id="terms"
+                checked={acceptedTerms}
+                onCheckedChange={(checked) => setAcceptedTerms(checked === true)}
+                className="mt-1"
+              />
+              <Label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
+                I agree to the{" "}
+                <Link to="/terms" className="text-primary hover:underline" target="_blank">
+                  Terms of Service
+                </Link>
+                {" "}and{" "}
+                <Link to="/privacy" className="text-primary hover:underline" target="_blank">
+                  Privacy Policy
+                </Link>
+              </Label>
+            </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !acceptedTerms}>
               {loading ? "Creating account..." : "Create account"}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
@@ -129,6 +159,11 @@ export default function Signup() {
               <Link to="/login" className="font-medium text-primary hover:underline">
                 Sign in
               </Link>
+            </p>
+            <p className="text-center text-xs text-muted-foreground">
+              <Link to="/terms" className="hover:underline">Terms of Service</Link>
+              {" · "}
+              <Link to="/privacy" className="hover:underline">Privacy Policy</Link>
             </p>
           </CardFooter>
         </form>

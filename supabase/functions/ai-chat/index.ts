@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { convertAnthropicStreamToOpenAI } from "../_shared/stream-converter.ts";
+import { checkRateLimit, rateLimitResponse, AI_CHAT_LIMITS } from "../_shared/rateLimit.ts";
 
 // ====================================================================
 // CORS HEADERS
@@ -1461,6 +1462,12 @@ serve(async (req) => {
           .single();
           
         tenantId = profile?.tenant_id || null;
+        
+        // Apply rate limiting per user
+        const rateLimitResult = checkRateLimit(userId, AI_CHAT_LIMITS);
+        if (!rateLimitResult.allowed) {
+          return rateLimitResponse(rateLimitResult);
+        }
       }
     }
 

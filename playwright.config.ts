@@ -35,17 +35,14 @@ export default defineConfig({
       name: 'mobile-chrome',
       use: { ...devices['Pixel 5'] },
     },
-    {
-      name: 'mobile-safari',
-      use: { ...devices['iPhone 13'] },
-    },
+    // Note: mobile-safari requires webkit browser install: npx playwright install webkit
   ],
 
   // Run local dev server before tests
   webServer: {
-    command: 'npm run dev',
+    command: 'npm run dev -- --port 8081',
     url: 'http://localhost:8081',
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
     timeout: 120 * 1000,
   },
 

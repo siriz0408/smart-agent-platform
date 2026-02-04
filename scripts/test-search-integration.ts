@@ -10,6 +10,15 @@ const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
 
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// Type for search results
+interface SearchResult {
+  entity_type: string;
+  name: string;
+  similarity?: number;
+  text_rank?: number;
+  rrf_score?: number;
+}
+
 interface TestResult {
   name: string;
   passed: boolean;
@@ -119,7 +128,7 @@ async function testSearchFor922() {
   console.log(`   Found ${data.results?.length || 0} results for "922"`);
 
   if (data.results && data.results.length > 0) {
-    const property = data.results.find((r: any) => r.name?.includes('922 Sharondale'));
+    const property = data.results.find((r: SearchResult) => r.name?.includes('922 Sharondale'));
     if (property) {
       console.log(`   ✓ Found property: ${property.name}`);
       console.log(`   ✓ RRF Score: ${property.rrf_score?.toFixed(4)}`);
@@ -156,7 +165,7 @@ async function testFacetedFiltering() {
   const data = await response.json();
 
   // All results should be contacts
-  const allContacts = data.results?.every((r: any) => r.entity_type === 'contact');
+  const allContacts = data.results?.every((r: SearchResult) => r.entity_type === 'contact');
 
   console.log(`   Found ${data.results?.length || 0} results`);
   console.log(`   All contacts: ${allContacts ? 'Yes' : 'No'}`);
@@ -209,7 +218,7 @@ async function testRRFScoring() {
   const data = await response.json();
 
   // Check that results have RRF scores
-  const allHaveScores = data.results?.every((r: any) => typeof r.rrf_score === 'number' && r.rrf_score > 0);
+  const allHaveScores = data.results?.every((r: SearchResult) => typeof r.rrf_score === 'number' && r.rrf_score > 0);
 
   // Check that results are sorted by RRF score (descending)
   let sorted = true;

@@ -39,6 +39,10 @@ import Billing from "./pages/Billing";
 import Tools from "./pages/Tools";
 import TrialExpired from "./pages/TrialExpired";
 import NotFound from "./pages/NotFound";
+import Terms from "./pages/Terms";
+import Help from "./pages/Help";
+import Privacy from "./pages/Privacy";
+import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +60,11 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+
+              {/* Onboarding - Protected but without full layout, skip onboarding check to prevent infinite redirect */}
+              <Route path="/onboarding" element={<ProtectedRoute skipOnboardingCheck><Onboarding /></ProtectedRoute>} />
 
               {/* Protected routes - Common */}
               <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
@@ -69,6 +78,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
               <Route path="/tools" element={<ProtectedRoute><Tools /></ProtectedRoute>} />
+              <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
 
               {/* Protected routes - Admin Only */}
               <Route

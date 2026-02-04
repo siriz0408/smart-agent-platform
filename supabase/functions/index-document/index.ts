@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders, callAnthropicAPI, extractTextFromResponse } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
+import { checkRateLimit, rateLimitResponse, DOCUMENT_INDEX_LIMITS } from "../_shared/rateLimit.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GetDocumentFn = (options: { data: Uint8Array }) => { promise: Promise<any> };
@@ -614,6 +615,14 @@ serve(async (req) => {
         JSON.stringify({ error: "Document not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Apply rate limiting per tenant
+    if (document.tenant_id) {
+      const rateLimitResult = checkRateLimit(document.tenant_id, DOCUMENT_INDEX_LIMITS);
+      if (!rateLimitResult.allowed) {
+        return rateLimitResponse(rateLimitResult);
+      }
     }
 
     const fileSize = document.file_size || 0;

@@ -12,6 +12,7 @@ import {
   Heart,
   Compass,
   Calculator,
+  HelpCircle,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -112,6 +113,7 @@ export function GleanSidebar() {
 
   // Bottom navigation items (always shown)
   const bottomItems: NavItem[] = [
+    { icon: HelpCircle, label: 'Help', href: '/help' },
     { icon: Settings, label: 'Settings', href: '/settings' },
   ];
 
@@ -233,6 +235,10 @@ export function GleanSidebar() {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => navigate('/settings/billing')}>
               Billing
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => navigate('/help')}>
+              <HelpCircle className="h-4 w-4 mr-2" />
+              Help Center
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleSignOut} className="text-destructive">

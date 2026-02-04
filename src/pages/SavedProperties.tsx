@@ -113,7 +113,7 @@ export default function SavedProperties() {
 
   return (
     <AppLayout>
-      <div className="container mx-auto p-6">
+      <div className="container mx-auto p-4 md:p-6">
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold">Saved Properties</h1>
