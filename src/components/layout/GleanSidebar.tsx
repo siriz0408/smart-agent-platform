@@ -64,6 +64,7 @@ export function GleanSidebar() {
         { icon: Briefcase, label: 'Pipeline', href: '/pipeline/buyers' },
         { icon: Building2, label: 'Properties', href: '/properties' },
         { icon: FileText, label: 'Documents', href: '/documents' },
+        { icon: MessageSquare, label: 'Messages', href: '/messages' },
       ],
       admin: [
         ...baseItems,
@@ -72,6 +73,7 @@ export function GleanSidebar() {
         { icon: Briefcase, label: 'Pipeline', href: '/pipeline/buyers' },
         { icon: Building2, label: 'Properties', href: '/properties' },
         { icon: FileText, label: 'Documents', href: '/documents' },
+        { icon: MessageSquare, label: 'Messages', href: '/messages' },
       ],
       agent: [
         ...baseItems,
@@ -80,6 +82,7 @@ export function GleanSidebar() {
         { icon: Briefcase, label: 'Pipeline', href: '/pipeline/buyers' },
         { icon: Building2, label: 'Properties', href: '/properties' },
         { icon: FileText, label: 'Documents', href: '/documents' },
+        { icon: MessageSquare, label: 'Messages', href: '/messages' },
       ],
       buyer: [
         { icon: Home, label: 'Home', href: '/' },
