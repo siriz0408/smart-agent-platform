@@ -3,16 +3,21 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 
+// Super admin email - only this user has platform-wide admin access
+const SUPER_ADMIN_EMAIL = "siriz04081@gmail.com";
+
 interface Profile {
   id: string;
   user_id: string;
   tenant_id: string;
+  active_workspace_id: string | null;
   email: string;
   full_name: string | null;
   avatar_url: string | null;
   phone: string | null;
   title: string | null;
   onboarding_completed: boolean;
+  primary_role?: string;
 }
 
 interface AuthContextType {
@@ -20,6 +25,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  isSuperAdmin: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -122,6 +128,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setProfile(null);
   };
 
+  // Determine if user is super admin
+  const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
+
   return (
     <AuthContext.Provider
       value={{
@@ -129,6 +138,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         session,
         profile,
         loading,
+        isSuperAdmin,
         signIn,
         signUp,
         signOut,

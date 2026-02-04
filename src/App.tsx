@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { RoleProvider } from "@/contexts/RoleContext";
+import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { KeyboardShortcutsProvider } from "@/components/keyboard/KeyboardShortcutsProvider";
 
@@ -55,8 +56,9 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <RoleProvider>
-        <TooltipProvider>
+      <WorkspaceProvider>
+        <RoleProvider>
+          <TooltipProvider>
           <Toaster />
           <Sonner />
           <BrowserRouter>
@@ -255,8 +257,9 @@ const App = () => (
             </Routes>
             </KeyboardShortcutsProvider>
           </BrowserRouter>
-        </TooltipProvider>
-      </RoleProvider>
+          </TooltipProvider>
+        </RoleProvider>
+      </WorkspaceProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

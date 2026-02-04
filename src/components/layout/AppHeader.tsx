@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical } from "lucide-react";
+import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical, Building2 } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { RoleBadge } from "./RoleBadge";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
@@ -14,10 +14,12 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 
 export function AppHeader() {
   const { user, profile, signOut } = useAuth();
   const { isAdmin, isOverrideActive } = useRole();
+  const { isSuperAdmin, activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
 
   const handleSignOut = async () => {
@@ -89,7 +91,16 @@ export function AppHeader() {
                 </div>
               </div>
               <DropdownMenuSeparator />
-              {isAdmin && (
+              {/* Workspace info */}
+              {activeWorkspace && (
+                <div className="px-2 py-1.5 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Building2 className="h-3 w-3" />
+                  <span className="truncate">{activeWorkspace.name}</span>
+                </div>
+              )}
+              <DropdownMenuSeparator />
+              {/* Admin link only for super_admin (Sam's email) */}
+              {isSuperAdmin && (
                 <DropdownMenuItem asChild>
                   <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
                     <Shield className="h-4 w-4" />

@@ -7,6 +7,9 @@ import type { Database } from "@/integrations/supabase/types";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
+// Super admin email - only this user has platform-wide admin access
+const SUPER_ADMIN_EMAIL = "siriz04081@gmail.com";
+
 interface ProtectedRouteProps {
   children: ReactNode;
   allowExpiredTrial?: boolean;
@@ -51,10 +54,22 @@ export function ProtectedRoute({
   // For admin routes, check availableRoles (actual DB permissions) not activeRole
   // This allows admins to test other roles while still accessing admin pages
   if (requiredRoles) {
+    // Super admin check - only Sam's email can access super_admin routes
+    const requiresSuperAdmin = requiredRoles.includes("super_admin") && requiredRoles.length === 1;
+    const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
+    
+    // For routes that ONLY require super_admin, verify email
+    if (requiresSuperAdmin && !isSuperAdmin) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    
     const isAdminRoute = requiredRoles.includes("super_admin") || requiredRoles.includes("admin");
-    const hasAccess = isAdminRoute
+    
+    // For admin routes, super_admin email always has access
+    // Otherwise check availableRoles
+    const hasAccess = isSuperAdmin || (isAdminRoute
       ? requiredRoles.some(r => availableRoles.includes(r))
-      : requiredRoles.includes(activeRole);
+      : requiredRoles.includes(activeRole));
     
     if (!hasAccess) {
       return <Navigate to="/dashboard" replace />;

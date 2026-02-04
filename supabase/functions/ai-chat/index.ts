@@ -1567,7 +1567,7 @@ serve(async (req) => {
               // Fetch data from ALL collections in parallel
               const collectionDataPromises = collectionRefs.map(async (ref: {collection: string}) => {
                 const collName = ref.collection.toLowerCase();
-                let results: any[] = [];
+                let results: Record<string, unknown>[] = [];
                 
                 await writeStatus(writer, encoder, "searching", `Searching your ${ref.collection}...`);
                 
@@ -2839,8 +2839,8 @@ Provide a brief, helpful response:
                 queryLower.includes("my " + collParams.collection) ||
                 queryLower.length < 2;
               
-              let searchResults: any[] = [];
-              let searchError: any = null;
+              let searchResults: Record<string, unknown>[] = [];
+              let searchError: Error | null = null;
               
               if (isGenericListQuery) {
                 // For generic "list all" queries, fetch directly from table instead of full-text search

@@ -13,6 +13,7 @@ import { DealDetailSheet } from "@/components/deals/DealDetailSheet";
 import { StageColumn } from "@/components/pipeline/StageColumn";
 import { useMilestoneIndicators } from "@/hooks/useMilestoneIndicators";
 import { toast } from "@/hooks/use-toast";
+import type { Tables } from "@/integrations/supabase/types";
 
 interface DealWithRelations {
   id: string;
@@ -58,7 +59,7 @@ export default function Pipeline() {
   const stages = type === "sellers" ? sellerStages : buyerStages;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [editingDeal, setEditingDeal] = useState<DealWithRelations | null>(null);
+  const [editingDeal, setEditingDeal] = useState<Tables<"deals"> | null>(null);
   const [movingDealId, setMovingDealId] = useState<string | null>(null);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -206,7 +207,7 @@ export default function Pipeline() {
       return;
     }
     
-    setEditingDeal(data as any);
+    setEditingDeal(data);
     setEditDialogOpen(true);
   };
 

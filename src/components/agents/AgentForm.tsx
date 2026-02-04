@@ -117,7 +117,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
       description: agent?.description || "",
       icon: agent?.icon || "bot",
       category: agent?.category || "general",
-      data_sources: (agent as any)?.data_sources || [],
+      data_sources: (agent?.workflow as { data_sources?: string[] } | null)?.data_sources || [],
       system_prompt: agent?.system_prompt || "",
     },
   });
@@ -130,7 +130,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
         description: agent.description || "",
         icon: agent.icon || "bot",
         category: agent.category || "general",
-        data_sources: (agent as any)?.data_sources || [],
+        data_sources: (agent?.workflow as { data_sources?: string[] } | null)?.data_sources || [],
         system_prompt: agent.system_prompt || "",
       });
     }
@@ -214,10 +214,10 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
             description: data.description || null,
             icon: data.icon,
             category: data.category,
-            data_sources: data.data_sources || [],
+            workflow: { data_sources: data.data_sources || [] },
             system_prompt: data.system_prompt || null,
             updated_at: new Date().toISOString(),
-          } as any)
+          })
           .eq("id", agent.id);
 
         if (error) throw error;
@@ -234,12 +234,12 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
           description: data.description || null,
           icon: data.icon,
           category: data.category,
-          data_sources: data.data_sources || [],
+          workflow: { data_sources: data.data_sources || [] },
           system_prompt: data.system_prompt || null,
           created_by: user.id,
           is_public: false,
           is_certified: false,
-        } as any);
+        });
 
         if (error) throw error;
 

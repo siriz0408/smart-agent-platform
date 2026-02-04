@@ -31,16 +31,10 @@ export default function Admin() {
   const { availableRoles, isAdmin } = useRole();
   const { profile } = useAuth();
 
-  // Defensive check: Verify user has admin privileges using availableRoles
-  // This uses actual DB roles, not the override activeRole
-  if (!isAdmin) {
-    return <Navigate to="/" replace />;
-  }
-
   // Determine display role (for badge - show actual role, not override)
   const actualAdminRole = availableRoles.includes('super_admin') ? 'super_admin' : 'admin';
 
-  // Fetch team members count
+  // Fetch team members count - hooks must be called unconditionally
   const { data: teamCount = 0 } = useQuery({
     queryKey: ["admin-team-count", profile?.tenant_id],
     queryFn: async () => {
@@ -52,7 +46,7 @@ export default function Admin() {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!profile?.tenant_id,
+    enabled: !!profile?.tenant_id && isAdmin,
   });
 
   // Fetch active agents count
@@ -68,7 +62,7 @@ export default function Admin() {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!profile?.tenant_id,
+    enabled: !!profile?.tenant_id && isAdmin,
   });
 
   // Fetch AI queries count
@@ -83,8 +77,15 @@ export default function Admin() {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!profile?.tenant_id,
+    enabled: !!profile?.tenant_id && isAdmin,
   });
+
+  // Defensive check: Verify user has admin privileges using availableRoles
+  // This uses actual DB roles, not the override activeRole
+  // Must be AFTER all hooks are called
+  if (!isAdmin) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <AppLayout>

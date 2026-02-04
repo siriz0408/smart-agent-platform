@@ -27,10 +27,12 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useTotalUnreadCount } from "@/hooks/useUnreadCounts";
 import { Badge } from "@/components/ui/badge";
+import { WorkspaceSwitcher } from "@/components/workspace/WorkspaceSwitcher";
 
 interface NavItem {
   icon: LucideIcon;
@@ -49,6 +51,7 @@ interface NavItem {
 export function GleanSidebar() {
   const { user } = useAuth();
   const { activeRole, availableRoles } = useRole();
+  const { isSuperAdmin, activeWorkspace } = useWorkspace();
   const location = useLocation();
   const navigate = useNavigate();
   const { data: totalUnread = 0 } = useTotalUnreadCount();
@@ -124,8 +127,9 @@ export function GleanSidebar() {
     { icon: Settings, label: 'Settings', href: '/settings' },
   ];
 
-  // Add admin link for super_admin and admin roles
-  if (activeRole === 'super_admin' || activeRole === 'admin') {
+  // Add admin link ONLY for super_admin (Sam's email)
+  // This hides the admin panel from all other users
+  if (isSuperAdmin) {
     bottomItems.unshift({ icon: Shield, label: 'Admin', href: '/admin' });
   }
 
@@ -141,6 +145,11 @@ export function GleanSidebar() {
         <div className="h-10 w-10 rounded-lg bg-white/20 flex items-center justify-center backdrop-blur-sm">
           <span className="text-xl font-bold">SA</span>
         </div>
+      </div>
+
+      {/* Workspace Switcher */}
+      <div className="px-2 py-2 border-b border-white/10">
+        <WorkspaceSwitcher collapsed />
       </div>
 
       {/* Main Navigation */}
