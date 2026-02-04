@@ -1,6 +1,33 @@
 # Smart Agent QA Dev Team
 
-Automated skill-based QA system for Smart Agent platform with browser testing, automatic debugging, and comprehensive reporting.
+Automated skill-based QA system for Smart Agent platform with browser testing, automatic debugging, comprehensive reporting, and continuous testing.
+
+## Quick Start
+
+```bash
+# Run E2E tests
+npm run test:e2e
+
+# Run critical tests only (P0)
+npm run test:e2e:p0
+
+# Run with UI mode
+npm run test:e2e:ui
+
+# Run mobile tests
+npm run test:e2e:mobile
+
+# Run and log bugs
+npm run qa:run
+```
+
+## Test Personas
+
+See `tests/TEST_PERSONAS.md` for detailed user personas:
+- **Sarah** - First-time buyer agent
+- **Marcus** - Luxury listing agent
+- **Elena** - Team lead/admin
+- **David** - Mobile-first part-time agent
 
 ## Architecture
 
