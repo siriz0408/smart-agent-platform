@@ -1,3 +1,4 @@
+# Smart Agent Robots.txt
 User-agent: Googlebot
 Allow: /
 
@@ -12,3 +13,21 @@ Allow: /
 
 User-agent: *
 Allow: /
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+Allow: /help
+
+# Disallow private/authenticated pages
+Disallow: /documents
+Disallow: /properties
+Disallow: /contacts
+Disallow: /agents
+Disallow: /messages
+Disallow: /settings
+Disallow: /billing
+Disallow: /admin
+
+# Sitemap
+Sitemap: https://smart-agent-platform-jt2xuthgb-sams-projects-2a2b7e20.vercel.app/sitemap.xml

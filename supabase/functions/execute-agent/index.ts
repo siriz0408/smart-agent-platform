@@ -4,6 +4,21 @@ import { logger } from "../_shared/logger.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 import { checkRateLimit, rateLimitResponse, AGENT_EXECUTION_LIMITS } from "../_shared/rateLimit.ts";
+import { 
+  ActionRequest, 
+  ActionContext, 
+  queueAction, 
+  executeAction,
+  getActionDescriptions,
+} from "../_shared/agentActions.ts";
+
+const MAX_ACTIONS_PER_RUN = 10;
+const MAX_SYSTEM_PROMPT_LENGTH = 10000;
+const ACTION_EXECUTION_LIMITS = {
+  maxRequests: 50,
+  windowSeconds: 3600,
+  prefix: "agent-actions",
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +34,10 @@ interface AgentExecutionRequest {
     deal_id?: string;
     additional_context?: string;
   };
+  // New fields for autonomous execution
+  enable_actions?: boolean; // Whether agent can request actions
+  auto_execute_actions?: boolean; // Execute actions immediately without approval
+  trigger_event?: Record<string, unknown>; // Event that triggered this execution
 }
 
 serve(async (req) => {
@@ -105,7 +124,8 @@ serve(async (req) => {
       );
     }
 
-    const { agent_id, context }: AgentExecutionRequest = await req.json();
+    const requestBody: AgentExecutionRequest = await req.json();
+    const { agent_id, context, enable_actions = false, auto_execute_actions = false, trigger_event } = requestBody;
 
     if (!agent_id) {
       return new Response(JSON.stringify({ error: "agent_id is required" }), {
@@ -157,7 +177,15 @@ serve(async (req) => {
         .from("properties")
         .select("*")
         .eq("id", context.property_id)
+        .eq("tenant_id", tenantId)
         .single();
+
+      if (!property) {
+        return new Response(JSON.stringify({ error: "Property not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (property) {
         contextData += `\n## Property Details\n`;
@@ -208,7 +236,15 @@ serve(async (req) => {
         .from("contacts")
         .select("*")
         .eq("id", context.contact_id)
+        .eq("tenant_id", tenantId)
         .single();
+
+      if (!contact) {
+        return new Response(JSON.stringify({ error: "Contact not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (contact) {
         contextData += `\n## Contact Details\n`;
@@ -271,7 +307,15 @@ serve(async (req) => {
         .from("documents")
         .select("id, name, category")
         .eq("id", context.document_id)
+        .eq("tenant_id", tenantId)
         .single();
+
+      if (!doc) {
+        return new Response(JSON.stringify({ error: "Document not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (doc) {
         contextData += `\n## Document: ${doc.name}\n`;
@@ -313,7 +357,15 @@ serve(async (req) => {
         .from("deals")
         .select("*, contacts(*), properties(*)")
         .eq("id", context.deal_id)
+        .eq("tenant_id", tenantId)
         .single();
+
+      if (!deal) {
+        return new Response(JSON.stringify({ error: "Deal not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
 
       if (deal) {
         contextData += `\n## Deal Details\n`;
@@ -385,8 +437,74 @@ serve(async (req) => {
       contextData += `\n## Additional Context\n${context.additional_context}\n`;
     }
 
-    // Build the prompt
-    const systemPrompt = agent.system_prompt || "You are a helpful real estate AI assistant.";
+    if (auto_execute_actions) {
+      const { data: isAdmin, error: adminError } = await serviceClient.rpc("is_admin", {
+        _user_id: userId,
+      });
+
+      if (adminError || !isAdmin) {
+        return new Response(JSON.stringify({ error: "Forbidden: auto_execute_actions requires admin role" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Build the prompt with optional action capabilities
+    let systemPrompt = agent.system_prompt || "You are a helpful real estate AI assistant.";
+    systemPrompt = systemPrompt.slice(0, MAX_SYSTEM_PROMPT_LENGTH);
+    
+    // If actions are enabled, append action instructions to system prompt
+    if (enable_actions) {
+      const actionDescriptions = getActionDescriptions();
+      const actionList = Object.entries(actionDescriptions)
+        .map(([type, desc]) => `- \`${type}\`: ${desc}`)
+        .join('\n');
+      
+      systemPrompt += `
+
+## Action Capabilities
+
+You are an AUTONOMOUS agent that can both analyze data AND take actions. When you determine an action should be taken, include it in your response.
+
+### Available Actions
+${actionList}
+
+### Response Format
+When you want to take actions, structure your response as JSON with this format:
+
+\`\`\`json
+{
+  "analysis": "Your analysis of the situation...",
+  "recommendation": "Your recommendation and reasoning...",
+  "actions": [
+    {
+      "type": "action_type",
+      "params": { /* parameters for the action */ },
+      "reason": "Why you're recommending this action"
+    }
+  ]
+}
+\`\`\`
+
+If no actions are needed, you can respond normally without JSON.
+
+### Important Guidelines
+- Only request actions when they genuinely add value
+- Provide clear reasoning for each action
+- Use contact_id, deal_id, property_id from the context when available
+- For create_contact: include first_name (required), last_name, email, phone, contact_type
+- For create_deal: include contact_id (required), deal_type (buyer/seller/dual), stage
+- For send_email: include template or subject/message, and recipient info
+- For schedule_task: include title, due_in_days or due_date
+`;
+
+      // Add trigger event context if this was auto-triggered
+      if (trigger_event) {
+        contextData += `\n## Trigger Event\nThis agent was automatically triggered by an event:\n${JSON.stringify(trigger_event, null, 2)}\n`;
+      }
+    }
+
     const userPrompt = contextData || "No specific context provided. Please provide general guidance.";
 
     // Call Anthropic API with streaming
@@ -475,12 +593,124 @@ serve(async (req) => {
             }
           }
 
-          // Update agent run as completed
+          // Parse and process actions if enabled
+          let parsedActions: ActionRequest[] = [];
+          const actionResults: Array<{ action: ActionRequest; result: unknown }> = [];
+          let actionLimitExceeded = false;
+          let actionRateLimited = false;
+          
+          if (enable_actions && fullContent) {
+            const extractActionPayload = (content: string): { actions?: unknown } | null => {
+              const blocks = Array.from(content.matchAll(/```json\s*([\s\S]*?)\s*```/g)).map(match => match[1]);
+              for (const block of blocks) {
+                try {
+                  return JSON.parse(block);
+                } catch {
+                  continue;
+                }
+              }
+
+              const trimmed = content.trim();
+              if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+                try {
+                  return JSON.parse(trimmed);
+                } catch {
+                  // Fall through
+                }
+              }
+
+              const firstBrace = content.indexOf("{");
+              const lastBrace = content.lastIndexOf("}");
+              if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                const candidate = content.slice(firstBrace, lastBrace + 1);
+                if (candidate.includes('"actions"')) {
+                  try {
+                    return JSON.parse(candidate);
+                  } catch {
+                    // Fall through
+                  }
+                }
+              }
+
+              return null;
+            };
+
+            try {
+              const parsed = extractActionPayload(fullContent);
+              if (parsed?.actions && Array.isArray(parsed.actions)) {
+                parsedActions = parsed.actions.filter((action) => {
+                  return action && typeof action === "object" && typeof (action as ActionRequest).type === "string";
+                }) as ActionRequest[];
+              }
+            } catch (parseError) {
+              logger.warn("Failed to parse actions from response", { 
+                error: parseError instanceof Error ? parseError.message : String(parseError) 
+              });
+            }
+
+            if (parsedActions.length > MAX_ACTIONS_PER_RUN) {
+              actionLimitExceeded = true;
+              parsedActions = parsedActions.slice(0, MAX_ACTIONS_PER_RUN);
+            }
+
+            if (parsedActions.length > 0) {
+              const actionRateResult = checkRateLimit(userId, ACTION_EXECUTION_LIMITS);
+              if (!actionRateResult.allowed) {
+                actionRateLimited = true;
+              }
+
+              // Process each action
+              const actionContext: ActionContext = {
+                tenant_id: tenantId,
+                user_id: userId,
+                agent_run_id: agentRun.id,
+                requires_approval: !auto_execute_actions,
+                source_contact: context.contact_id ? { id: context.contact_id } : undefined,
+                source_deal: context.deal_id ? { id: context.deal_id } : undefined,
+                source_property: context.property_id ? { id: context.property_id } : undefined,
+                source_document: context.document_id ? { id: context.document_id } : undefined,
+              };
+              
+              if (actionRateLimited) {
+                logger.warn("Action rate limit exceeded", { user_id: userId });
+              } else {
+                for (const action of parsedActions) {
+                  try {
+                    if (auto_execute_actions) {
+                      // Execute immediately
+                      const result = await executeAction(serviceClient, action, actionContext);
+                      actionResults.push({ action, result });
+                      logger.info("Action executed", { action_type: action.type, success: result.success });
+                    } else {
+                      // Queue for approval
+                      const queueResult = await queueAction(serviceClient, action, actionContext);
+                      actionResults.push({ action, result: queueResult });
+                      logger.info("Action queued", { action_type: action.type, queued: queueResult.queued });
+                    }
+                  } catch (actionError) {
+                    const errorMessage = actionError instanceof Error ? actionError.message : String(actionError);
+                    logger.error("Action processing failed", { action_type: action.type, error: errorMessage });
+                    actionResults.push({ action, result: { success: false, error: errorMessage } });
+                  }
+                }
+              }
+            }
+          }
+
+          // Update agent run as completed with action info
           await serviceClient
             .from("agent_runs")
             .update({
               status: "completed",
-              output_result: { content: fullContent },
+              output_result: { 
+                content: fullContent,
+                actions_requested: parsedActions.length,
+                actions_processed: actionResults.length,
+                action_results: actionResults,
+                action_limit_exceeded: actionLimitExceeded,
+                action_limit: MAX_ACTIONS_PER_RUN,
+                action_rate_limited: actionRateLimited,
+              },
               completed_at: new Date().toISOString(),
             })
             .eq("id", agentRun.id);

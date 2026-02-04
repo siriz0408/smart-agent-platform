@@ -4,6 +4,7 @@ import { ArrowLeft, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AgentForm } from "@/components/agents/AgentForm";
+import { TriggerConfig } from "@/components/agents/TriggerConfig";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
@@ -126,6 +127,9 @@ export default function AgentEdit() {
 
         {/* Form */}
         <AgentForm agent={agent} onSuccess={handleSuccess} onCancel={handleCancel} />
+
+        {/* Triggers Configuration */}
+        <TriggerConfig agentId={agent.id} agentName={agent.name} />
       </div>
     </AppLayout>
   );

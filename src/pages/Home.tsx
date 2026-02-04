@@ -43,7 +43,7 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <div className="flex h-full flex-col">
+      <main className="flex h-full flex-col">
         {/* Chat Area - responsive padding */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {messages.length === 0 ? (
@@ -54,8 +54,18 @@ export default function Home() {
               <h1 className="text-3xl font-semibold mb-2">
                 Good {getTimeOfDay()}, {firstName}
               </h1>
-              <p className="text-muted-foreground text-lg mb-8">
+              <p className="text-muted-foreground text-lg mb-4">
                 How can I help you with your real estate business today?
+              </p>
+              <p className="text-sm text-muted-foreground mb-8 max-w-xl">
+                Smart Agent is your AI-powered assistant for real estate professionals.
+                Analyze <a href="/documents" className="text-primary hover:underline">documents</a>, manage your{" "}
+                <a href="/contacts" className="text-primary hover:underline">CRM</a>, chat with multiple documents simultaneously,
+                and get intelligent insights to streamline your workflow. Visit our{" "}
+                <a href="/help" className="text-primary hover:underline">help center</a> to learn more, or check out{" "}
+                <a href="https://www.nar.realtor/research-and-statistics" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                  NAR research
+                </a> for real estate market insights.
               </p>
 
               {/* Quick Actions */}
@@ -210,7 +220,7 @@ export default function Home() {
             </p>
           </form>
         </div>
-      </div>
+      </main>
     </AppLayout>
   );
 }

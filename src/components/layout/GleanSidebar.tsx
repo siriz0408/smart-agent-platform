@@ -13,6 +13,7 @@ import {
   Compass,
   Calculator,
   HelpCircle,
+  ListTodo,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ export function GleanSidebar() {
       super_admin: [
         ...baseItems,
         { icon: Users2, label: 'Agents', href: '/agents' },
+        { icon: ListTodo, label: 'Actions', href: '/action-queue' },
         { icon: Users, label: 'Contacts', href: '/contacts' },
         { icon: Briefcase, label: 'Pipeline', href: '/pipeline/buyers' },
         { icon: Building2, label: 'Properties', href: '/properties' },
@@ -70,6 +72,7 @@ export function GleanSidebar() {
       admin: [
         ...baseItems,
         { icon: Users2, label: 'Agents', href: '/agents' },
+        { icon: ListTodo, label: 'Actions', href: '/action-queue' },
         { icon: Users, label: 'Contacts', href: '/contacts' },
         { icon: Briefcase, label: 'Pipeline', href: '/pipeline/buyers' },
         { icon: Building2, label: 'Properties', href: '/properties' },
@@ -79,6 +82,7 @@ export function GleanSidebar() {
       agent: [
         ...baseItems,
         { icon: Users2, label: 'Agents', href: '/agents' },
+        { icon: ListTodo, label: 'Actions', href: '/action-queue' },
         { icon: Users, label: 'Contacts', href: '/contacts' },
         { icon: Briefcase, label: 'Pipeline', href: '/pipeline/buyers' },
         { icon: Building2, label: 'Properties', href: '/properties' },

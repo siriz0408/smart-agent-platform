@@ -17,6 +17,7 @@ import Chat from "./pages/Chat";
 import Agents from "./pages/Agents";
 import AgentCreate from "./pages/AgentCreate";
 import AgentEdit from "./pages/AgentEdit";
+import ActionQueue from "./pages/ActionQueue";
 import AdminAgents from "./pages/AdminAgents";
 import AdminAgentEdit from "./pages/AdminAgentEdit";
 import Contacts from "./pages/Contacts";
@@ -42,6 +43,8 @@ import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
 import Help from "./pages/Help";
 import Privacy from "./pages/Privacy";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
@@ -62,6 +65,9 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/privacy-policy" element={<Privacy />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
 
               {/* Onboarding - Protected but without full layout, skip onboarding check to prevent infinite redirect */}
               <Route path="/onboarding" element={<ProtectedRoute skipOnboardingCheck><Onboarding /></ProtectedRoute>} />
@@ -128,6 +134,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
                     <AgentEdit />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/action-queue"
+                element={
+                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
+                    <ActionQueue />
                   </ProtectedRoute>
                 }
               />
