@@ -5,6 +5,7 @@ import { ConversationList } from "@/components/messages/ConversationList";
 import { MessageThread } from "@/components/messages/MessageThread";
 import { MessageInput } from "@/components/messages/MessageInput";
 import { ConversationHeader } from "@/components/messages/ConversationHeader";
+import { NewConversationDialog } from "@/components/messages/NewConversationDialog";
 import { useConversation } from "@/hooks/useConversation";
 import { useRealtimeMessages } from "@/hooks/useRealtimeMessages";
 import { MessageSquare } from "lucide-react";
@@ -16,6 +17,7 @@ export default function Messages() {
     conversationId || null
   );
   const [showMobileList, setShowMobileList] = useState(!conversationId);
+  const [isNewConversationOpen, setIsNewConversationOpen] = useState(false);
 
   const {
     conversations,
@@ -26,6 +28,7 @@ export default function Messages() {
     sendMessage,
     isSending,
     refetchConversations,
+    createOrFindContactConversation,
   } = useConversation(selectedConversationId);
 
   // Subscribe to realtime messages
@@ -57,6 +60,15 @@ export default function Messages() {
     }
   };
 
+  const handleNewConversation = async (contactId: string) => {
+    const newConversationId = await createOrFindContactConversation(contactId);
+    if (newConversationId) {
+      setSelectedConversationId(newConversationId);
+      setShowMobileList(false);
+      navigate(`/messages/${newConversationId}`);
+    }
+  };
+
   return (
     <AppLayout>
       <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
@@ -71,6 +83,7 @@ export default function Messages() {
             isLoading={isLoadingConversations}
             selectedId={selectedConversationId}
             onSelect={handleSelectConversation}
+            onNewConversation={() => setIsNewConversationOpen(true)}
           />
         </div>
 
@@ -100,12 +113,18 @@ export default function Messages() {
               <div className="text-center">
                 <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
                 <p className="text-lg font-medium">Select a conversation</p>
-                <p className="text-sm">Choose from your existing conversations or start a new one from Contacts</p>
+                <p className="text-sm">Choose from your existing conversations or click "New" to start one</p>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      <NewConversationDialog
+        open={isNewConversationOpen}
+        onOpenChange={setIsNewConversationOpen}
+        onSelectContact={handleNewConversation}
+      />
     </AppLayout>
   );
 }

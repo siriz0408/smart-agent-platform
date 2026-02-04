@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -8,10 +9,16 @@ import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
 interface Participant {
-  user_id: string;
+  user_id: string | null;
+  contact_id: string | null;
   profile?: {
     full_name: string | null;
     email: string;
+  } | null;
+  contact?: {
+    first_name: string;
+    last_name: string;
+    email: string | null;
   } | null;
 }
 
@@ -31,6 +38,7 @@ interface ConversationListProps {
   isLoading: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  onNewConversation?: () => void;
 }
 
 export function ConversationList({
@@ -38,12 +46,20 @@ export function ConversationList({
   isLoading,
   selectedId,
   onSelect,
+  onNewConversation,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
+  const getParticipantName = (p: Participant): string => {
+    if (p.profile?.full_name) return p.profile.full_name;
+    if (p.profile?.email) return p.profile.email;
+    if (p.contact) return `${p.contact.first_name} ${p.contact.last_name}`;
+    return "";
+  };
+
   const filteredConversations = conversations.filter((conv) => {
     const participantNames = conv.participants
-      .map((p) => p.profile?.full_name || p.profile?.email || "")
+      .map(getParticipantName)
       .join(" ")
       .toLowerCase();
     return (
@@ -54,13 +70,11 @@ export function ConversationList({
 
   const getConversationName = (conv: ConversationWithDetails) => {
     if (conv.title) return conv.title;
-    const otherParticipants = conv.participants.filter(
-      (p) => p.profile?.full_name || p.profile?.email
-    );
-    if (otherParticipants.length === 0) return "New Conversation";
-    return otherParticipants
-      .map((p) => p.profile?.full_name || p.profile?.email?.split("@")[0])
-      .join(", ");
+    const names = conv.participants
+      .map(getParticipantName)
+      .filter((name) => name.length > 0);
+    if (names.length === 0) return "New Conversation";
+    return names.join(", ");
   };
 
   const getInitials = (conv: ConversationWithDetails) => {
@@ -76,7 +90,19 @@ export function ConversationList({
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border">
-        <h2 className="text-lg font-semibold mb-3">Messages</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">Messages</h2>
+          {onNewConversation && (
+            <Button
+              size="sm"
+              onClick={onNewConversation}
+              className="gap-1"
+            >
+              <Plus className="h-4 w-4" />
+              New
+            </Button>
+          )}
+        </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

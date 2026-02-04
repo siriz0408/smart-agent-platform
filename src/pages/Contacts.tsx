@@ -67,7 +67,7 @@ export default function Contacts() {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { createOrFindConversation } = useConversation(null);
+  const { createOrFindConversation, createOrFindContactConversation } = useConversation(null);
 
   // Invite mutation
   const inviteMutation = useMutation({
@@ -121,11 +121,16 @@ export default function Contacts() {
   });
 
   const handleSendMessage = async (contact: Contact) => {
-    if (!contact.user_id) {
-      toast.info("This contact doesn't have a platform account yet. Invite them to join!");
-      return;
+    // If contact has a user_id (they're on the platform), use user-to-user messaging
+    // Otherwise, use agent-to-contact messaging
+    let conversationId: string | null = null;
+    
+    if (contact.user_id) {
+      conversationId = await createOrFindConversation(contact.user_id);
+    } else {
+      conversationId = await createOrFindContactConversation(contact.id);
     }
-    const conversationId = await createOrFindConversation(contact.user_id);
+    
     if (conversationId) {
       navigate(`/messages/${conversationId}`);
     }

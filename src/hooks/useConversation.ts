@@ -6,10 +6,16 @@ import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 
 interface Participant {
-  user_id: string;
+  user_id: string | null;
+  contact_id: string | null;
   profile?: {
     full_name: string | null;
     email: string;
+  } | null;
+  contact?: {
+    first_name: string;
+    last_name: string;
+    email: string | null;
   } | null;
 }
 
@@ -70,24 +76,34 @@ export function useConversation(conversationId: string | null) {
 
       if (convoError) throw convoError;
 
-      // For each conversation, get participants with profiles
+      // For each conversation, get participants with profiles/contacts
       const conversationsWithDetails: ConversationWithDetails[] = await Promise.all(
         (convos || []).map(async (conv) => {
-          // Get participants
+          // Get participants (both users and contacts)
           const { data: participants } = await supabase
             .from("conversation_participants")
-            .select("user_id")
+            .select("user_id, contact_id")
             .eq("conversation_id", conv.id);
 
-          // Get profiles for participants
-          const participantDetails = await Promise.all(
+          // Get profiles for user participants and contact info for contact participants
+          const participantDetails: Participant[] = await Promise.all(
             (participants || []).map(async (p) => {
-              const { data: profileData } = await supabase
-                .from("profiles")
-                .select("full_name, email")
-                .eq("user_id", p.user_id)
-                .single();
-              return { user_id: p.user_id, profile: profileData };
+              if (p.user_id) {
+                const { data: profileData } = await supabase
+                  .from("profiles")
+                  .select("full_name, email")
+                  .eq("user_id", p.user_id)
+                  .single();
+                return { user_id: p.user_id, contact_id: null, profile: profileData, contact: null };
+              } else if (p.contact_id) {
+                const { data: contactData } = await supabase
+                  .from("contacts")
+                  .select("first_name, last_name, email")
+                  .eq("id", p.contact_id)
+                  .single();
+                return { user_id: null, contact_id: p.contact_id, profile: null, contact: contactData };
+              }
+              return { user_id: null, contact_id: null, profile: null, contact: null };
             })
           );
 
@@ -248,6 +264,81 @@ export function useConversation(conversationId: string | null) {
     [user?.id, tenantId, refetchConversations]
   );
 
+  // Create or find direct conversation with a contact (client)
+  const createOrFindContactConversation = useCallback(
+    async (contactId: string): Promise<string | null> => {
+      if (!user?.id || !tenantId) return null;
+
+      try {
+        // Check for existing conversation with this contact
+        const { data: myParticipations } = await supabase
+          .from("conversation_participants")
+          .select("conversation_id")
+          .eq("user_id", user.id);
+
+        const { data: contactParticipations } = await supabase
+          .from("conversation_participants")
+          .select("conversation_id")
+          .eq("contact_id", contactId);
+
+        const myConvos = myParticipations?.map((p) => p.conversation_id) || [];
+        const contactConvos = contactParticipations?.map((p) => p.conversation_id) || [];
+
+        // Find common conversation (direct)
+        const commonConvo = myConvos.find((id) => contactConvos.includes(id));
+        if (commonConvo) {
+          // Verify it's a direct conversation with only 2 participants
+          const { data: participants } = await supabase
+            .from("conversation_participants")
+            .select("id")
+            .eq("conversation_id", commonConvo);
+
+          if (participants?.length === 2) {
+            return commonConvo;
+          }
+        }
+
+        // Get contact name for conversation title
+        const { data: contact } = await supabase
+          .from("contacts")
+          .select("first_name, last_name")
+          .eq("id", contactId)
+          .single();
+
+        // Create new conversation
+        const { data: newConvo, error: convError } = await supabase
+          .from("conversations")
+          .insert({
+            tenant_id: tenantId,
+            type: "direct",
+            title: contact ? `${contact.first_name} ${contact.last_name}` : null,
+          })
+          .select("id")
+          .single();
+
+        if (convError) throw convError;
+
+        // Add agent as user participant, contact as contact participant
+        const { error: partError } = await supabase
+          .from("conversation_participants")
+          .insert([
+            { conversation_id: newConvo.id, user_id: user.id },
+            { conversation_id: newConvo.id, contact_id: contactId },
+          ]);
+
+        if (partError) throw partError;
+
+        refetchConversations();
+        return newConvo.id;
+      } catch (error) {
+        logger.error("Failed to create contact conversation:", error);
+        toast.error("Failed to create conversation");
+        return null;
+      }
+    },
+    [user?.id, tenantId, refetchConversations]
+  );
+
   return {
     conversations,
     isLoadingConversations,
@@ -259,5 +350,6 @@ export function useConversation(conversationId: string | null) {
     refetchConversations,
     refetchMessages,
     createOrFindConversation,
+    createOrFindContactConversation,
   };
 }
