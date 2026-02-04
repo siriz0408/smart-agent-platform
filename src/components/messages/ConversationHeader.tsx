@@ -3,10 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface Participant {
-  user_id: string;
+  user_id: string | null;
+  contact_id: string | null;
   profile?: {
     full_name: string | null;
     email: string;
+  } | null;
+  contact?: {
+    first_name: string;
+    last_name: string;
+    email: string | null;
   } | null;
 }
 
@@ -22,15 +28,20 @@ interface ConversationHeaderProps {
 }
 
 export function ConversationHeader({ conversation, onBack }: ConversationHeaderProps) {
+  const getParticipantName = (p: Participant): string => {
+    if (p.profile?.full_name) return p.profile.full_name;
+    if (p.profile?.email) return p.profile.email.split("@")[0];
+    if (p.contact) return `${p.contact.first_name} ${p.contact.last_name}`;
+    return "";
+  };
+
   const getConversationName = () => {
     if (conversation.title) return conversation.title;
-    const otherParticipants = conversation.participants.filter(
-      (p) => p.profile?.full_name || p.profile?.email
-    );
-    if (otherParticipants.length === 0) return "Conversation";
-    return otherParticipants
-      .map((p) => p.profile?.full_name || p.profile?.email?.split("@")[0])
-      .join(", ");
+    const names = conversation.participants
+      .map(getParticipantName)
+      .filter((name) => name.length > 0);
+    if (names.length === 0) return "Conversation";
+    return names.join(", ");
   };
 
   const getInitials = () => {
