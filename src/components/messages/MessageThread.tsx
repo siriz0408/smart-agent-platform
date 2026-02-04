@@ -9,6 +9,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useSaveToDocuments, useGetAttachmentUrl, type MessageAttachment } from "@/hooks/useMessageAttachments";
 import { FileText, Download, FolderPlus, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { TypingIndicator } from "./TypingIndicator";
 
 interface Message {
   id: string;
@@ -27,9 +28,10 @@ interface Message {
 interface MessageThreadProps {
   messages: Message[];
   isLoading: boolean;
+  conversationId?: string;
 }
 
-export function MessageThread({ messages, isLoading }: MessageThreadProps) {
+export function MessageThread({ messages, isLoading, conversationId }: MessageThreadProps) {
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -163,6 +165,10 @@ export function MessageThread({ messages, isLoading }: MessageThreadProps) {
             </div>
           );
         })}
+
+        {/* Typing Indicator */}
+        {conversationId && <TypingIndicator conversationId={conversationId} />}
+
         <div ref={bottomRef} />
       </div>
     </ScrollArea>

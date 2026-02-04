@@ -3,26 +3,29 @@ import { Send, Paperclip, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useMessageAttachments, type PendingAttachment } from "@/hooks/useMessageAttachments";
+import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { toast } from "sonner";
 
 interface MessageInputProps {
   onSend: (content: string, uploadAttachments?: () => Promise<void>) => Promise<void>;
   disabled?: boolean;
-  conversationId?: string; // Reserved for future use
+  conversationId?: string;
 }
 
-export function MessageInput({ onSend, disabled, conversationId: _conversationId }: MessageInputProps) {
+export function MessageInput({ onSend, disabled, conversationId }: MessageInputProps) {
   const [content, setContent] = useState("");
   const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { pendingAttachments, addFiles, removeFile, clearFiles, hasAttachments } = useMessageAttachments();
+  const { handleTyping, stopTyping } = useTypingIndicator(conversationId ?? null);
 
   const handleSend = async () => {
     const trimmedContent = content.trim();
     if ((!trimmedContent && !hasAttachments) || isSending) return;
 
     setIsSending(true);
+    stopTyping(); // Stop typing indicator when sending
     try {
       await onSend(trimmedContent || "(Attachment)");
       setContent("");
@@ -30,6 +33,11 @@ export function MessageInput({ onSend, disabled, conversationId: _conversationId
     } finally {
       setIsSending(false);
     }
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    handleTyping(); // Trigger typing indicator
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -107,7 +115,7 @@ export function MessageInput({ onSend, disabled, conversationId: _conversationId
         <Textarea
           ref={textareaRef}
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={handleContentChange}
           onKeyDown={handleKeyDown}
           placeholder="Type a message..."
           disabled={disabled || isSending}

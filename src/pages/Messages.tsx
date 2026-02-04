@@ -102,10 +102,12 @@ export default function Messages() {
               <MessageThread
                 messages={messages}
                 isLoading={isLoadingMessages}
+                conversationId={selectedConversationId ?? undefined}
               />
               <MessageInput
                 onSend={handleSendMessage}
                 disabled={isSending}
+                conversationId={selectedConversationId ?? undefined}
               />
             </>
           ) : (
