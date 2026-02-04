@@ -18,15 +18,15 @@ export function useAIChat() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  const sendMessage = useCallback(async (input: string) => {
+  const sendMessage = useCallback(async (input: string, options?: { thinkingMode?: boolean }) => {
     if (!input.trim() || isLoading) return;
 
     // Parse mentions from the input
     const { mentions } = parseMentions(input);
-    
+
     // Parse collection references (#Properties, #Contacts, etc.)
     const { collections } = parseCollectionMentions(input);
-    
+
     // Fetch full data for all mentioned entities
     let mentionData: MentionData[] = [];
     if (mentions.length > 0) {
@@ -37,7 +37,7 @@ export function useAIChat() {
         console.error("Error fetching mention data:", err);
       }
     }
-    
+
     // Convert collection references to the format expected by the API
     const collectionRefs = collections.map(c => ({ collection: c.collection }));
     if (collectionRefs.length > 0) {
@@ -95,6 +95,7 @@ export function useAIChat() {
           })),
           ...(mentionData.length > 0 && { mentionData }),
           ...(collectionRefs.length > 0 && { collectionRefs }),
+          ...(options?.thinkingMode && { thinkingMode: true }),
         }),
       });
 

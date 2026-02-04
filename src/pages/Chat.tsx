@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft, Settings, Plus, SlidersHorizontal, Lightbulb, Mic, ArrowUp } from "lucide-react";
+import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft, Settings, Plus, SlidersHorizontal, Lightbulb, ArrowUp } from "lucide-react";
 import { useAIStreaming, type UsageLimitInfo, type StatusUpdate } from "@/hooks/useAIStreaming";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MentionInput } from "@/components/ai-chat";
+import { MentionInput, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, parseCollectionMentions, fetchMentionData, type Mention, type CollectionType } from "@/hooks/useMentionSearch";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -54,6 +55,7 @@ export default function Chat() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { streamMessage, isStreaming } = useAIStreaming();
+  const { preferences, updatePreference } = useUserPreferences();
 
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -63,12 +65,17 @@ export default function Chat() {
   const [limitInfo, setLimitInfo] = useState<UsageLimitInfo | null>(null);
   const [currentStatus, setCurrentStatus] = useState<StatusUpdate | null>(null);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   // Persist sidebar collapsed state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const saved = localStorage.getItem("chat-sidebar-collapsed");
     return saved === "true";
   });
   const [activeMentions, setActiveMentions] = useState<Mention[]>([]);
+
+  // Use thinking mode from preferences
+  const thinkingMode = preferences.thinkingMode || false;
+  const setThinkingMode = (value: boolean) => updatePreference("thinkingMode", value);
   
   // Save sidebar state to localStorage
   useEffect(() => {
@@ -245,6 +252,7 @@ export default function Chat() {
       conversationId: convId,
       mentionData: mentionData.length > 0 ? mentionData : undefined,
       collectionRefs: collectionRefs.length > 0 ? collectionRefs : undefined,
+      thinkingMode,
       onChunk: (_chunk, fullContent) => {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -852,35 +860,32 @@ export default function Chat() {
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      title="Settings"
+                    <AISettingsPopover open={settingsOpen} onOpenChange={setSettingsOpen}>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        title="AI Settings"
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                      </Button>
+                    </AISettingsPopover>
+                    <Button
+                      type="button"
+                      variant={thinkingMode ? "secondary" : "ghost"}
+                      size="icon"
+                      className={cn(
+                        "h-8 w-8",
+                        thinkingMode ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                      )}
+                      title={thinkingMode ? "Thinking mode ON" : "Enable thinking mode"}
+                      onClick={() => setThinkingMode(!thinkingMode)}
                     >
-                      <SlidersHorizontal className="h-4 w-4" />
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      title="AI thinking mode"
-                    >
-                      <Lightbulb className="h-4 w-4" />
+                      <Lightbulb className={cn("h-4 w-4", thinkingMode && "fill-current")} />
                     </Button>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
-                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                      title="Voice input"
-                    >
-                      <Mic className="h-4 w-4" />
-                    </Button>
                     <Button 
                       type="submit" 
                       size="icon" 

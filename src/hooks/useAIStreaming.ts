@@ -48,6 +48,8 @@ interface StreamOptions {
   mentionData?: MentionData[];
   /** Optional collection references for bulk queries */
   collectionRefs?: CollectionRef[];
+  /** Enable thinking mode for step-by-step reasoning */
+  thinkingMode?: boolean;
   /** Called when a new content chunk arrives */
   onChunk?: (content: string, fullContent: string) => void;
   /** Called when streaming completes */
@@ -100,6 +102,7 @@ export function useAIStreaming(): UseAIStreamingReturn {
       conversationId,
       mentionData,
       collectionRefs,
+      thinkingMode,
       onChunk,
       onComplete,
       onError,
@@ -134,6 +137,7 @@ export function useAIStreaming(): UseAIStreamingReturn {
         ...(conversationId && { conversationId }),
         ...(mentionData?.length && { mentionData }),
         ...(collectionRefs?.length && { collectionRefs }),
+        ...(thinkingMode && { thinkingMode }),
       };
 
       const response = await fetch(AI_CHAT_URL, {

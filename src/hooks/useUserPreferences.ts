@@ -6,6 +6,11 @@ export interface UserPreferences {
   pushNotifications: boolean;
   dealUpdates: boolean;
   darkMode: boolean;
+  // AI Settings
+  aiModel?: "default" | "fast" | "advanced";
+  searchMode?: "myData" | "web";
+  responseLength?: "short" | "medium" | "long";
+  thinkingMode?: boolean;
 }
 
 const STORAGE_KEY = "smart-agent-preferences";
@@ -15,6 +20,11 @@ const defaultPreferences: UserPreferences = {
   pushNotifications: true,
   dealUpdates: true,
   darkMode: false,
+  // AI Settings defaults
+  aiModel: "default",
+  searchMode: "myData",
+  responseLength: "medium",
+  thinkingMode: false,
 };
 
 function getStoredPreferences(): UserPreferences {

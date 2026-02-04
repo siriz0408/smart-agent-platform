@@ -1,12 +1,14 @@
 import { useState, useRef, useEffect } from "react";
-import { Sparkles, Bot, User, Plus, SlidersHorizontal, Lightbulb, Mic, ArrowUp } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Sparkles, Bot, User, Plus, SlidersHorizontal, Lightbulb, ArrowUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useAIChat } from "@/hooks/useAIChat";
+import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { cn } from "@/lib/utils";
-import { MentionInput, ChatMarkdown, UserMessageContent } from "@/components/ai-chat";
+import { MentionInput, ChatMarkdown, UserMessageContent, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, fetchMentionData, type Mention } from "@/hooks/useMentionSearch";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,10 +20,17 @@ const quickActions = [
 
 export default function Home() {
   const { profile } = useAuth();
+  const navigate = useNavigate();
   const { messages, isLoading, sendMessage, clearMessages } = useAIChat();
+  const { preferences, updatePreference } = useUserPreferences();
   const [input, setInput] = useState("");
   const [activeMentions, setActiveMentions] = useState<Mention[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Use thinking mode from preferences
+  const thinkingMode = preferences.thinkingMode || false;
+  const setThinkingMode = (value: boolean) => updatePreference("thinkingMode", value);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -36,7 +45,7 @@ export default function Home() {
     if (!input.trim() || isLoading) return;
     const message = input;
     setInput("");
-    await sendMessage(message);
+    await sendMessage(message, { thinkingMode });
   };
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
@@ -175,35 +184,32 @@ export default function Home() {
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    title="Settings"
+                  <AISettingsPopover open={settingsOpen} onOpenChange={setSettingsOpen}>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                      title="AI Settings"
+                    >
+                      <SlidersHorizontal className="h-4 w-4" />
+                    </Button>
+                  </AISettingsPopover>
+                  <Button
+                    type="button"
+                    variant={thinkingMode ? "secondary" : "ghost"}
+                    size="icon"
+                    className={cn(
+                      "h-8 w-8",
+                      thinkingMode ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    title={thinkingMode ? "Thinking mode ON" : "Enable thinking mode"}
+                    onClick={() => setThinkingMode(!thinkingMode)}
                   >
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    title="AI thinking mode"
-                  >
-                    <Lightbulb className="h-4 w-4" />
+                    <Lightbulb className={cn("h-4 w-4", thinkingMode && "fill-current")} />
                   </Button>
                 </div>
                 <div className="flex items-center gap-0.5">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                    title="Voice input"
-                  >
-                    <Mic className="h-4 w-4" />
-                  </Button>
                   <Button 
                     type="submit" 
                     size="icon" 
