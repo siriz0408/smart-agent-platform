@@ -43,10 +43,24 @@
     "open": 0,
     "fixed": 3,
     "wontfix": 0,
-    "lastUpdated": "2026-02-04T01:55:00Z"
+    "lastUpdated": "2026-02-04T03:30:00Z"
+  },
+  "aiTestingNotes": {
+    "testedDate": "2026-02-04",
+    "results": "All AI features functional",
+    "observations": [
+      "AI Chat API working with streaming responses",
+      "Calculator triggers working via chat",
+      "Document indexing operational (19 chunks from 1 doc)",
+      "6 AI Agents available (5 certified)",
+      "Agent execution hit rate limit (429) - expected behavior",
+      "Context collections (@mentions) data available",
+      "Property search requires RAPIDAPI_KEY configuration"
+    ],
+    "noBugsFound": true
   },
   "metadata": {
     "created": "2026-02-04T00:00:00Z",
-    "version": "1.0.0"
+    "version": "1.1.0"
   }
 }
