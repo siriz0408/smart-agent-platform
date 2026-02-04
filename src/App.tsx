@@ -45,6 +45,7 @@ import Help from "./pages/Help";
 import Privacy from "./pages/Privacy";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
+import Landing from "./pages/Landing";
 import Onboarding from "./pages/Onboarding";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,7 @@ const App = () => (
             <KeyboardShortcutsProvider>
             <Routes>
               {/* Public routes */}
+              <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -73,7 +75,7 @@ const App = () => (
               <Route path="/onboarding" element={<ProtectedRoute skipOnboardingCheck><Onboarding /></ProtectedRoute>} />
 
               {/* Protected routes - Common */}
-              <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
               <Route path="/documents" element={<ProtectedRoute><Documents /></ProtectedRoute>} />
               <Route path="/documents/:id" element={<ProtectedRoute><DocumentDetail /></ProtectedRoute>} />

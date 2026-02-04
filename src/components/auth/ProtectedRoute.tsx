@@ -57,7 +57,7 @@ export function ProtectedRoute({
       : requiredRoles.includes(activeRole);
     
     if (!hasAccess) {
-      return <Navigate to="/" replace />;
+      return <Navigate to="/dashboard" replace />;
     }
   }
 

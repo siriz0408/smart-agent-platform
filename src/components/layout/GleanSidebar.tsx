@@ -53,7 +53,7 @@ export function GleanSidebar() {
   // Role-based navigation items
   const getNavItems = (): NavItem[] => {
     const baseItems: NavItem[] = [
-      { icon: Home, label: 'Home', href: '/' },
+      { icon: Home, label: 'Home', href: '/dashboard' },
       { icon: MessageSquare, label: 'Chat', href: '/chat' },
       { icon: Calculator, label: 'Tools', href: '/tools' },
     ];
@@ -90,7 +90,7 @@ export function GleanSidebar() {
         { icon: MessageSquare, label: 'Messages', href: '/messages' },
       ],
       buyer: [
-        { icon: Home, label: 'Home', href: '/' },
+        { icon: Home, label: 'Home', href: '/dashboard' },
         { icon: MessageSquare, label: 'Chat', href: '/chat' },
         { icon: Calculator, label: 'Tools', href: '/tools' },
         { icon: Building2, label: 'Search', href: '/properties/search' },
@@ -100,7 +100,7 @@ export function GleanSidebar() {
         { icon: MessageSquare, label: 'Messages', href: '/messages' },
       ],
       seller: [
-        { icon: Home, label: 'Home', href: '/' },
+        { icon: Home, label: 'Home', href: '/dashboard' },
         { icon: MessageSquare, label: 'Chat', href: '/chat' },
         { icon: Calculator, label: 'Tools', href: '/tools' },
         { icon: Building2, label: 'My Listing', href: '/my-listing' },
