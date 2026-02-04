@@ -10,6 +10,18 @@ import { UsageLimitDialog } from "./UsageLimitDialog";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
+type AIAgentWithSources = AIAgent & { data_sources?: string[] | null };
+
+const getAgentDataSources = (agent: AIAgent | null): string[] => {
+  if (!agent || !("data_sources" in agent)) {
+    return [];
+  }
+  const rawSources = (agent as AIAgentWithSources).data_sources;
+  if (!Array.isArray(rawSources)) {
+    return [];
+  }
+  return rawSources.filter((source): source is string => typeof source === "string");
+};
 
 interface AgentExecutionSheetProps {
   agent: AIAgent | null;
@@ -98,7 +110,7 @@ export function AgentExecutionSheet({ agent, open, onOpenChange }: AgentExecutio
             {/* Input Form */}
             <AgentInputForm
               agentType={agentType}
-              dataSources={(agent as any)?.data_sources || []}
+              dataSources={getAgentDataSources(agent)}
               context={context}
               onContextChange={setContext}
               disabled={isExecuting || result.isStreaming}

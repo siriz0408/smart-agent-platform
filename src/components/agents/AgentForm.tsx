@@ -48,9 +48,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
+type AIAgentWithSources = AIAgent & { data_sources?: string[] | null };
+
+const getAgentDataSources = (agent?: AIAgent): string[] => {
+  if (!agent || !("data_sources" in agent)) {
+    return [];
+  }
+  const rawSources = (agent as AIAgentWithSources).data_sources;
+  if (!Array.isArray(rawSources)) {
+    return [];
+  }
+  return rawSources.filter((source): source is string => typeof source === "string");
+};
 
 const agentFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(100, "Name must be 100 characters or less"),
@@ -117,7 +129,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
       description: agent?.description || "",
       icon: agent?.icon || "bot",
       category: agent?.category || "general",
-      data_sources: (agent as any)?.data_sources || [],
+      data_sources: getAgentDataSources(agent),
       system_prompt: agent?.system_prompt || "",
     },
   });
@@ -130,7 +142,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
         description: agent.description || "",
         icon: agent.icon || "bot",
         category: agent.category || "general",
-        data_sources: (agent as any)?.data_sources || [],
+        data_sources: getAgentDataSources(agent),
         system_prompt: agent.system_prompt || "",
       });
     }
@@ -207,17 +219,19 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
     try {
       if (isEditMode && agent) {
         // Update existing agent
+        const updatePayload: TablesUpdate<"ai_agents"> & { data_sources?: string[] } = {
+          name: data.name,
+          description: data.description || null,
+          icon: data.icon,
+          category: data.category,
+          data_sources: data.data_sources || [],
+          system_prompt: data.system_prompt || null,
+          updated_at: new Date().toISOString(),
+        };
+
         const { error } = await supabase
           .from("ai_agents")
-          .update({
-            name: data.name,
-            description: data.description || null,
-            icon: data.icon,
-            category: data.category,
-            data_sources: data.data_sources || [],
-            system_prompt: data.system_prompt || null,
-            updated_at: new Date().toISOString(),
-          } as any)
+          .update(updatePayload)
           .eq("id", agent.id);
 
         if (error) throw error;
@@ -228,7 +242,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
         });
       } else {
         // Create new agent
-        const { error } = await supabase.from("ai_agents").insert({
+        const insertPayload: TablesInsert<"ai_agents"> & { data_sources?: string[] } = {
           tenant_id: profile.tenant_id,
           name: data.name,
           description: data.description || null,
@@ -239,7 +253,9 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
           created_by: user.id,
           is_public: false,
           is_certified: false,
-        } as any);
+        };
+
+        const { error } = await supabase.from("ai_agents").insert(insertPayload);
 
         if (error) throw error;
 

@@ -3,10 +3,32 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
+import { GlobalSearch } from '@/components/search/GlobalSearch';
+import { AppHeader } from '@/components/layout/AppHeader';
 
-// Mock components - will be implemented in GREEN phase
-const GlobalSearch = () => <div>GlobalSearch component not implemented</div>;
-const AppHeader = () => <div>AppHeader component</div>;
+vi.mock('@/hooks/useAuth', () => ({
+  useAuth: () => ({
+    session: { access_token: 'test-token' },
+    user: { id: 'user-1', email: 'test@example.com' },
+    profile: { full_name: 'Test User' },
+    signOut: vi.fn(),
+  }),
+}));
+
+vi.mock('@/contexts/RoleContext', () => ({
+  useRole: () => ({
+    isAdmin: false,
+    isOverrideActive: false,
+  }),
+}));
+
+vi.mock('@/components/layout/NotificationBell', () => ({
+  NotificationBell: () => <div data-testid="notification-bell" />,
+}));
+
+vi.mock('@/components/layout/RoleBadge', () => ({
+  RoleBadge: () => <div data-testid="role-badge" />,
+}));
 
 // Test wrapper with providers
 const TestWrapper = ({ children }: { children: React.ReactNode }) => {
