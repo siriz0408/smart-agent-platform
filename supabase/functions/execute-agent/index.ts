@@ -161,6 +161,32 @@ serve(async (req) => {
         contextData += `Square Feet: ${property.square_feet ? property.square_feet.toLocaleString() : "N/A"}\n`;
         contextData += `Year Built: ${property.year_built || "N/A"}\n`;
         contextData += `Lot Size: ${property.lot_size ? `${property.lot_size} acres` : "N/A"}\n`;
+        // HOA info
+        if (property.hoa_fee) {
+          contextData += `HOA Fee: $${property.hoa_fee}/month${property.hoa_name ? ` (${property.hoa_name})` : ""}\n`;
+        }
+        // Parking & HVAC
+        if (property.parking_spaces || property.parking_type) {
+          contextData += `Parking: ${property.parking_spaces || "N/A"} spaces${property.parking_type ? ` (${property.parking_type})` : ""}\n`;
+        }
+        if (property.heating_type || property.cooling_type) {
+          contextData += `HVAC: ${property.heating_type || "N/A"} / ${property.cooling_type || "N/A"}\n`;
+        }
+        // Schools
+        if (property.school_district) {
+          contextData += `School District: ${property.school_district}\n`;
+        }
+        // Taxes
+        if (property.annual_taxes) {
+          contextData += `Annual Taxes: $${property.annual_taxes.toLocaleString()}\n`;
+        }
+        // Marketing info
+        if (property.days_on_market !== null && property.days_on_market !== undefined) {
+          contextData += `Days on Market: ${property.days_on_market}\n`;
+        }
+        if (property.listing_agent_name) {
+          contextData += `Listing Agent: ${property.listing_agent_name}${property.listing_agent_phone ? ` (${property.listing_agent_phone})` : ""}\n`;
+        }
         if (property.features && property.features.length > 0) {
           contextData += `Features: ${property.features.join(", ")}\n`;
         }
@@ -185,6 +211,48 @@ serve(async (req) => {
         contextData += `Company: ${contact.company || "N/A"}\n`;
         contextData += `Type: ${contact.contact_type || "Lead"}\n`;
         contextData += `Status: ${contact.status || "Active"}\n`;
+        // Buyer preferences
+        if (contact.price_min || contact.price_max) {
+          contextData += `Budget: ${contact.price_min ? `$${contact.price_min.toLocaleString()}` : "Any"} - ${contact.price_max ? `$${contact.price_max.toLocaleString()}` : "Any"}\n`;
+        }
+        if (contact.preferred_beds || contact.preferred_baths) {
+          contextData += `Preferences: ${contact.preferred_beds || "Any"} beds / ${contact.preferred_baths || "Any"} baths\n`;
+        }
+        if (contact.preferred_areas && contact.preferred_areas.length > 0) {
+          contextData += `Preferred Areas: ${contact.preferred_areas.join(", ")}\n`;
+        }
+        if (contact.preferred_property_types && contact.preferred_property_types.length > 0) {
+          contextData += `Property Types: ${contact.preferred_property_types.join(", ")}\n`;
+        }
+        // Seller info
+        if (contact.owned_property_address) {
+          contextData += `Owned Property: ${contact.owned_property_address}\n`;
+        }
+        if (contact.listing_timeline) {
+          contextData += `Listing Timeline: ${contact.listing_timeline}\n`;
+        }
+        // Financial status
+        if (contact.pre_approval_status) {
+          contextData += `Pre-Approval: ${contact.pre_approval_status}${contact.pre_approval_amount ? ` ($${contact.pre_approval_amount.toLocaleString()})` : ""}\n`;
+        }
+        if (contact.lender_name) {
+          contextData += `Lender: ${contact.lender_name}\n`;
+        }
+        // Timeline
+        if (contact.urgency_level) {
+          contextData += `Urgency: ${contact.urgency_level}\n`;
+        }
+        if (contact.target_move_date) {
+          contextData += `Target Move Date: ${contact.target_move_date}\n`;
+        }
+        // Communication preferences
+        if (contact.preferred_contact_method) {
+          contextData += `Preferred Contact Method: ${contact.preferred_contact_method}\n`;
+        }
+        // Lead tracking
+        if (contact.lead_source) {
+          contextData += `Lead Source: ${contact.lead_source}\n`;
+        }
         if (contact.notes) {
           contextData += `Notes: ${contact.notes}\n`;
         }
@@ -246,6 +314,52 @@ serve(async (req) => {
         contextData += `Stage: ${deal.stage || "Lead"}\n`;
         contextData += `Estimated Value: ${deal.estimated_value ? `$${deal.estimated_value.toLocaleString()}` : "N/A"}\n`;
         contextData += `Expected Close: ${deal.expected_close_date || "Not set"}\n`;
+        // Financials
+        if (deal.earnest_money) {
+          contextData += `Earnest Money: $${deal.earnest_money.toLocaleString()}\n`;
+        }
+        if (deal.option_fee) {
+          contextData += `Option Fee: $${deal.option_fee.toLocaleString()}\n`;
+        }
+        if (deal.appraisal_value) {
+          contextData += `Appraisal Value: $${deal.appraisal_value.toLocaleString()}\n`;
+        }
+        if (deal.final_sale_price) {
+          contextData += `Final Sale Price: $${deal.final_sale_price.toLocaleString()}\n`;
+        }
+        // Key dates
+        if (deal.option_period_end || deal.inspection_date || deal.appraisal_date || deal.financing_deadline) {
+          contextData += `Key Dates: `;
+          const dates = [];
+          if (deal.option_period_end) dates.push(`Option Period: ${deal.option_period_end}`);
+          if (deal.inspection_date) dates.push(`Inspection: ${deal.inspection_date}`);
+          if (deal.appraisal_date) dates.push(`Appraisal: ${deal.appraisal_date}`);
+          if (deal.financing_deadline) dates.push(`Financing: ${deal.financing_deadline}`);
+          contextData += dates.join(", ") + "\n";
+        }
+        // Contingencies
+        const contingencies = [];
+        if (deal.has_inspection_contingency) contingencies.push("Inspection");
+        if (deal.has_financing_contingency) contingencies.push("Financing");
+        if (deal.has_appraisal_contingency) contingencies.push("Appraisal");
+        if (deal.has_sale_contingency) contingencies.push("Sale of Home");
+        if (contingencies.length > 0) {
+          contextData += `Contingencies: ${contingencies.join(", ")}\n`;
+        }
+        // Lender info
+        if (deal.loan_type || deal.lender_name) {
+          contextData += `Loan: ${deal.loan_type || "Unknown type"}${deal.lender_name ? ` via ${deal.lender_name}` : ""}\n`;
+        }
+        if (deal.loan_officer_name) {
+          contextData += `Loan Officer: ${deal.loan_officer_name}${deal.loan_officer_phone ? ` (${deal.loan_officer_phone})` : ""}\n`;
+        }
+        // Title/Escrow
+        if (deal.title_company) {
+          contextData += `Title Company: ${deal.title_company}\n`;
+        }
+        if (deal.escrow_officer_name) {
+          contextData += `Escrow Officer: ${deal.escrow_officer_name}${deal.escrow_officer_phone ? ` (${deal.escrow_officer_phone})` : ""}\n`;
+        }
         if (deal.notes) {
           contextData += `Notes: ${deal.notes}\n`;
         }

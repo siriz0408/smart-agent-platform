@@ -15,7 +15,13 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Loader2,
+  Thermometer,
+  Car,
+  GraduationCap,
+  Receipt,
+  Clock,
 } from "lucide-react";
 import {
   Sheet,
@@ -54,6 +60,12 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
@@ -94,11 +106,20 @@ const statusColors: Record<string, string> = {
   coming_soon: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
 };
 
+const PARKING_TYPES = [
+  { value: "garage", label: "Garage" },
+  { value: "carport", label: "Carport" },
+  { value: "street", label: "Street" },
+  { value: "none", label: "None" },
+];
+
 const propertySchema = z.object({
+  // Location
   address: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City is required"),
   state: z.string().length(2, "Please select a state"),
   zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code"),
+  // Basic details
   property_type: z.string().optional(),
   status: z.string().optional(),
   price: z.coerce.number().positive("Price must be positive").optional().or(z.literal("")),
@@ -109,6 +130,27 @@ const propertySchema = z.object({
   year_built: z.coerce.number().min(1800).max(new Date().getFullYear()).optional().or(z.literal("")),
   description: z.string().optional(),
   mls_number: z.string().optional(),
+  // HOA
+  hoa_fee: z.coerce.number().min(0).optional().or(z.literal("")),
+  hoa_name: z.string().optional(),
+  // Parking & HVAC
+  parking_spaces: z.coerce.number().min(0).max(20).optional().or(z.literal("")),
+  parking_type: z.string().optional(),
+  heating_type: z.string().optional(),
+  cooling_type: z.string().optional(),
+  // Schools
+  school_district: z.string().optional(),
+  elementary_school: z.string().optional(),
+  middle_school: z.string().optional(),
+  high_school: z.string().optional(),
+  // Taxes
+  annual_taxes: z.coerce.number().min(0).optional().or(z.literal("")),
+  tax_assessment: z.coerce.number().min(0).optional().or(z.literal("")),
+  // Marketing
+  days_on_market: z.coerce.number().min(0).optional().or(z.literal("")),
+  listing_date: z.string().optional(),
+  listing_agent_name: z.string().optional(),
+  listing_agent_phone: z.string().optional(),
 });
 
 type PropertyFormData = z.infer<typeof propertySchema>;
@@ -129,6 +171,11 @@ export function PropertyDetailSheet({
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const [hoaOpen, setHoaOpen] = useState(false);
+  const [parkingHvacOpen, setParkingHvacOpen] = useState(false);
+  const [schoolsOpen, setSchoolsOpen] = useState(false);
+  const [taxesOpen, setTaxesOpen] = useState(false);
+  const [marketingOpen, setMarketingOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const form = useForm<PropertyFormData>({
@@ -148,6 +195,22 @@ export function PropertyDetailSheet({
       year_built: "",
       description: "",
       mls_number: "",
+      hoa_fee: "",
+      hoa_name: "",
+      parking_spaces: "",
+      parking_type: "",
+      heating_type: "",
+      cooling_type: "",
+      school_district: "",
+      elementary_school: "",
+      middle_school: "",
+      high_school: "",
+      annual_taxes: "",
+      tax_assessment: "",
+      days_on_market: "",
+      listing_date: "",
+      listing_agent_name: "",
+      listing_agent_phone: "",
     },
   });
 
@@ -168,6 +231,22 @@ export function PropertyDetailSheet({
         year_built: property.year_built || "",
         description: property.description || "",
         mls_number: property.mls_number || "",
+        hoa_fee: property.hoa_fee || "",
+        hoa_name: property.hoa_name || "",
+        parking_spaces: property.parking_spaces || "",
+        parking_type: property.parking_type || "",
+        heating_type: property.heating_type || "",
+        cooling_type: property.cooling_type || "",
+        school_district: property.school_district || "",
+        elementary_school: property.elementary_school || "",
+        middle_school: property.middle_school || "",
+        high_school: property.high_school || "",
+        annual_taxes: property.annual_taxes || "",
+        tax_assessment: property.tax_assessment || "",
+        days_on_market: property.days_on_market || "",
+        listing_date: property.listing_date || "",
+        listing_agent_name: property.listing_agent_name || "",
+        listing_agent_phone: property.listing_agent_phone || "",
       });
       setCurrentPhotoIndex(0);
     }
@@ -197,6 +276,22 @@ export function PropertyDetailSheet({
           year_built: data.year_built || null,
           description: data.description || null,
           mls_number: data.mls_number || null,
+          hoa_fee: data.hoa_fee || null,
+          hoa_name: data.hoa_name || null,
+          parking_spaces: data.parking_spaces || null,
+          parking_type: data.parking_type || null,
+          heating_type: data.heating_type || null,
+          cooling_type: data.cooling_type || null,
+          school_district: data.school_district || null,
+          elementary_school: data.elementary_school || null,
+          middle_school: data.middle_school || null,
+          high_school: data.high_school || null,
+          annual_taxes: data.annual_taxes || null,
+          tax_assessment: data.tax_assessment || null,
+          days_on_market: data.days_on_market || null,
+          listing_date: data.listing_date || null,
+          listing_agent_name: data.listing_agent_name || null,
+          listing_agent_phone: data.listing_agent_phone || null,
         })
         .eq("id", property.id);
       if (error) throw error;
@@ -310,106 +405,219 @@ export function PropertyDetailSheet({
               <TabsTrigger value="edit">Edit</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="details" className="space-y-6 mt-6">
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-4">
-                {property.bedrooms && (
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                    <Bed className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-semibold">{property.bedrooms}</div>
-                      <div className="text-xs text-muted-foreground">Beds</div>
-                    </div>
+            <TabsContent value="details" className="mt-6">
+              <ScrollArea className="h-[calc(100vh-350px)]">
+                <div className="space-y-6 pr-4">
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {property.bedrooms && (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <Bed className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-semibold">{property.bedrooms}</div>
+                          <div className="text-xs text-muted-foreground">Beds</div>
+                        </div>
+                      </div>
+                    )}
+                    {property.bathrooms && (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <Bath className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-semibold">{Number(property.bathrooms)}</div>
+                          <div className="text-xs text-muted-foreground">Baths</div>
+                        </div>
+                      </div>
+                    )}
+                    {property.square_feet && (
+                      <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                        <Square className="h-5 w-5 text-muted-foreground" />
+                        <div>
+                          <div className="font-semibold">{property.square_feet.toLocaleString()}</div>
+                          <div className="text-xs text-muted-foreground">Sq Ft</div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-                {property.bathrooms && (
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                    <Bath className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-semibold">{Number(property.bathrooms)}</div>
-                      <div className="text-xs text-muted-foreground">Baths</div>
-                    </div>
-                  </div>
-                )}
-                {property.square_feet && (
-                  <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
-                    <Square className="h-5 w-5 text-muted-foreground" />
-                    <div>
-                      <div className="font-semibold">{property.square_feet.toLocaleString()}</div>
-                      <div className="text-xs text-muted-foreground">Sq Ft</div>
-                    </div>
-                  </div>
-                )}
-              </div>
 
-              {/* Property Details */}
-              <div className="space-y-4">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                  Property Information
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {property.address}<br />
-                      {property.city}, {property.state} {property.zip_code}
-                    </span>
+                  {/* Property Details */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                      Property Information
+                    </h3>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span>
+                          {property.address}<br />
+                          {property.city}, {property.state} {property.zip_code}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Home className="h-4 w-4 text-muted-foreground" />
+                        <span>
+                          {PROPERTY_TYPES.find(t => t.value === property.property_type)?.label || "Single Family"}
+                        </span>
+                      </div>
+                      {property.year_built && (
+                        <div className="flex items-center gap-3">
+                          <Calendar className="h-4 w-4 text-muted-foreground" />
+                          <span>Built in {property.year_built}</span>
+                        </div>
+                      )}
+                      {property.lot_size && (
+                        <div className="flex items-center gap-3">
+                          <Square className="h-4 w-4 text-muted-foreground" />
+                          <span>{Number(property.lot_size)} acres</span>
+                        </div>
+                      )}
+                      {property.mls_number && (
+                        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                          MLS# {property.mls_number}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Home className="h-4 w-4 text-muted-foreground" />
-                    <span>
-                      {PROPERTY_TYPES.find(t => t.value === property.property_type)?.label || "Single Family"}
-                    </span>
-                  </div>
-                  {property.year_built && (
-                    <div className="flex items-center gap-3">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span>Built in {property.year_built}</span>
+
+                  {/* HOA Info */}
+                  {(property.hoa_fee || property.hoa_name) && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        HOA Information
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {property.hoa_fee && <p>Monthly Fee: ${property.hoa_fee.toLocaleString()}</p>}
+                        {property.hoa_name && <p className="text-muted-foreground">{property.hoa_name}</p>}
+                      </div>
                     </div>
                   )}
-                  {property.lot_size && (
-                    <div className="flex items-center gap-3">
-                      <Square className="h-4 w-4 text-muted-foreground" />
-                      <span>{Number(property.lot_size)} acres</span>
+
+                  {/* Parking & HVAC */}
+                  {(property.parking_spaces || property.parking_type || property.heating_type || property.cooling_type) && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        Parking & HVAC
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {(property.parking_spaces || property.parking_type) && (
+                          <div className="flex items-center gap-3">
+                            <Car className="h-4 w-4 text-muted-foreground" />
+                            <span>
+                              {property.parking_spaces && `${property.parking_spaces} spaces`}
+                              {property.parking_spaces && property.parking_type && ' - '}
+                              {property.parking_type && PARKING_TYPES.find(t => t.value === property.parking_type)?.label}
+                            </span>
+                          </div>
+                        )}
+                        {(property.heating_type || property.cooling_type) && (
+                          <div className="flex items-center gap-3">
+                            <Thermometer className="h-4 w-4 text-muted-foreground" />
+                            <span>
+                              {property.heating_type && `Heat: ${property.heating_type}`}
+                              {property.heating_type && property.cooling_type && ' / '}
+                              {property.cooling_type && `Cool: ${property.cooling_type}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
-                  {property.mls_number && (
+
+                  {/* Schools */}
+                  {(property.school_district || property.elementary_school || property.middle_school || property.high_school) && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        Schools
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {property.school_district && (
+                          <div className="flex items-center gap-3">
+                            <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-medium">{property.school_district}</span>
+                          </div>
+                        )}
+                        <div className="ml-7 space-y-1 text-muted-foreground">
+                          {property.elementary_school && <p>Elementary: {property.elementary_school}</p>}
+                          {property.middle_school && <p>Middle: {property.middle_school}</p>}
+                          {property.high_school && <p>High: {property.high_school}</p>}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Taxes */}
+                  {(property.annual_taxes || property.tax_assessment) && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        Taxes
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {property.annual_taxes && (
+                          <div className="flex items-center gap-3">
+                            <Receipt className="h-4 w-4 text-muted-foreground" />
+                            <span>Annual Taxes: ${property.annual_taxes.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {property.tax_assessment && (
+                          <p className="ml-7 text-muted-foreground">Assessment: ${property.tax_assessment.toLocaleString()}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Marketing */}
+                  {(property.days_on_market || property.listing_date || property.listing_agent_name) && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        Marketing Info
+                      </h3>
+                      <div className="space-y-2 text-sm">
+                        {property.days_on_market !== null && property.days_on_market !== undefined && (
+                          <div className="flex items-center gap-3">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span>{property.days_on_market} days on market</span>
+                          </div>
+                        )}
+                        {property.listing_date && (
+                          <p className="ml-7 text-muted-foreground">Listed: {format(new Date(property.listing_date), "MMM d, yyyy")}</p>
+                        )}
+                        {property.listing_agent_name && (
+                          <p className="ml-7">Agent: {property.listing_agent_name} {property.listing_agent_phone && `(${property.listing_agent_phone})`}</p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description */}
+                  {property.description && (
+                    <div className="space-y-3">
+                      <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
+                        Description
+                      </h3>
+                      <p className="text-sm whitespace-pre-wrap">{property.description}</p>
+                    </div>
+                  )}
+
+                  {/* Metadata */}
+                  <div className="space-y-3 pt-4 border-t">
                     <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                      MLS# {property.mls_number}
+                      <Calendar className="h-4 w-4" />
+                      <span>Added {format(new Date(property.created_at), "MMM d, yyyy")}</span>
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
 
-              {/* Description */}
-              {property.description && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                    Description
-                  </h3>
-                  <p className="text-sm whitespace-pre-wrap">{property.description}</p>
+                  {/* Delete Button */}
+                  <div className="pt-4 border-t">
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => setShowDeleteDialog(true)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete Property
+                    </Button>
+                  </div>
                 </div>
-              )}
-
-              {/* Metadata */}
-              <div className="space-y-3 pt-4 border-t">
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <Calendar className="h-4 w-4" />
-                  <span>Added {format(new Date(property.created_at), "MMM d, yyyy")}</span>
-                </div>
-              </div>
-
-              {/* Delete Button */}
-              <div className="pt-4 border-t">
-                <Button
-                  variant="destructive"
-                  className="w-full"
-                  onClick={() => setShowDeleteDialog(true)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Property
-                </Button>
-              </div>
+              </ScrollArea>
             </TabsContent>
 
             <TabsContent value="edit" className="mt-6">
@@ -651,12 +859,202 @@ export function PropertyDetailSheet({
                       <FormItem>
                         <FormLabel>Description</FormLabel>
                         <FormControl>
-                          <Textarea rows={4} {...field} />
+                          <Textarea rows={3} {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* HOA Section */}
+                  <Collapsible open={hoaOpen} onOpenChange={setHoaOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                        <span className="font-medium">HOA & Fees</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${hoaOpen ? '' : '-rotate-90'}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="hoa_fee" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>HOA Fee ($/mo)</FormLabel>
+                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="hoa_name" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>HOA Name</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Parking & HVAC Section */}
+                  <Collapsible open={parkingHvacOpen} onOpenChange={setParkingHvacOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                        <span className="font-medium">Parking & HVAC</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${parkingHvacOpen ? '' : '-rotate-90'}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="parking_spaces" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Parking Spaces</FormLabel>
+                            <FormControl><Input type="number" min={0} {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="parking_type" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Parking Type</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value || ""}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {PARKING_TYPES.map((type) => (
+                                  <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="heating_type" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Heating</FormLabel>
+                            <FormControl><Input placeholder="Forced Air, Radiant" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="cooling_type" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cooling</FormLabel>
+                            <FormControl><Input placeholder="Central Air" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Schools Section */}
+                  <Collapsible open={schoolsOpen} onOpenChange={setSchoolsOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                        <span className="font-medium">Schools</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${schoolsOpen ? '' : '-rotate-90'}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-2">
+                      <FormField control={form.control} name="school_district" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>School District</FormLabel>
+                          <FormControl><Input {...field} /></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )} />
+                      <div className="grid grid-cols-3 gap-2">
+                        <FormField control={form.control} name="elementary_school" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Elementary</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="middle_school" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Middle</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="high_school" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>High</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                          </FormItem>
+                        )} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Taxes Section */}
+                  <Collapsible open={taxesOpen} onOpenChange={setTaxesOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                        <span className="font-medium">Taxes</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${taxesOpen ? '' : '-rotate-90'}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="annual_taxes" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Annual Taxes ($)</FormLabel>
+                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="tax_assessment" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Assessment ($)</FormLabel>
+                            <FormControl><Input type="number" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Marketing Section */}
+                  <Collapsible open={marketingOpen} onOpenChange={setMarketingOpen}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                        <span className="font-medium">Marketing Info</span>
+                        <ChevronDown className={`h-4 w-4 transition-transform ${marketingOpen ? '' : '-rotate-90'}`} />
+                      </Button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="space-y-4 pt-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="days_on_market" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Days on Market</FormLabel>
+                            <FormControl><Input type="number" min={0} {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="listing_date" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Listing Date</FormLabel>
+                            <FormControl><Input type="date" {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <FormField control={form.control} name="listing_agent_name" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Agent Name</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="listing_agent_phone" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Agent Phone</FormLabel>
+                            <FormControl><Input {...field} /></FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )} />
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
 
                   <div className="flex gap-3 pt-4">
                     <Button

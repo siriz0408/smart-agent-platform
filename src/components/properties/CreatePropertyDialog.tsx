@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
 
 import {
   Dialog,
@@ -30,6 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
@@ -60,11 +66,20 @@ const PROPERTY_STATUSES = [
   { value: "coming_soon", label: "Coming Soon" },
 ];
 
+const PARKING_TYPES = [
+  { value: "garage", label: "Garage" },
+  { value: "carport", label: "Carport" },
+  { value: "street", label: "Street" },
+  { value: "none", label: "None" },
+];
+
 const formSchema = z.object({
+  // Location
   address: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
   state: z.string().length(2, "Please select a state"),
   zip_code: z.string().regex(/^\d{5}(-\d{4})?$/, "Invalid ZIP code format"),
+  // Basic details
   property_type: z.string().optional(),
   status: z.string().optional(),
   price: z.coerce.number().positive("Price must be positive").optional().or(z.literal("")),
@@ -75,6 +90,27 @@ const formSchema = z.object({
   year_built: z.coerce.number().min(1800).max(new Date().getFullYear()).optional().or(z.literal("")),
   description: z.string().optional(),
   mls_number: z.string().optional(),
+  // HOA
+  hoa_fee: z.coerce.number().min(0).optional().or(z.literal("")),
+  hoa_name: z.string().optional(),
+  // Parking & HVAC
+  parking_spaces: z.coerce.number().min(0).max(20).optional().or(z.literal("")),
+  parking_type: z.string().optional(),
+  heating_type: z.string().optional(),
+  cooling_type: z.string().optional(),
+  // Schools
+  school_district: z.string().optional(),
+  elementary_school: z.string().optional(),
+  middle_school: z.string().optional(),
+  high_school: z.string().optional(),
+  // Taxes
+  annual_taxes: z.coerce.number().min(0).optional().or(z.literal("")),
+  tax_assessment: z.coerce.number().min(0).optional().or(z.literal("")),
+  // Marketing
+  days_on_market: z.coerce.number().min(0).optional().or(z.literal("")),
+  listing_date: z.string().optional(),
+  listing_agent_name: z.string().optional(),
+  listing_agent_phone: z.string().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -89,6 +125,11 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
   const queryClient = useQueryClient();
   const [photos, setPhotos] = useState<PhotoFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [hoaOpen, setHoaOpen] = useState(false);
+  const [parkingHvacOpen, setParkingHvacOpen] = useState(false);
+  const [schoolsOpen, setSchoolsOpen] = useState(false);
+  const [taxesOpen, setTaxesOpen] = useState(false);
+  const [marketingOpen, setMarketingOpen] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -107,6 +148,22 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
       year_built: "",
       description: "",
       mls_number: "",
+      hoa_fee: "",
+      hoa_name: "",
+      parking_spaces: "",
+      parking_type: "",
+      heating_type: "",
+      cooling_type: "",
+      school_district: "",
+      elementary_school: "",
+      middle_school: "",
+      high_school: "",
+      annual_taxes: "",
+      tax_assessment: "",
+      days_on_market: "",
+      listing_date: "",
+      listing_agent_name: "",
+      listing_agent_phone: "",
     },
   });
 
@@ -170,6 +227,23 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
         description: values.description || null,
         mls_number: values.mls_number || null,
         listing_agent_id: user.id,
+        // New fields
+        hoa_fee: values.hoa_fee || null,
+        hoa_name: values.hoa_name || null,
+        parking_spaces: values.parking_spaces || null,
+        parking_type: values.parking_type || null,
+        heating_type: values.heating_type || null,
+        cooling_type: values.cooling_type || null,
+        school_district: values.school_district || null,
+        elementary_school: values.elementary_school || null,
+        middle_school: values.middle_school || null,
+        high_school: values.high_school || null,
+        annual_taxes: values.annual_taxes || null,
+        tax_assessment: values.tax_assessment || null,
+        days_on_market: values.days_on_market || null,
+        listing_date: values.listing_date || null,
+        listing_agent_name: values.listing_agent_name || null,
+        listing_agent_phone: values.listing_agent_phone || null,
       };
 
       const { data: property, error: insertError } = await supabase
@@ -492,6 +566,199 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
                 </FormItem>
               )}
             />
+
+            {/* HOA Section */}
+            <Collapsible open={hoaOpen} onOpenChange={setHoaOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                  <span className="font-medium">HOA & Fees</span>
+                  {hoaOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="hoa_fee" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>HOA Fee ($/month)</FormLabel>
+                      <FormControl><Input type="number" placeholder="250" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="hoa_name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>HOA Name</FormLabel>
+                      <FormControl><Input placeholder="Community HOA" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Parking & HVAC Section */}
+            <Collapsible open={parkingHvacOpen} onOpenChange={setParkingHvacOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                  <span className="font-medium">Parking & HVAC</span>
+                  {parkingHvacOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="parking_spaces" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parking Spaces</FormLabel>
+                      <FormControl><Input type="number" min={0} placeholder="2" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="parking_type" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parking Type</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {PARKING_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="heating_type" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Heating Type</FormLabel>
+                      <FormControl><Input placeholder="Forced Air, Radiant, etc." {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="cooling_type" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cooling Type</FormLabel>
+                      <FormControl><Input placeholder="Central Air, Window Unit, etc." {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Schools Section */}
+            <Collapsible open={schoolsOpen} onOpenChange={setSchoolsOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                  <span className="font-medium">Schools</span>
+                  {schoolsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                <FormField control={form.control} name="school_district" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>School District</FormLabel>
+                    <FormControl><Input placeholder="Unified School District" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField control={form.control} name="elementary_school" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Elementary</FormLabel>
+                      <FormControl><Input placeholder="School name" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="middle_school" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Middle</FormLabel>
+                      <FormControl><Input placeholder="School name" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="high_school" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>High</FormLabel>
+                      <FormControl><Input placeholder="School name" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Taxes Section */}
+            <Collapsible open={taxesOpen} onOpenChange={setTaxesOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                  <span className="font-medium">Taxes</span>
+                  {taxesOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="annual_taxes" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Annual Taxes ($)</FormLabel>
+                      <FormControl><Input type="number" placeholder="5000" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="tax_assessment" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tax Assessment ($)</FormLabel>
+                      <FormControl><Input type="number" placeholder="400000" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Marketing Section */}
+            <Collapsible open={marketingOpen} onOpenChange={setMarketingOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+                  <span className="font-medium">Marketing Info</span>
+                  {marketingOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-4 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="days_on_market" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Days on Market</FormLabel>
+                      <FormControl><Input type="number" min={0} placeholder="30" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="listing_date" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Listing Date</FormLabel>
+                      <FormControl><Input type="date" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="listing_agent_name" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Listing Agent Name</FormLabel>
+                      <FormControl><Input placeholder="Agent name" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="listing_agent_phone" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Listing Agent Phone</FormLabel>
+                      <FormControl><Input placeholder="(555) 123-4567" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Photos */}
             <div className="space-y-2">

@@ -2835,7 +2835,7 @@ Provide a brief, helpful response:
                 if (tableName === "contacts") {
                   const { data, error } = await supabase
                     .from("contacts")
-                    .select("id, first_name, last_name, email, company, contact_type")
+                    .select("id, first_name, last_name, email, company, contact_type, phone, price_min, price_max, preferred_beds, preferred_baths, preferred_areas, pre_approval_status, pre_approval_amount, urgency_level, lead_source")
                     .eq("tenant_id", tenantId)
                     .order("updated_at", { ascending: false })
                     .limit(limit);
@@ -2846,14 +2846,26 @@ Provide a brief, helpful response:
                       entity_id: c.id,
                       name: [c.first_name, c.last_name].filter(Boolean).join(" ") || c.email || "Unknown",
                       subtitle: c.company || c.contact_type || "",
-                      metadata: { email: c.email, company: c.company }
+                      metadata: { 
+                        email: c.email, 
+                        company: c.company,
+                        phone: c.phone,
+                        budget: c.price_min || c.price_max ? `$${c.price_min || 0}-$${c.price_max || '∞'}` : null,
+                        beds: c.preferred_beds,
+                        baths: c.preferred_baths,
+                        areas: c.preferred_areas,
+                        pre_approval: c.pre_approval_status,
+                        pre_approval_amount: c.pre_approval_amount,
+                        urgency: c.urgency_level,
+                        lead_source: c.lead_source
+                      }
                     }));
                   }
                   searchError = error;
                 } else if (tableName === "properties") {
                   const { data, error } = await supabase
                     .from("properties")
-                    .select("id, address, city, state, price, status, property_type")
+                    .select("id, address, city, state, price, status, property_type, bedrooms, bathrooms, square_feet, year_built, hoa_fee, school_district, days_on_market, listing_agent_name")
                     .eq("tenant_id", tenantId)
                     .order("updated_at", { ascending: false })
                     .limit(limit);
@@ -2864,14 +2876,26 @@ Provide a brief, helpful response:
                       entity_id: p.id,
                       name: p.address || "Unknown Property",
                       subtitle: [p.city, p.state].filter(Boolean).join(", ") || p.property_type || "",
-                      metadata: { price: p.price, status: p.status, property_type: p.property_type }
+                      metadata: { 
+                        price: p.price, 
+                        status: p.status, 
+                        property_type: p.property_type,
+                        beds: p.bedrooms,
+                        baths: p.bathrooms,
+                        sqft: p.square_feet,
+                        year_built: p.year_built,
+                        hoa_fee: p.hoa_fee,
+                        school_district: p.school_district,
+                        days_on_market: p.days_on_market,
+                        listing_agent: p.listing_agent_name
+                      }
                     }));
                   }
                   searchError = error;
                 } else if (tableName === "deals") {
                   const { data, error } = await supabase
                     .from("deals")
-                    .select("id, deal_type, stage, estimated_value, property_id")
+                    .select("id, deal_type, stage, estimated_value, property_id, expected_close_date, earnest_money, loan_type, lender_name, has_inspection_contingency, has_financing_contingency, inspection_date, appraisal_date")
                     .eq("tenant_id", tenantId)
                     .order("updated_at", { ascending: false })
                     .limit(limit);
@@ -2882,7 +2906,21 @@ Provide a brief, helpful response:
                       entity_id: d.id,
                       name: `${d.deal_type || "Deal"} - ${d.stage || "Unknown Stage"}`,
                       subtitle: d.estimated_value ? `$${d.estimated_value.toLocaleString()}` : "",
-                      metadata: { stage: d.stage, value: d.estimated_value, deal_type: d.deal_type }
+                      metadata: { 
+                        stage: d.stage, 
+                        value: d.estimated_value, 
+                        deal_type: d.deal_type,
+                        expected_close: d.expected_close_date,
+                        earnest_money: d.earnest_money,
+                        loan_type: d.loan_type,
+                        lender: d.lender_name,
+                        contingencies: [
+                          d.has_inspection_contingency ? 'inspection' : null,
+                          d.has_financing_contingency ? 'financing' : null
+                        ].filter(Boolean),
+                        inspection_date: d.inspection_date,
+                        appraisal_date: d.appraisal_date
+                      }
                     }));
                   }
                   searchError = error;

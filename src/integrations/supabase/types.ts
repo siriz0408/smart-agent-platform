@@ -274,6 +274,7 @@ export type Database = {
       contacts: {
         Row: {
           address_id: string | null
+          best_time_to_call: string | null
           company: string | null
           contact_type: string | null
           created_at: string
@@ -283,16 +284,37 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          lead_source: string | null
+          lease_expiration: string | null
+          lender_name: string | null
+          listing_timeline: string | null
           notes: string | null
+          owned_property_address: string | null
           phone: string | null
+          pre_approval_amount: number | null
+          pre_approval_status: string | null
+          preferred_areas: string[] | null
+          preferred_baths: number | null
+          preferred_beds: number | null
+          preferred_contact_method: string | null
+          preferred_property_types: string[] | null
+          price_max: number | null
+          price_min: number | null
+          referral_source: string | null
+          secondary_email: string | null
+          secondary_phone: string | null
+          seller_motivation: string | null
           status: string | null
           tags: string[] | null
+          target_move_date: string | null
           tenant_id: string
           updated_at: string
+          urgency_level: string | null
           user_id: string | null
         }
         Insert: {
           address_id?: string | null
+          best_time_to_call?: string | null
           company?: string | null
           contact_type?: string | null
           created_at?: string
@@ -302,16 +324,37 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
+          lead_source?: string | null
+          lease_expiration?: string | null
+          lender_name?: string | null
+          listing_timeline?: string | null
           notes?: string | null
+          owned_property_address?: string | null
           phone?: string | null
+          pre_approval_amount?: number | null
+          pre_approval_status?: string | null
+          preferred_areas?: string[] | null
+          preferred_baths?: number | null
+          preferred_beds?: number | null
+          preferred_contact_method?: string | null
+          preferred_property_types?: string[] | null
+          price_max?: number | null
+          price_min?: number | null
+          referral_source?: string | null
+          secondary_email?: string | null
+          secondary_phone?: string | null
+          seller_motivation?: string | null
           status?: string | null
           tags?: string[] | null
+          target_move_date?: string | null
           tenant_id: string
           updated_at?: string
+          urgency_level?: string | null
           user_id?: string | null
         }
         Update: {
           address_id?: string | null
+          best_time_to_call?: string | null
           company?: string | null
           contact_type?: string | null
           created_at?: string
@@ -321,12 +364,32 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          lead_source?: string | null
+          lease_expiration?: string | null
+          lender_name?: string | null
+          listing_timeline?: string | null
           notes?: string | null
+          owned_property_address?: string | null
           phone?: string | null
+          pre_approval_amount?: number | null
+          pre_approval_status?: string | null
+          preferred_areas?: string[] | null
+          preferred_baths?: number | null
+          preferred_beds?: number | null
+          preferred_contact_method?: string | null
+          preferred_property_types?: string[] | null
+          price_max?: number | null
+          price_min?: number | null
+          referral_source?: string | null
+          secondary_email?: string | null
+          secondary_phone?: string | null
+          seller_motivation?: string | null
           status?: string | null
           tags?: string[] | null
+          target_move_date?: string | null
           tenant_id?: string
           updated_at?: string
+          urgency_level?: string | null
           user_id?: string | null
         }
         Relationships: [
@@ -458,67 +521,170 @@ export type Database = {
         Row: {
           actual_close_date: string | null
           agent_id: string | null
+          appraisal_date: string | null
+          appraisal_value: number | null
+          attorney_contact_id: string | null
           buyer_stage: Database["public"]["Enums"]["deal_stage_buyer"] | null
           buyer_user_id: string | null
+          co_buyer_contact_id: string | null
+          co_seller_contact_id: string | null
           commission_rate: number | null
           contact_id: string | null
           created_at: string
           deal_type: string
+          earnest_money: number | null
+          escrow_officer_name: string | null
+          escrow_officer_phone: string | null
           estimated_value: number | null
           expected_close_date: string | null
+          final_sale_price: number | null
+          financing_deadline: string | null
+          has_appraisal_contingency: boolean | null
+          has_financing_contingency: boolean | null
+          has_inspection_contingency: boolean | null
+          has_sale_contingency: boolean | null
           id: string
+          inspection_date: string | null
+          inspector_contact_id: string | null
+          lender_name: string | null
+          loan_officer_email: string | null
+          loan_officer_name: string | null
+          loan_officer_phone: string | null
+          loan_type: string | null
           notes: string | null
+          option_fee: number | null
+          option_period_end: string | null
           property_id: string | null
           seller_stage: Database["public"]["Enums"]["deal_stage_seller"] | null
           seller_user_id: string | null
           stage: string | null
           tenant_id: string
+          title_company: string | null
+          title_policy_type: string | null
           updated_at: string
         }
         Insert: {
           actual_close_date?: string | null
           agent_id?: string | null
+          appraisal_date?: string | null
+          appraisal_value?: number | null
+          attorney_contact_id?: string | null
           buyer_stage?: Database["public"]["Enums"]["deal_stage_buyer"] | null
           buyer_user_id?: string | null
+          co_buyer_contact_id?: string | null
+          co_seller_contact_id?: string | null
           commission_rate?: number | null
           contact_id?: string | null
           created_at?: string
           deal_type: string
+          earnest_money?: number | null
+          escrow_officer_name?: string | null
+          escrow_officer_phone?: string | null
           estimated_value?: number | null
           expected_close_date?: string | null
+          final_sale_price?: number | null
+          financing_deadline?: string | null
+          has_appraisal_contingency?: boolean | null
+          has_financing_contingency?: boolean | null
+          has_inspection_contingency?: boolean | null
+          has_sale_contingency?: boolean | null
           id?: string
+          inspection_date?: string | null
+          inspector_contact_id?: string | null
+          lender_name?: string | null
+          loan_officer_email?: string | null
+          loan_officer_name?: string | null
+          loan_officer_phone?: string | null
+          loan_type?: string | null
           notes?: string | null
+          option_fee?: number | null
+          option_period_end?: string | null
           property_id?: string | null
           seller_stage?: Database["public"]["Enums"]["deal_stage_seller"] | null
           seller_user_id?: string | null
           stage?: string | null
           tenant_id: string
+          title_company?: string | null
+          title_policy_type?: string | null
           updated_at?: string
         }
         Update: {
           actual_close_date?: string | null
           agent_id?: string | null
+          appraisal_date?: string | null
+          appraisal_value?: number | null
+          attorney_contact_id?: string | null
           buyer_stage?: Database["public"]["Enums"]["deal_stage_buyer"] | null
           buyer_user_id?: string | null
+          co_buyer_contact_id?: string | null
+          co_seller_contact_id?: string | null
           commission_rate?: number | null
           contact_id?: string | null
           created_at?: string
           deal_type?: string
+          earnest_money?: number | null
+          escrow_officer_name?: string | null
+          escrow_officer_phone?: string | null
           estimated_value?: number | null
           expected_close_date?: string | null
+          final_sale_price?: number | null
+          financing_deadline?: string | null
+          has_appraisal_contingency?: boolean | null
+          has_financing_contingency?: boolean | null
+          has_inspection_contingency?: boolean | null
+          has_sale_contingency?: boolean | null
           id?: string
+          inspection_date?: string | null
+          inspector_contact_id?: string | null
+          lender_name?: string | null
+          loan_officer_email?: string | null
+          loan_officer_name?: string | null
+          loan_officer_phone?: string | null
+          loan_type?: string | null
           notes?: string | null
+          option_fee?: number | null
+          option_period_end?: string | null
           property_id?: string | null
           seller_stage?: Database["public"]["Enums"]["deal_stage_seller"] | null
           seller_user_id?: string | null
           stage?: string | null
           tenant_id?: string
+          title_company?: string | null
+          title_policy_type?: string | null
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "deals_attorney_contact_id_fkey"
+            columns: ["attorney_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_co_buyer_contact_id_fkey"
+            columns: ["co_buyer_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_co_seller_contact_id_fkey"
+            columns: ["co_seller_contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "deals_contact_id_fkey"
             columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deals_inspector_contact_id_fkey"
+            columns: ["inspector_contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
             referencedColumns: ["id"]
@@ -1285,23 +1451,39 @@ export type Database = {
           address: string
           address_id: string | null
           ai_description: string | null
+          annual_taxes: number | null
           bathrooms: number | null
           bedrooms: number | null
           city: string
+          cooling_type: string | null
           created_at: string
+          days_on_market: number | null
           description: string | null
+          elementary_school: string | null
           features: string[] | null
+          heating_type: string | null
+          high_school: string | null
+          hoa_fee: number | null
+          hoa_name: string | null
           id: string
           listing_agent_id: string | null
+          listing_agent_name: string | null
+          listing_agent_phone: string | null
+          listing_date: string | null
           lot_size: number | null
+          middle_school: string | null
           mls_number: string | null
+          parking_spaces: number | null
+          parking_type: string | null
           photos: string[] | null
           price: number | null
           property_type: string | null
+          school_district: string | null
           seller_contact_id: string | null
           square_feet: number | null
           state: string
           status: string | null
+          tax_assessment: number | null
           tenant_id: string
           updated_at: string
           year_built: number | null
@@ -1311,23 +1493,39 @@ export type Database = {
           address: string
           address_id?: string | null
           ai_description?: string | null
+          annual_taxes?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
           city: string
+          cooling_type?: string | null
           created_at?: string
+          days_on_market?: number | null
           description?: string | null
+          elementary_school?: string | null
           features?: string[] | null
+          heating_type?: string | null
+          high_school?: string | null
+          hoa_fee?: number | null
+          hoa_name?: string | null
           id?: string
           listing_agent_id?: string | null
+          listing_agent_name?: string | null
+          listing_agent_phone?: string | null
+          listing_date?: string | null
           lot_size?: number | null
+          middle_school?: string | null
           mls_number?: string | null
+          parking_spaces?: number | null
+          parking_type?: string | null
           photos?: string[] | null
           price?: number | null
           property_type?: string | null
+          school_district?: string | null
           seller_contact_id?: string | null
           square_feet?: number | null
           state: string
           status?: string | null
+          tax_assessment?: number | null
           tenant_id: string
           updated_at?: string
           year_built?: number | null
@@ -1337,23 +1535,39 @@ export type Database = {
           address?: string
           address_id?: string | null
           ai_description?: string | null
+          annual_taxes?: number | null
           bathrooms?: number | null
           bedrooms?: number | null
           city?: string
+          cooling_type?: string | null
           created_at?: string
+          days_on_market?: number | null
           description?: string | null
+          elementary_school?: string | null
           features?: string[] | null
+          heating_type?: string | null
+          high_school?: string | null
+          hoa_fee?: number | null
+          hoa_name?: string | null
           id?: string
           listing_agent_id?: string | null
+          listing_agent_name?: string | null
+          listing_agent_phone?: string | null
+          listing_date?: string | null
           lot_size?: number | null
+          middle_school?: string | null
           mls_number?: string | null
+          parking_spaces?: number | null
+          parking_type?: string | null
           photos?: string[] | null
           price?: number | null
           property_type?: string | null
+          school_district?: string | null
           seller_contact_id?: string | null
           square_feet?: number | null
           state?: string
           status?: string | null
+          tax_assessment?: number | null
           tenant_id?: string
           updated_at?: string
           year_built?: number | null
