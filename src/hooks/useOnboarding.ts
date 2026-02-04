@@ -22,12 +22,13 @@ export interface OnboardingData {
   documentUploaded?: boolean;
 }
 
+// Simplified onboarding - only require profile setup
 const STEP_ORDER: OnboardingStep[] = [
   "welcome",
   "profile",
   "role",
-  "first-contact",
-  "first-document",
+  // "first-contact",  // REMOVED: Not required
+  // "first-document", // REMOVED: Not required
   "completion",
 ];
 
@@ -75,7 +76,9 @@ export function useOnboarding() {
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async () => {
-      if (!profile?.id) throw new Error("Profile not found");
+      if (!profile?.id) {
+        throw new Error("Profile not found");
+      }
 
       // Update profile with onboarding_completed flag
       const { error } = await supabase
@@ -88,9 +91,14 @@ export function useOnboarding() {
 
       if (error) throw error;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["profile"] });
-      queryClient.invalidateQueries({ queryKey: ["auth"] });
+    onSuccess: async () => {
+      // Wait for queries to refetch to avoid redirect loop
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+      
+      // Small additional delay to ensure queries have refetched
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       trackEvent("onboarding_completed");
       toast({
         title: "Welcome to Smart Agent!",

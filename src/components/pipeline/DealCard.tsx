@@ -46,6 +46,7 @@ interface DealCardProps {
   stages: Stage[];
   onMoveToStage: (dealId: string, newStage: string) => void;
   onOpenDetail: (dealId: string) => void;
+  onEdit?: (deal: DealWithRelations) => void;
   isMoving?: boolean;
   milestoneIndicator?: MilestoneIndicator;
 }
@@ -55,6 +56,7 @@ export function DealCard({
   stages, 
   onMoveToStage, 
   onOpenDetail,
+  onEdit,
   isMoving, 
   milestoneIndicator 
 }: DealCardProps) {
@@ -91,7 +93,9 @@ export function DealCard({
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpenDetail(deal.id); }}>
                 View details
               </DropdownMenuItem>
-              <DropdownMenuItem>Edit deal</DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit?.(deal); }}>
+                Edit deal
+              </DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger>Move to stage</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-44">

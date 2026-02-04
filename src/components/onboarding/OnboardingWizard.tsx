@@ -35,8 +35,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const handleSkipAll = async () => {
-    await skipOnboarding();
-    onComplete();
+    try {
+      await skipOnboarding();
+      onComplete();
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+    }
   };
 
   const renderStep = () => {

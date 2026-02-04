@@ -104,7 +104,7 @@ export default function ContactDetail() {
         <Button
           variant="ghost"
           className="mb-4"
-          onClick={() => navigate("/contacts")}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Contacts
@@ -114,7 +114,7 @@ export default function ContactDetail() {
         <ContactDetailsView
           contact={contact}
           onEdit={() => setIsEditSheetOpen(true)}
-          onDelete={() => navigate("/contacts")}
+          onDelete={() => navigate(-1)}
         />
       </div>
 

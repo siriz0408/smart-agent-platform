@@ -10,6 +10,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { BackButton } from "@/components/navigation/BackButton";
 import { DocumentDetailsView } from "@/components/documents/DocumentDetailsView";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
@@ -95,14 +96,11 @@ export default function DocumentDetail() {
       </Breadcrumb>
 
       {/* Back Button */}
-      <Button
-        variant="ghost"
+      <BackButton
+        fallbackPath="/documents"
+        label="Back to Documents"
         className="mb-4"
-        onClick={() => navigate("/documents")}
-      >
-        <ArrowLeft className="h-4 w-4 mr-2" />
-        Back to Documents
-      </Button>
+      />
 
       {/* Document Details */}
       <DocumentDetailsView

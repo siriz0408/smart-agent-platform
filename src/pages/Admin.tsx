@@ -1,4 +1,5 @@
 import { Link, Navigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useRole } from "@/contexts/RoleContext";
 import { RoleTestingCard } from "@/components/admin/RoleTestingCard";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 interface DataSource {
   id: string;
@@ -26,6 +29,7 @@ const dataSources: DataSource[] = [
 
 export default function Admin() {
   const { availableRoles, isAdmin } = useRole();
+  const { profile } = useAuth();
 
   // Defensive check: Verify user has admin privileges using availableRoles
   // This uses actual DB roles, not the override activeRole
@@ -35,6 +39,52 @@ export default function Admin() {
 
   // Determine display role (for badge - show actual role, not override)
   const actualAdminRole = availableRoles.includes('super_admin') ? 'super_admin' : 'admin';
+
+  // Fetch team members count
+  const { data: teamCount = 0 } = useQuery({
+    queryKey: ["admin-team-count", profile?.tenant_id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("profiles")
+        .select("*", { count: "exact", head: true })
+        .eq("tenant_id", profile?.tenant_id);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!profile?.tenant_id,
+  });
+
+  // Fetch active agents count
+  const { data: agentsCount = 0 } = useQuery({
+    queryKey: ["admin-agents-count", profile?.tenant_id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("ai_agents")
+        .select("*", { count: "exact", head: true })
+        .eq("tenant_id", profile?.tenant_id)
+        .eq("is_active", true);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!profile?.tenant_id,
+  });
+
+  // Fetch AI queries count
+  const { data: queriesCount = 0 } = useQuery({
+    queryKey: ["admin-queries-count", profile?.tenant_id],
+    queryFn: async () => {
+      const { count, error } = await supabase
+        .from("ai_messages")
+        .select("*", { count: "exact", head: true })
+        .eq("tenant_id", profile?.tenant_id);
+      
+      if (error) throw error;
+      return count || 0;
+    },
+    enabled: !!profile?.tenant_id,
+  });
 
   return (
     <AppLayout>
@@ -191,19 +241,19 @@ export default function Admin() {
           <div className="grid gap-3 grid-cols-3">
             <Card>
               <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-semibold">5</div>
+                <div className="text-2xl md:text-3xl font-semibold">{teamCount}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">Team Members</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-semibold">3</div>
+                <div className="text-2xl md:text-3xl font-semibold">{agentsCount}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">Active Agents</div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4 md:p-6">
-                <div className="text-2xl md:text-3xl font-semibold">1,250</div>
+                <div className="text-2xl md:text-3xl font-semibold">{queriesCount.toLocaleString()}</div>
                 <div className="text-xs md:text-sm text-muted-foreground">AI Queries</div>
               </CardContent>
             </Card>

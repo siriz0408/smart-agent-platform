@@ -67,7 +67,7 @@ serve(async (req) => {
       .from("subscriptions")
       .select("stripe_customer_id")
       .eq("tenant_id", profile.tenant_id)
-      .single();
+      .maybeSingle();
 
     const { plan } = await req.json();
     const priceId = PRICE_IDS[plan];

@@ -38,6 +38,7 @@ interface StageColumnProps {
   movingDealId?: string | null;
   onMoveToStage: (dealId: string, newStage: string) => void;
   onOpenDetail: (dealId: string) => void;
+  onEdit?: (deal: DealWithRelations) => void;
   onQuickAdd?: (stageId: string) => void;
   milestoneIndicators?: Record<string, MilestoneIndicator>;
   /** Use mobile accordion layout instead of fixed-width column */
@@ -54,6 +55,7 @@ export function StageColumn({
   movingDealId,
   onMoveToStage,
   onOpenDetail,
+  onEdit,
   onQuickAdd,
   milestoneIndicators = {},
   isMobileView = false,
@@ -85,6 +87,7 @@ export function StageColumn({
             stages={allStages}
             onMoveToStage={onMoveToStage}
             onOpenDetail={onOpenDetail}
+            onEdit={onEdit}
             isMoving={movingDealId === deal.id}
             milestoneIndicator={milestoneIndicators[deal.id]}
           />

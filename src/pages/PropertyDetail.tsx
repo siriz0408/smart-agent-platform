@@ -102,7 +102,7 @@ export default function PropertyDetail() {
         <Button
           variant="ghost"
           className="mb-4"
-          onClick={() => navigate("/properties")}
+          onClick={() => navigate(-1)}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Properties
@@ -112,7 +112,7 @@ export default function PropertyDetail() {
         <PropertyDetailsView
           property={property}
           onEdit={() => setIsEditSheetOpen(true)}
-          onDelete={() => navigate("/properties")}
+          onDelete={() => navigate(-1)}
         />
       </div>
 

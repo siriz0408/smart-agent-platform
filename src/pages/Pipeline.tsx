@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { CreateDealDialog } from "@/components/deals/CreateDealDialog";
+import { EditDealDialog } from "@/components/deals/EditDealDialog";
 import { DealDetailSheet } from "@/components/deals/DealDetailSheet";
 import { StageColumn } from "@/components/pipeline/StageColumn";
 import { useMilestoneIndicators } from "@/hooks/useMilestoneIndicators";
@@ -56,6 +57,8 @@ export default function Pipeline() {
   const dealType = type === "sellers" ? "seller" : "buyer";
   const stages = type === "sellers" ? sellerStages : buyerStages;
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editingDeal, setEditingDeal] = useState<DealWithRelations | null>(null);
   const [movingDealId, setMovingDealId] = useState<string | null>(null);
   const [selectedDealId, setSelectedDealId] = useState<string | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
@@ -186,6 +189,27 @@ export default function Pipeline() {
     setDetailSheetOpen(true);
   };
 
+  const handleEdit = async (deal: DealWithRelations) => {
+    // Fetch full deal data with all fields
+    const { data, error } = await supabase
+      .from("deals")
+      .select("*")
+      .eq("id", deal.id)
+      .single();
+    
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load deal details.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setEditingDeal(data as any);
+    setEditDialogOpen(true);
+  };
+
   const getDealsByStage = (stageId: string) => deals.filter((d) => d.stage === stageId);
 
   const totalValue = deals.reduce((acc, deal) => acc + (deal.estimated_value || 0), 0);
@@ -239,6 +263,12 @@ export default function Pipeline() {
           dealType={dealType}
         />
 
+        <EditDealDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          deal={editingDeal}
+        />
+
         <DealDetailSheet
           dealId={selectedDealId}
           open={detailSheetOpen}
@@ -280,6 +310,7 @@ export default function Pipeline() {
                     movingDealId={movingDealId}
                     onMoveToStage={handleMoveToStage}
                     onOpenDetail={handleOpenDetail}
+                    onEdit={handleEdit}
                     milestoneIndicators={milestoneIndicators}
                     isMobileView={true}
                     defaultOpen={index === 0} // First stage open by default
@@ -297,6 +328,7 @@ export default function Pipeline() {
                     allStages={stages}
                     isLoading={isLoading}
                     movingDealId={movingDealId}
+                    onEdit={handleEdit}
                     onMoveToStage={handleMoveToStage}
                     onOpenDetail={handleOpenDetail}
                     milestoneIndicators={milestoneIndicators}
