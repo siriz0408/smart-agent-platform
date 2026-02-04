@@ -28,6 +28,8 @@ export function useReadReceipts() {
     onSuccess: (_, conversationId) => {
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
       queryClient.invalidateQueries({ queryKey: ["conversation", conversationId] });
+      queryClient.invalidateQueries({ queryKey: ["unread-counts"] });
+      queryClient.invalidateQueries({ queryKey: ["total-unread-count"] });
     },
   });
 

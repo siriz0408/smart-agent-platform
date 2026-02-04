@@ -8,6 +8,7 @@ import { ConversationHeader } from "@/components/messages/ConversationHeader";
 import { NewConversationDialog } from "@/components/messages/NewConversationDialog";
 import { useConversation } from "@/hooks/useConversation";
 import { useRealtimeMessages } from "@/hooks/useRealtimeMessages";
+import { useReadReceipts } from "@/hooks/useReadReceipts";
 import { MessageSquare } from "lucide-react";
 
 export default function Messages() {
@@ -34,6 +35,9 @@ export default function Messages() {
   // Subscribe to realtime messages
   useRealtimeMessages(selectedConversationId, refetchConversations);
 
+  // Mark conversations as read
+  const { markAsRead } = useReadReceipts();
+
   // Sync URL param with state
   useEffect(() => {
     if (conversationId && conversationId !== selectedConversationId) {
@@ -41,6 +45,14 @@ export default function Messages() {
       setShowMobileList(false);
     }
   }, [conversationId, selectedConversationId]);
+
+  // Mark conversation as read when opened and messages loaded
+  useEffect(() => {
+    if (selectedConversationId && !isLoadingMessages && messages.length > 0) {
+      markAsRead.mutate(selectedConversationId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedConversationId, isLoadingMessages, messages.length]);
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversationId(id);

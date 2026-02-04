@@ -8,6 +8,14 @@ interface TypingIndicatorProps {
   className?: string;
 }
 
+interface TypingIndicatorData {
+  user_id: string;
+  profiles?: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
+}
+
 export function TypingIndicator({ conversationId, className }: TypingIndicatorProps) {
   const { user } = useAuth();
   const [typingUsers, setTypingUsers] = useState<{ userId: string; userName: string }[]>([]);
@@ -37,7 +45,7 @@ export function TypingIndicator({ conversationId, className }: TypingIndicatorPr
             .gte("updated_at", threeSecondsAgo);
 
           if (data) {
-            const activeTypers = data.map((d: any) => ({
+            const activeTypers = data.map((d: TypingIndicatorData) => ({
               userId: d.user_id,
               userName: d.profiles?.full_name || d.profiles?.email?.split("@")[0] || "Someone",
             }));

@@ -29,6 +29,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { useTotalUnreadCount } from "@/hooks/useUnreadCounts";
+import { Badge } from "@/components/ui/badge";
 
 interface NavItem {
   icon: LucideIcon;
@@ -49,6 +51,7 @@ export function GleanSidebar() {
   const { activeRole, availableRoles } = useRole();
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: totalUnread = 0 } = useTotalUnreadCount();
 
   // Role-based navigation items
   const getNavItems = (): NavItem[] => {
@@ -161,7 +164,17 @@ export function GleanSidebar() {
                       : "text-white/70 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <item.icon className="h-6 w-6" />
+                  <div className="relative">
+                    <item.icon className="h-6 w-6" />
+                    {item.label === 'Messages' && totalUnread > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 text-[9px] font-semibold"
+                      >
+                        {totalUnread > 99 ? '99+' : totalUnread}
+                      </Badge>
+                    )}
+                  </div>
                   <span className="text-[10px] font-medium text-center leading-tight px-1">
                     {item.label}
                   </span>
