@@ -39,3 +39,13 @@ test-artifacts/.playwright-artifacts*/
 # Capacitor native projects (regenerated from web)
 ios/
 android/
+
+# Agent skill directories
+.agents/skills/
+.claude/skills/
+.cursor/skills/
+.github/skills/
+.opencode/skills/
+
+# Test scripts
+test-bug-fixes.sh
