@@ -12,7 +12,7 @@ import { EditDealDialog } from "@/components/deals/EditDealDialog";
 import { DealDetailSheet } from "@/components/deals/DealDetailSheet";
 import { StageColumn } from "@/components/pipeline/StageColumn";
 import { useMilestoneIndicators } from "@/hooks/useMilestoneIndicators";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface DealWithRelations {
@@ -159,17 +159,10 @@ export default function Pipeline() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deals", dealType] });
       queryClient.invalidateQueries({ queryKey: ["milestone-indicators"] });
-      toast({
-        title: "Deal moved",
-        description: "Stage updated successfully.",
-      });
+      toast.success("Deal moved", { description: "Stage updated successfully." });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to move deal",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Failed to move deal", { description: error.message });
     },
     onSettled: () => {
       setMovingDealId(null);
@@ -199,11 +192,7 @@ export default function Pipeline() {
       .single();
     
     if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load deal details.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to load deal details." });
       return;
     }
     

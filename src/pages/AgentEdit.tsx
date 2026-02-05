@@ -68,7 +68,7 @@ export default function AgentEdit() {
       <AppLayout>
         <div className="p-6 space-y-6 max-w-3xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/agents")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/agents")} aria-label="Back to agents">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-2xl font-semibold">Edit Agent</h1>
@@ -91,7 +91,7 @@ export default function AgentEdit() {
       <AppLayout>
         <div className="p-6 space-y-6 max-w-3xl mx-auto">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/agents")}>
+            <Button variant="ghost" size="icon" onClick={() => navigate("/agents")} aria-label="Back to agents">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <h1 className="text-2xl font-semibold">Edit Agent</h1>

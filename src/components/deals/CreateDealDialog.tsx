@@ -7,7 +7,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Check, ChevronsUpDown, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Collapsible,
@@ -196,11 +196,7 @@ export function CreateDealDialog({ open, onOpenChange, dealType }: CreateDealDia
 
   const handleSubmit = async (values: DealFormValues) => {
     if (!profile?.tenant_id) {
-      toast({
-        title: "Error",
-        description: "Unable to determine tenant. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Unable to determine tenant. Please try again." });
       return;
     }
 
@@ -248,20 +244,13 @@ export function CreateDealDialog({ open, onOpenChange, dealType }: CreateDealDia
 
       if (error) throw error;
 
-      toast({
-        title: "Deal created",
-        description: `New ${dealType} deal added to pipeline.`,
-      });
+      toast.success("Deal created", { description: `New ${dealType} deal added to pipeline.` });
 
       queryClient.invalidateQueries({ queryKey: ["deals"] });
       form.reset();
       onOpenChange(false);
     } catch (error) {
-      toast({
-        title: "Error creating deal",
-        description: error instanceof Error ? error.message : "Something went wrong.",
-        variant: "destructive",
-      });
+      toast.error("Error creating deal", { description: error instanceof Error ? error.message : "Something went wrong." });
     } finally {
       setIsSubmitting(false);
     }

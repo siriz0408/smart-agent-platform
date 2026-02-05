@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { TriggerConditionBuilder } from "./TriggerConditionBuilder";
@@ -80,7 +80,6 @@ const cronPresets = [
 
 export function TriggerConfig({ agentId, agentName }: TriggerConfigProps) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -139,17 +138,13 @@ export function TriggerConfig({ agentId, agentName }: TriggerConfigProps) {
       return data;
     },
     onSuccess: () => {
-      toast({ title: "Trigger created", description: "The trigger has been saved." });
+      toast.success("Trigger created", { description: "The trigger has been saved." });
       queryClient.invalidateQueries({ queryKey: ["agent_triggers", agentId] });
       resetForm();
       setDialogOpen(false);
     },
     onError: (error) => {
-      toast({
-        title: "Failed to create trigger",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to create trigger", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -167,17 +162,13 @@ export function TriggerConfig({ agentId, agentName }: TriggerConfigProps) {
       return data;
     },
     onSuccess: () => {
-      toast({ title: "Trigger updated", description: "The trigger has been updated." });
+      toast.success("Trigger updated", { description: "The trigger has been updated." });
       queryClient.invalidateQueries({ queryKey: ["agent_triggers", agentId] });
       resetForm();
       setDialogOpen(false);
     },
     onError: (error) => {
-      toast({
-        title: "Failed to update trigger",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to update trigger", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -192,15 +183,11 @@ export function TriggerConfig({ agentId, agentName }: TriggerConfigProps) {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({ title: "Trigger deleted", description: "The trigger has been removed." });
+      toast.success("Trigger deleted", { description: "The trigger has been removed." });
       queryClient.invalidateQueries({ queryKey: ["agent_triggers", agentId] });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to delete trigger",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete trigger", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -499,6 +486,7 @@ export function TriggerConfig({ agentId, agentName }: TriggerConfigProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => toggleActive.mutate({ id: trigger.id, isActive: !trigger.is_active })}
+                    aria-label={trigger.is_active ? "Pause trigger" : "Activate trigger"}
                   >
                     {trigger.is_active ? (
                       <Pause className="h-4 w-4" />
@@ -517,6 +505,7 @@ export function TriggerConfig({ agentId, agentName }: TriggerConfigProps) {
                     variant="ghost"
                     size="icon"
                     onClick={() => deleteTrigger.mutate(trigger.id)}
+                    aria-label="Delete trigger"
                   >
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>

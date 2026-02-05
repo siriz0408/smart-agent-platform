@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface PrivacySettings {
   id: string;
@@ -70,10 +70,10 @@ export function useProfilePrivacy() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["privacy-settings", user?.id] });
-      toast({ title: "Privacy settings updated" });
+      toast.success("Privacy settings updated");
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast.error("Error", { description: error.message });
     },
   });
 

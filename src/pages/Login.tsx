@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { OAuthButtons, OAuthDivider } from "@/components/auth/OAuthButtons";
 
 export default function Login() {
@@ -17,7 +17,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const { signIn } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,16 +26,9 @@ export default function Login() {
     const { error } = await signIn(email, password);
 
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign in failed",
-        description: error.message,
-      });
+      toast.error("Sign in failed", { description: error.message });
     } else {
-      toast({
-        title: "Welcome back!",
-        description: "You've successfully signed in.",
-      });
+      toast.success("Welcome back!", { description: "You've successfully signed in." });
       navigate("/");
     }
 
@@ -45,11 +37,7 @@ export default function Login() {
 
   const handleForgotPassword = async () => {
     if (!email) {
-      toast({
-        variant: "destructive",
-        title: "Email required",
-        description: "Please enter your email address first.",
-      });
+      toast.error("Email required", { description: "Please enter your email address first." });
       return;
     }
 
@@ -59,16 +47,9 @@ export default function Login() {
     });
 
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Reset failed",
-        description: error.message,
-      });
+      toast.error("Reset failed", { description: error.message });
     } else {
-      toast({
-        title: "Check your email",
-        description: "We've sent you a password reset link.",
-      });
+      toast.success("Check your email", { description: "We've sent you a password reset link." });
     }
     setResetLoading(false);
   };
@@ -117,6 +98,7 @@ export default function Login() {
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />

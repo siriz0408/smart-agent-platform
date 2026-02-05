@@ -140,6 +140,7 @@ export function InvoiceList() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title="Download PDF"
+                      aria-label="Download PDF"
                     >
                       <Download className="h-4 w-4" />
                     </a>
@@ -157,6 +158,7 @@ export function InvoiceList() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title="View Invoice"
+                      aria-label="View invoice"
                     >
                       <ExternalLink className="h-4 w-4" />
                     </a>

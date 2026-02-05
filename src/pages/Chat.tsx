@@ -31,7 +31,7 @@ import { PropertyCardGrid, ChatMarkdown, MortgageCalculator, AffordabilityCalcul
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 import type { Tables } from "@/integrations/supabase/types";
@@ -52,7 +52,6 @@ interface Message {
 
 export default function Chat() {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
   const { refetchUsage } = useSubscription();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -419,6 +418,7 @@ export default function Chat() {
           size="icon"
           className="h-8 w-8 text-muted-foreground hover:text-foreground md:hidden"
           onClick={() => setMobileDrawerOpen(false)}
+          aria-label="Close sidebar"
         >
           <PanelLeftClose className="h-4 w-4" />
         </Button>
@@ -509,6 +509,7 @@ export default function Chat() {
                               size="icon"
                               className="h-7 w-7 shrink-0 mr-1 text-muted-foreground/50 hover:text-foreground group-hover:text-muted-foreground"
                               onClick={(e) => e.stopPropagation()}
+                              aria-label="Conversation actions"
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -576,7 +577,7 @@ export default function Chat() {
               </p>
               <p className="text-xs text-muted-foreground">Go to profile</p>
             </div>
-            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); navigate("/settings"); }}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={(e) => { e.stopPropagation(); navigate("/settings"); }} aria-label="Settings">
               <Settings className="h-4 w-4" />
             </Button>
           </div>
@@ -908,13 +909,14 @@ export default function Chat() {
                 {/* Action bar with Glean-style icons */}
                 <div className="flex items-center justify-between px-3 py-2 border-t border-border/50 rounded-b-2xl">
                   <div className="flex items-center gap-0.5">
-                    <Button 
-                      type="button" 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       onClick={handleNewChat}
                       title="New conversation"
+                      aria-label="New conversation"
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
@@ -925,6 +927,7 @@ export default function Chat() {
                         size="icon"
                         className="h-8 w-8 text-muted-foreground hover:text-foreground"
                         title="AI Settings"
+                        aria-label="AI Settings"
                       >
                         <SlidersHorizontal className="h-4 w-4" />
                       </Button>
@@ -939,6 +942,7 @@ export default function Chat() {
                       )}
                       title={thinkingMode ? "Thinking mode ON" : "Enable thinking mode"}
                       onClick={() => setThinkingMode(!thinkingMode)}
+                      aria-label={thinkingMode ? "Disable thinking mode" : "Enable thinking mode"}
                     >
                       <Lightbulb className={cn("h-4 w-4", thinkingMode && "fill-current")} />
                     </Button>

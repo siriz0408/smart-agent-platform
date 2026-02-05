@@ -156,7 +156,7 @@ export default function Agents() {
               className="pl-10"
             />
           </div>
-          <Button variant="outline" size="icon">
+          <Button variant="outline" size="icon" aria-label="Filter agents">
             <Filter className="h-4 w-4" />
           </Button>
         </div>
@@ -300,6 +300,7 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
                         navigate(`/agents/${agent.id}/edit`);
                       }}
                       title="Edit agent"
+                      aria-label="Edit agent"
                     >
                       <Pencil className="h-4 w-4" />
                     </Button>
@@ -312,6 +313,7 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
                       e.stopPropagation();
                       onToggleFavorite(agent.id);
                     }}
+                    aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
                   >
                     <Star
                       className={`h-4 w-4 ${isFavorite ? "fill-yellow-400 text-yellow-400" : ""}`}

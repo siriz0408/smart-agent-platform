@@ -99,6 +99,7 @@ export function UnifiedPropertyCard({
             onSave?.();
           }}
           disabled={isSaving}
+          aria-label={isSaved ? "Unsave property" : "Save property"}
         >
           <Heart
             className={cn(
@@ -116,6 +117,7 @@ export function UnifiedPropertyCard({
               size="icon"
               className="absolute left-2 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => navigatePhoto(e, 'prev')}
+              aria-label="Previous photo"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
@@ -124,6 +126,7 @@ export function UnifiedPropertyCard({
               size="icon"
               className="absolute right-2 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-black/50 hover:bg-black/70 text-white opacity-0 group-hover:opacity-100 transition-opacity"
               onClick={(e) => navigatePhoto(e, 'next')}
+              aria-label="Next photo"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>

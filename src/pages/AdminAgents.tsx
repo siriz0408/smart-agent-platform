@@ -116,7 +116,7 @@ export default function AdminAgents() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3 sm:gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/admin")} className="shrink-0" aria-label="Back to admin">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>
@@ -227,7 +227,7 @@ export default function AdminAgents() {
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8">
+                                <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" aria-label="Agent actions">
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -369,7 +369,7 @@ export default function AdminAgents() {
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" aria-label="Agent actions">
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>

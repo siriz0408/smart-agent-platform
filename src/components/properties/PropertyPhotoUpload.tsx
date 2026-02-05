@@ -188,6 +188,7 @@ export function PropertyPhotoUpload({
                   className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                   onClick={() => removePhoto(photo.id)}
                   disabled={disabled}
+                  aria-label="Remove photo"
                 >
                   <X className="h-3 w-3" />
                 </Button>

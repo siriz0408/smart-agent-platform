@@ -120,6 +120,7 @@ export function WorkspaceSwitcher({ collapsed = false, className }: WorkspaceSwi
               className
             )}
             title={activeWorkspace.name}
+            aria-label="Switch workspace"
           >
             <Building2 className="h-5 w-5" />
           </Button>

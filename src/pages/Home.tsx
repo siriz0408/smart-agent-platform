@@ -174,13 +174,14 @@ export default function Home() {
               {/* Action bar with Glean-style icons */}
               <div className="flex items-center justify-between px-3 py-2 border-t border-border/50 rounded-b-2xl">
                 <div className="flex items-center gap-0.5">
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={clearMessages}
                     title="New conversation"
+                    aria-label="New conversation"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
@@ -191,6 +192,7 @@ export default function Home() {
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground"
                       title="AI Settings"
+                      aria-label="AI Settings"
                     >
                       <SlidersHorizontal className="h-4 w-4" />
                     </Button>
@@ -205,16 +207,18 @@ export default function Home() {
                     )}
                     title={thinkingMode ? "Thinking mode ON" : "Enable thinking mode"}
                     onClick={() => setThinkingMode(!thinkingMode)}
+                    aria-label={thinkingMode ? "Disable thinking mode" : "Enable thinking mode"}
                   >
                     <Lightbulb className={cn("h-4 w-4", thinkingMode && "fill-current")} />
                   </Button>
                 </div>
                 <div className="flex items-center gap-0.5">
-                  <Button 
-                    type="submit" 
-                    size="icon" 
+                  <Button
+                    type="submit"
+                    size="icon"
                     disabled={!input.trim() || isLoading}
                     className="h-8 w-8 rounded-full"
+                    aria-label="Send message"
                   >
                     <ArrowUp className="h-4 w-4" />
                   </Button>

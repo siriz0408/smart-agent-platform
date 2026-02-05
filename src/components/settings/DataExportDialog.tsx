@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 
 interface DataExportDialogProps {
@@ -24,7 +24,6 @@ type ExportFormat = "csv" | "json";
 type DataType = "contacts" | "properties" | "deals";
 
 export function DataExportDialog({ open, onOpenChange }: DataExportDialogProps) {
-  const { toast } = useToast();
   const [selectedData, setSelectedData] = useState<DataType[]>(["contacts"]);
   const [format, setFormat] = useState<ExportFormat>("csv");
   const [isExporting, setIsExporting] = useState(false);
@@ -87,11 +86,7 @@ export function DataExportDialog({ open, onOpenChange }: DataExportDialogProps) 
 
   const handleExport = async () => {
     if (selectedData.length === 0) {
-      toast({
-        title: "No data selected",
-        description: "Please select at least one data type to export.",
-        variant: "destructive",
-      });
+      toast.error("No data selected", { description: "Please select at least one data type to export." });
       return;
     }
 
@@ -170,10 +165,7 @@ export function DataExportDialog({ open, onOpenChange }: DataExportDialogProps) 
       }
 
       setExportComplete(true);
-      toast({
-        title: "Export complete",
-        description: `Successfully exported ${selectedData.length} data type(s) as ${format.toUpperCase()}.`,
-      });
+      toast.success("Export complete", { description: `Successfully exported ${selectedData.length} data type(s) as ${format.toUpperCase()}.` });
 
       // Reset after a delay
       setTimeout(() => {
@@ -181,11 +173,7 @@ export function DataExportDialog({ open, onOpenChange }: DataExportDialogProps) 
       }, 3000);
     } catch (error) {
       logger.error("Export error:", error);
-      toast({
-        title: "Export failed",
-        description: error instanceof Error ? error.message : "An error occurred during export.",
-        variant: "destructive",
-      });
+      toast.error("Export failed", { description: error instanceof Error ? error.message : "An error occurred during export." });
     } finally {
       setIsExporting(false);
     }

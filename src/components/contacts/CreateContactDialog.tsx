@@ -7,7 +7,7 @@ import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/lib/logger";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -195,20 +195,13 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["contacts"] });
-      toast({
-        title: "Contact created",
-        description: "The contact has been added successfully.",
-      });
+      toast.success("Contact created", { description: "The contact has been added successfully." });
       form.reset();
       onOpenChange(false);
     },
     onError: (error) => {
       logger.error("Error creating contact:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create contact. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to create contact. Please try again." });
     },
   });
 

@@ -99,6 +99,7 @@ export function ResidentialPropertyCard({
             onSave();
           }}
           disabled={isSaving}
+          aria-label="Save property"
         >
           <Heart
             className={cn(

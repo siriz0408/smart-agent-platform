@@ -6,12 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Mail, MessageSquare, HelpCircle, Phone } from "lucide-react";
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export default function Contact() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
   // Structured data for Contact page
   const contactSchema = {
     "@context": "https://schema.org",
@@ -52,10 +50,7 @@ export default function Contact() {
 
     // Simulate form submission
     setTimeout(() => {
-      toast({
-        title: "Message sent!",
-        description: "We'll get back to you within 24-48 hours.",
-      });
+      toast.success("Message sent!", { description: "We'll get back to you within 24-48 hours." });
       setIsSubmitting(false);
       (e.target as HTMLFormElement).reset();
     }, 1000);

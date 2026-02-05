@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "./use-toast";
+import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
 
 export interface ContactImportRow {
@@ -129,7 +129,6 @@ function validatePhone(phone: string): boolean {
 }
 
 export function useContactImport() {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [progress, setProgress] = useState<ImportProgress>({
     total: 0,
@@ -257,20 +256,13 @@ export function useContactImport() {
         count: results.imported,
         source: "csv_import",
       });
-      toast({
-        title: "Import complete",
-        description: `Successfully imported ${results.imported} contacts${
+      toast.success("Import complete", { description: `Successfully imported ${results.imported} contacts${
           results.failed > 0 ? `. ${results.failed} failed.` : ""
-        }`,
-      });
+        }` });
     },
     onError: (error) => {
       setProgress((prev) => ({ ...prev, status: "error" }));
-      toast({
-        title: "Import failed",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Import failed", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 

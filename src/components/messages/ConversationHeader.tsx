@@ -61,6 +61,7 @@ export function ConversationHeader({ conversation, onBack }: ConversationHeaderP
         size="icon"
         onClick={onBack}
         className="md:hidden"
+        aria-label="Back to conversations"
       >
         <ArrowLeft className="h-5 w-5" />
       </Button>

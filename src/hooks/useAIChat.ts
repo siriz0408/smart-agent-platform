@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { logger } from "@/lib/logger";
 import { parseMentions, parseCollectionMentions, fetchMentionData, type MentionData } from "@/hooks/useMentionSearch";
 
@@ -16,7 +16,6 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat`;
 export function useAIChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
 
   const sendMessage = useCallback(async (input: string, options?: { thinkingMode?: boolean }) => {
     if (!input.trim() || isLoading) return;
@@ -164,11 +163,7 @@ export function useAIChat() {
       }
     } catch (error) {
       logger.error("AI chat error:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to get AI response",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error instanceof Error ? error.message : "Failed to get AI response" });
       // Remove the empty assistant message if error occurred before any content
       setMessages((prev) => {
         const last = prev[prev.length - 1];
@@ -180,7 +175,7 @@ export function useAIChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, isLoading, toast]);
+  }, [messages, isLoading]);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

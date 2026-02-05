@@ -307,6 +307,7 @@ export function TriggerConditionBuilder({
                   variant="ghost"
                   size="icon"
                   onClick={() => removeCondition(condition.id)}
+                  aria-label="Remove condition"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

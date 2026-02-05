@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function ResetPassword() {
@@ -16,7 +16,6 @@ export default function ResetPassword() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   useEffect(() => {
     // Check if we have a valid session from the reset link
@@ -33,20 +32,12 @@ export default function ResetPassword() {
     e.preventDefault();
     
     if (password !== confirmPassword) {
-      toast({
-        title: "Passwords don't match",
-        description: "Please make sure both passwords are the same.",
-        variant: "destructive",
-      });
+      toast.error("Passwords don't match", { description: "Please make sure both passwords are the same." });
       return;
     }
 
     if (password.length < 6) {
-      toast({
-        title: "Password too short",
-        description: "Password must be at least 6 characters long.",
-        variant: "destructive",
-      });
+      toast.error("Password too short", { description: "Password must be at least 6 characters long." });
       return;
     }
 
@@ -55,20 +46,13 @@ export default function ResetPassword() {
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      toast({
-        title: "Error resetting password",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Error resetting password", { description: error.message });
       setLoading(false);
       return;
     }
 
     setSuccess(true);
-    toast({
-      title: "Password updated!",
-      description: "Your password has been successfully reset.",
-    });
+    toast.success("Password updated!", { description: "Your password has been successfully reset." });
 
     // Redirect to home after a short delay
     setTimeout(() => {
@@ -146,6 +130,7 @@ export default function ResetPassword() {
                   size="icon"
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />

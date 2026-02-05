@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface DocumentProject {
   id: string;
@@ -19,7 +19,6 @@ export interface ProjectWithCount extends DocumentProject {
 
 export function useDocumentProjects() {
   const { profile, user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch all document projects for the tenant
@@ -80,17 +79,10 @@ export function useDocumentProjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document-projects"] });
-      toast({
-        title: "Project Created",
-        description: "Your document project has been created successfully.",
-      });
+      toast.success("Project Created", { description: "Your document project has been created successfully." });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create project.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Failed to create project." });
     },
   });
 
@@ -106,17 +98,10 @@ export function useDocumentProjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document-projects"] });
-      toast({
-        title: "Project Deleted",
-        description: "The project has been deleted successfully.",
-      });
+      toast.success("Project Deleted", { description: "The project has been deleted successfully." });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete project.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Failed to delete project." });
     },
   });
 
@@ -138,17 +123,10 @@ export function useDocumentProjects() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document-projects"] });
-      toast({
-        title: "Project Updated",
-        description: "The project has been updated successfully.",
-      });
+      toast.success("Project Updated", { description: "The project has been updated successfully." });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update project.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Failed to update project." });
     },
   });
 
@@ -173,17 +151,10 @@ export function useDocumentProjects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document-projects"] });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
-      toast({
-        title: "Document Added",
-        description: "The document has been added to the project.",
-      });
+      toast.success("Document Added", { description: "The document has been added to the project." });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to add document to project.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Failed to add document to project." });
     },
   });
 
@@ -200,17 +171,10 @@ export function useDocumentProjects() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["document-projects"] });
       queryClient.invalidateQueries({ queryKey: ["documents"] });
-      toast({
-        title: "Document Removed",
-        description: "The document has been removed from the project.",
-      });
+      toast.success("Document Removed", { description: "The document has been removed from the project." });
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to remove document from project.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Failed to remove document from project." });
     },
   });
 

@@ -7,7 +7,7 @@ import { Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/lib/logger";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -72,11 +72,7 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 2 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Avatar image must be less than 2MB",
-          variant: "destructive",
-        });
+        toast.error("File too large", { description: "Avatar image must be less than 2MB" });
         return;
       }
       setAvatarFile(file);
@@ -126,20 +122,13 @@ export function EditProfileDialog({ open, onOpenChange }: EditProfileDialogProps
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({
-        title: "Profile updated",
-        description: "Your profile has been updated successfully.",
-      });
+      toast.success("Profile updated", { description: "Your profile has been updated successfully." });
       queryClient.invalidateQueries({ queryKey: ["profile"] });
       refreshProfile?.();
       onOpenChange(false);
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Failed to update profile" });
     },
   });
 

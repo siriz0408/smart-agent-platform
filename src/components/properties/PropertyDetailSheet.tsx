@@ -370,6 +370,7 @@ export function PropertyDetailSheet({
                     size="icon"
                     className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full opacity-80 hover:opacity-100"
                     onClick={prevPhoto}
+                    aria-label="Previous photo"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
@@ -378,6 +379,7 @@ export function PropertyDetailSheet({
                     size="icon"
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full opacity-80 hover:opacity-100"
                     onClick={nextPhoto}
+                    aria-label="Next photo"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>

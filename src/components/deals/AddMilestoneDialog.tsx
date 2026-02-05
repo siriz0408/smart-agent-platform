@@ -6,7 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -115,8 +115,7 @@ export function AddMilestoneDialog({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-milestones", dealId] });
       queryClient.invalidateQueries({ queryKey: ["deals"] });
-      toast({
-        title: isEditing ? "Milestone updated" : "Milestone added",
+      toast.success(isEditing ? "Milestone updated" : "Milestone added", {
         description: isEditing
           ? "The milestone has been updated."
           : "New milestone added to the deal.",
@@ -125,11 +124,7 @@ export function AddMilestoneDialog({
       onOpenChange(false);
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message || "Something went wrong.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error.message || "Something went wrong." });
     },
   });
 

@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { cn } from "@/lib/utils";
 import { useSubscription, createCheckoutSession, openCustomerPortal, PLAN_PRICES } from "@/hooks/useSubscription";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { InvoiceList } from "@/components/billing/InvoiceList";
 import { UsageChart } from "@/components/billing/UsageChart";
 
@@ -79,7 +79,6 @@ const plans: Plan[] = [
 
 export default function Billing() {
   const { subscription, usage, plan: currentPlan, limits, isLoading, refetch } = useSubscription();
-  const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -87,19 +86,12 @@ export default function Billing() {
   // Handle success/cancel URL params from Stripe
   useEffect(() => {
     if (searchParams.get("success") === "true") {
-      toast({
-        title: "Subscription successful!",
-        description: "Your plan has been upgraded. It may take a moment to reflect.",
-      });
+      toast.success("Subscription successful!", { description: "Your plan has been upgraded. It may take a moment to reflect." });
       refetch();
     } else if (searchParams.get("canceled") === "true") {
-      toast({
-        title: "Subscription canceled",
-        description: "You can upgrade anytime.",
-        variant: "destructive",
-      });
+      toast.error("Subscription canceled", { description: "You can upgrade anytime." });
     }
-  }, [searchParams, toast, refetch]);
+  }, [searchParams, refetch]);
 
   const handleUpgrade = async (planId: string) => {
     if (planId === "free" || planId === currentPlan) return;
@@ -111,11 +103,7 @@ export default function Billing() {
         window.location.href = url;
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to start checkout",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error instanceof Error ? error.message : "Failed to start checkout" });
     } finally {
       setUpgradeLoading(null);
     }
@@ -129,11 +117,7 @@ export default function Billing() {
         window.location.href = url;
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to open billing portal",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error instanceof Error ? error.message : "Failed to open billing portal" });
     } finally {
       setPortalLoading(false);
     }

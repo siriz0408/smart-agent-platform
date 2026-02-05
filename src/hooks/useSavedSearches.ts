@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { SearchParams } from "@/components/properties/SaveSearchDialog";
 import type { Json } from "@/integrations/supabase/types";
 
@@ -21,7 +21,6 @@ export interface SavedSearch {
 
 export function useSavedSearches() {
   const { profile } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Query user's saved searches
@@ -66,18 +65,11 @@ export function useSavedSearches() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
-      toast({
-        title: "Search Saved",
-        description: "Your property search has been saved successfully",
-      });
+      toast.success("Search Saved", { description: "Your property search has been saved successfully" });
     },
     onError: (error) => {
       console.error("Error creating search:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save search",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to save search" });
     },
   });
 
@@ -111,18 +103,11 @@ export function useSavedSearches() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
-      toast({
-        title: "Search Updated",
-        description: "Your search settings have been updated",
-      });
+      toast.success("Search Updated", { description: "Your search settings have been updated" });
     },
     onError: (error) => {
       console.error("Error updating search:", error);
-      toast({
-        title: "Error",
-        description: "Failed to update search",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to update search" });
     },
   });
 
@@ -138,18 +123,11 @@ export function useSavedSearches() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["saved-searches"] });
-      toast({
-        title: "Search Deleted",
-        description: "Your saved search has been removed",
-      });
+      toast.success("Search Deleted", { description: "Your saved search has been removed" });
     },
     onError: (error) => {
       console.error("Error deleting search:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete search",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to delete search" });
     },
   });
 

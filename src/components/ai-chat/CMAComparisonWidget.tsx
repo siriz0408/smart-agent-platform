@@ -147,6 +147,7 @@ export function CMAComparisonWidget({
                 className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 z-10 h-8 w-8 rounded-full shadow-md"
                 onClick={goToPrevious}
                 disabled={currentIndex === 0}
+                aria-label="Previous comparables"
               >
                 <ChevronLeft className="h-4 w-4" />
               </Button>
@@ -156,6 +157,7 @@ export function CMAComparisonWidget({
                 className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 z-10 h-8 w-8 rounded-full shadow-md"
                 onClick={goToNext}
                 disabled={currentIndex >= comparables.length - 3}
+                aria-label="Next comparables"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

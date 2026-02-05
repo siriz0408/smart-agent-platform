@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { PLAN_PRICES } from "@/hooks/useSubscription";
 import { createCheckoutSession } from "@/hooks/useSubscription";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useState } from "react";
 
 const plans = [
@@ -47,7 +47,6 @@ const plans = [
 
 export default function TrialExpired() {
   
-  const { toast } = useToast();
   const [loading, setLoading] = useState<string | null>(null);
 
   const handleUpgrade = async (planId: string) => {
@@ -58,11 +57,7 @@ export default function TrialExpired() {
         window.location.href = url;
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to start checkout",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error instanceof Error ? error.message : "Failed to start checkout" });
     } finally {
       setLoading(null);
     }

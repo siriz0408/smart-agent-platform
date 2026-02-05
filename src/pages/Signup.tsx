@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { OAuthButtons, OAuthDivider } from "@/components/auth/OAuthButtons";
 
 export default function Signup() {
@@ -18,7 +18,6 @@ export default function Signup() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -26,21 +25,13 @@ export default function Signup() {
     setLoading(true);
 
     if (password.length < 6) {
-      toast({
-        variant: "destructive",
-        title: "Password too short",
-        description: "Password must be at least 6 characters.",
-      });
+      toast.error("Password too short", { description: "Password must be at least 6 characters." });
       setLoading(false);
       return;
     }
 
     if (!acceptedTerms) {
-      toast({
-        variant: "destructive",
-        title: "Terms required",
-        description: "Please accept the Terms of Service to continue.",
-      });
+      toast.error("Terms required", { description: "Please accept the Terms of Service to continue." });
       setLoading(false);
       return;
     }
@@ -48,16 +39,9 @@ export default function Signup() {
     const { error } = await signUp(email, password, fullName);
 
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Sign up failed",
-        description: error.message,
-      });
+      toast.error("Sign up failed", { description: error.message });
     } else {
-      toast({
-        title: "Account created!",
-        description: "Welcome to Smart Agent. Let's get started!",
-      });
+      toast.success("Account created!", { description: "Welcome to Smart Agent. Let's get started!" });
       navigate("/");
     }
 
@@ -119,6 +103,7 @@ export default function Signup() {
                   size="icon"
                   className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4 text-muted-foreground" />

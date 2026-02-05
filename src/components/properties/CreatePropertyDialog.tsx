@@ -36,7 +36,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { PropertyPhotoUpload, type PhotoFile } from "./PropertyPhotoUpload";
@@ -121,7 +121,6 @@ interface CreatePropertyDialogProps {
 }
 
 export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialogProps) {
-  const { toast } = useToast();
   const queryClient = useQueryClient();
   const [photos, setPhotos] = useState<PhotoFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
@@ -276,19 +275,12 @@ export function CreatePropertyDialog({ open, onOpenChange }: CreatePropertyDialo
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["properties"] });
-      toast({
-        title: "Property created",
-        description: "The property has been added successfully.",
-      });
+      toast.success("Property created", { description: "The property has been added successfully." });
       handleClose();
     },
     onError: (error) => {
       logger.error("Error creating property:", error);
-      toast({
-        title: "Error",
-        description: "Failed to create property. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to create property. Please try again." });
       setIsUploading(false);
     },
   });

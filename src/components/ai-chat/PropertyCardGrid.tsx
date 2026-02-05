@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ZillowPropertyDetailSheet } from "./ZillowPropertyDetailSheet";
 import { useSaveProperty } from "@/hooks/usePropertySearch";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { PropertyCardData } from "@/types/property";
 
 interface PropertyCardGridProps {
@@ -17,8 +17,6 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [photoIndices, setPhotoIndices] = useState<Record<string, number>>({});
   const saveProperty = useSaveProperty();
-  const { toast } = useToast();
-
   if (!properties || properties.length === 0) {
     return null;
   }
@@ -60,16 +58,9 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
       await saveProperty.mutateAsync(saveData);
       
       setSavedIds((prev) => new Set(prev).add(property.zpid));
-      toast({
-        title: "Property saved",
-        description: "Added to your saved properties",
-      });
+      toast.success("Property saved", { description: "Added to your saved properties" });
     } catch (error) {
-      toast({
-        title: "Error saving property",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive",
-      });
+      toast.error("Error saving property", { description: error instanceof Error ? error.message : "Please try again" });
     }
   };
 
@@ -173,6 +164,7 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
                   size="icon"
                   className="absolute top-2 right-2 h-8 w-8 rounded-full bg-background/80 hover:bg-background"
                   onClick={(e) => handleSaveProperty(e, property)}
+                  aria-label={isSaved ? "Unsave property" : "Save property"}
                 >
                   <Heart 
                     className={`h-5 w-5 ${isSaved ? "fill-red-500 text-red-500" : "text-foreground"}`} 
@@ -187,6 +179,7 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
                       size="icon"
                       className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
                       onClick={(e) => navigatePhoto(e, property.zpid, photos, 'prev')}
+                      aria-label="Previous photo"
                     >
                       <ChevronLeft className="h-5 w-5" />
                     </Button>
@@ -195,6 +188,7 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
                       size="icon"
                       className="absolute right-10 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-black/50 hover:bg-black/70 text-white"
                       onClick={(e) => navigatePhoto(e, property.zpid, photos, 'next')}
+                      aria-label="Next photo"
                     >
                       <ChevronRight className="h-5 w-5" />
                     </Button>
@@ -205,17 +199,18 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
                 {photos.length > 1 && (
                   <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
                     {photos.slice(0, 6).map((_, idx) => (
-                      <button 
+                      <button
                         key={idx}
                         className={`w-2 h-2 rounded-full transition-all ${
-                          idx === currentPhotoIndex 
-                            ? 'bg-white scale-110' 
+                          idx === currentPhotoIndex
+                            ? 'bg-white scale-110'
                             : 'bg-white/60 hover:bg-white/80'
                         }`}
                         onClick={(e) => {
                           e.stopPropagation();
                           setPhotoIndices(prev => ({ ...prev, [property.zpid]: idx }));
                         }}
+                        aria-label={`Photo ${idx + 1}`}
                       />
                     ))}
                     {photos.length > 6 && (
@@ -236,6 +231,7 @@ export function PropertyCardGrid({ properties, title }: PropertyCardGridProps) {
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:text-foreground"
                     onClick={(e) => e.stopPropagation()}
+                    aria-label="Property actions"
                   >
                     <MoreHorizontal className="h-5 w-5" />
                   </Button>

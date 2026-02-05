@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface SocialLink {
   id: string;
@@ -105,10 +105,10 @@ export function useProfileExtensions(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["social-links", user?.id] });
-      toast({ title: "Social link added" });
+      toast.success("Social link added");
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast.error("Error", { description: error.message });
     },
   });
 
@@ -137,7 +137,7 @@ export function useProfileExtensions(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["social-links", user?.id] });
-      toast({ title: "Social link removed" });
+      toast.success("Social link removed");
     },
   });
 
@@ -155,10 +155,10 @@ export function useProfileExtensions(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["credentials", user?.id] });
-      toast({ title: "Credential added" });
+      toast.success("Credential added");
     },
     onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast.error("Error", { description: error.message });
     },
   });
 
@@ -173,7 +173,7 @@ export function useProfileExtensions(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["credentials", user?.id] });
-      toast({ title: "Credential removed" });
+      toast.success("Credential removed");
     },
   });
 
@@ -191,7 +191,7 @@ export function useProfileExtensions(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gallery", user?.id] });
-      toast({ title: "Image added to gallery" });
+      toast.success("Image added to gallery");
     },
   });
 
@@ -206,7 +206,7 @@ export function useProfileExtensions(userId?: string) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["gallery", user?.id] });
-      toast({ title: "Image removed from gallery" });
+      toast.success("Image removed from gallery");
     },
   });
 

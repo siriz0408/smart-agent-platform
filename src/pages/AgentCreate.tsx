@@ -20,7 +20,7 @@ export default function AgentCreate() {
       <div className="p-6 space-y-6 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/agents")}>
+          <Button variant="ghost" size="icon" onClick={() => navigate("/agents")} aria-label="Back to agents">
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>

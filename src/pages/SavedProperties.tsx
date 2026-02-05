@@ -347,6 +347,7 @@ function SavedPropertyCard({
             size="icon"
             onClick={onToggleFavorite}
             disabled={isUpdating}
+            aria-label={property.is_favorite ? "Remove from favorites" : "Add to favorites"}
           >
             <Star className={cn(
               "h-4 w-4",
@@ -357,6 +358,7 @@ function SavedPropertyCard({
             variant="secondary"
             size="icon"
             onClick={onOpenNotes}
+            aria-label="Open notes"
           >
             <StickyNote className="h-4 w-4" />
           </Button>
@@ -365,6 +367,7 @@ function SavedPropertyCard({
             size="icon"
             onClick={onRemove}
             disabled={isRemoving}
+            aria-label="Remove property"
           >
             <Trash2 className="h-4 w-4 text-destructive" />
           </Button>

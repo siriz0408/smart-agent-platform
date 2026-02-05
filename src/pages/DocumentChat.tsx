@@ -231,6 +231,7 @@ export default function DocumentChat() {
                               e.stopPropagation();
                               setBrowsingDocId(doc.id);
                             }}
+                            aria-label="View document"
                           >
                             <Eye className="h-4 w-4" />
                           </Button>

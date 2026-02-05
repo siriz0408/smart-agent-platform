@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, isPast, isToday, addDays, isBefore } from "date-fns";
 import { Circle, Plus, Trash2, Edit2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -63,11 +63,7 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
       queryClient.invalidateQueries({ queryKey: ["deals"] });
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error updating milestone",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Error updating milestone", { description: error.message });
     },
   });
 
@@ -82,14 +78,10 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-milestones", dealId] });
       queryClient.invalidateQueries({ queryKey: ["deals"] });
-      toast({ title: "Milestone deleted" });
+      toast.success("Milestone deleted");
     },
     onError: (error: Error) => {
-      toast({
-        title: "Error deleting milestone",
-        description: error.message,
-        variant: "destructive",
-      });
+      toast.error("Error deleting milestone", { description: error.message });
     },
   });
 
@@ -213,6 +205,7 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
                         size="icon"
                         className="h-7 w-7"
                         onClick={() => setEditingMilestone(milestone)}
+                        aria-label="Edit milestone"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </Button>
@@ -227,6 +220,7 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
                         size="icon"
                         className="h-7 w-7 text-destructive hover:text-destructive"
                         onClick={() => deleteMutation.mutate(milestone.id)}
+                        aria-label="Delete milestone"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>

@@ -116,6 +116,7 @@ export function PropertyDetailsView({ property, onEdit, onDelete }: PropertyDeta
                 size="icon"
                 className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
                 onClick={prevPhoto}
+                aria-label="Previous photo"
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
@@ -124,6 +125,7 @@ export function PropertyDetailsView({ property, onEdit, onDelete }: PropertyDeta
                 size="icon"
                 className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full opacity-80 hover:opacity-100"
                 onClick={nextPhoto}
+                aria-label="Next photo"
               >
                 <ChevronRight className="h-5 w-5" />
               </Button>

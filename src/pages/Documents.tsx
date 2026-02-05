@@ -339,7 +339,7 @@ export default function Documents() {
                 className="pl-10"
               />
             </div>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" aria-label="Filter documents">
               <Filter className="h-4 w-4" />
             </Button>
           </div>
@@ -401,7 +401,7 @@ export default function Documents() {
                                 </div>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-11 w-11 flex-shrink-0">
+                                    <Button variant="ghost" size="icon" className="h-11 w-11 flex-shrink-0" aria-label="Document actions">
                                       <MoreHorizontal className="h-5 w-5" />
                                     </Button>
                                   </DropdownMenuTrigger>
@@ -553,7 +553,7 @@ export default function Documents() {
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Document actions">
                                     <MoreHorizontal className="h-4 w-4" />
                                   </Button>
                                 </DropdownMenuTrigger>

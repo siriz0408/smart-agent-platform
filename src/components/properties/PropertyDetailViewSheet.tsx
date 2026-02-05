@@ -168,6 +168,7 @@ export function PropertyDetailViewSheet({
                           size="icon"
                           className="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full opacity-80 hover:opacity-100"
                           onClick={handlePrevPhoto}
+                          aria-label="Previous photo"
                         >
                           <ChevronLeft className="h-4 w-4" />
                         </Button>
@@ -176,6 +177,7 @@ export function PropertyDetailViewSheet({
                           size="icon"
                           className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full opacity-80 hover:opacity-100"
                           onClick={handleNextPhoto}
+                          aria-label="Next photo"
                         >
                           <ChevronRight className="h-4 w-4" />
                         </Button>
@@ -224,10 +226,11 @@ export function PropertyDetailViewSheet({
                         size="icon"
                         onClick={() => onSave?.(property)}
                         disabled={isSaving}
+                        aria-label="Save property"
                       >
                         <Heart className="h-4 w-4" />
                       </Button>
-                      <Button variant="outline" size="icon">
+                      <Button variant="outline" size="icon" aria-label="Share property">
                         <Share2 className="h-4 w-4" />
                       </Button>
                     </div>

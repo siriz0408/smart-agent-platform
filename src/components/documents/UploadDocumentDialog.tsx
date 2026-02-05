@@ -23,7 +23,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/lib/logger";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface UploadDocumentDialogProps {
   open: boolean;
@@ -122,20 +122,12 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
 
   const handleFileSelect = useCallback((selectedFile: File) => {
     if (!ACCEPTED_TYPES.includes(selectedFile.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF, Word document, or image file.",
-        variant: "destructive",
-      });
+      toast.error("Invalid file type", { description: "Please upload a PDF, Word document, or image file." });
       return;
     }
 
     if (selectedFile.size > MAX_FILE_SIZE) {
-      toast({
-        title: "File too large",
-        description: "Maximum file size is 10MB.",
-        variant: "destructive",
-      });
+      toast.error("File too large", { description: "Maximum file size is 10MB." });
       return;
     }
 
@@ -167,11 +159,7 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
 
   const handleUpload = async () => {
     if (!file || !profile?.tenant_id || !user?.id) {
-      toast({
-        title: "Upload error",
-        description: "Missing file or user information.",
-        variant: "destructive",
-      });
+      toast.error("Upload error", { description: "Missing file or user information." });
       return;
     }
 
@@ -220,10 +208,7 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
 
       setProgress(100);
 
-      toast({
-        title: "Document uploaded",
-        description: `${name || file.name} has been uploaded successfully.`,
-      });
+      toast.success("Document uploaded", { description: `${name || file.name} has been uploaded successfully.` });
 
       // Refresh documents list
       queryClient.invalidateQueries({ queryKey: ["documents"] });
@@ -233,11 +218,7 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
       onOpenChange(false);
     } catch (error) {
       logger.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "An error occurred during upload.",
-        variant: "destructive",
-      });
+      toast.error("Upload failed", { description: error instanceof Error ? error.message : "An error occurred during upload." });
     } finally {
       setUploading(false);
     }
@@ -301,6 +282,7 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
                     e.stopPropagation();
                     setFile(null);
                   }}
+                  aria-label="Remove file"
                 >
                   <X className="h-4 w-4" />
                 </Button>

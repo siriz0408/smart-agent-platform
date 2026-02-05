@@ -197,6 +197,7 @@ export function PropertyComparisonTable({
                             size="icon"
                             className="absolute -top-1 -right-1 h-6 w-6"
                             onClick={() => onRemoveProperty(property.id)}
+                            aria-label="Remove from comparison"
                           >
                             <X className="h-4 w-4" />
                           </Button>

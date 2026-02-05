@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical, Building2 } from "lucide-react";
+import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical, Building2, Search, X } from "lucide-react";
 import { NotificationBell } from "./NotificationBell";
 import { RoleBadge } from "./RoleBadge";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
@@ -21,6 +22,7 @@ export function AppHeader() {
   const { isAdmin, isOverrideActive } = useRole();
   const { isSuperAdmin, activeWorkspace } = useWorkspace();
   const navigate = useNavigate();
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -34,10 +36,40 @@ export function AppHeader() {
     .toUpperCase() || user?.email?.[0]?.toUpperCase() || "U";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-border bg-background px-6">
-      {/* Global Search Bar */}
-      <div className="flex flex-1 items-center max-w-2xl">
+    <header className="flex h-16 items-center justify-between border-b border-border bg-background px-4 md:px-6 relative">
+      {/* Mobile search overlay */}
+      {mobileSearchOpen && (
+        <div className="absolute inset-0 z-50 flex items-center bg-background px-4 md:hidden">
+          <div className="flex-1">
+            <GlobalSearch />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="ml-2 shrink-0"
+            onClick={() => setMobileSearchOpen(false)}
+            aria-label="Close search"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+
+      {/* Global Search Bar - hidden on mobile */}
+      <div className="hidden md:flex flex-1 items-center max-w-2xl">
         <GlobalSearch />
+      </div>
+
+      {/* Mobile search trigger */}
+      <div className="md:hidden">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setMobileSearchOpen(true)}
+          aria-label="Search"
+        >
+          <Search className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Right Actions */}
@@ -46,7 +78,7 @@ export function AppHeader() {
         {isOverrideActive && (
           <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-amber-500/10 border border-amber-500/20">
             <FlaskConical className="h-4 w-4 text-amber-500" />
-            <span className="text-xs font-medium text-amber-500">Testing</span>
+            <span className="text-xs font-medium text-amber-500 hidden sm:inline">Testing</span>
           </div>
         )}
         
@@ -65,7 +97,7 @@ export function AppHeader() {
         {user ? (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 pl-2 pr-1">
+              <Button variant="ghost" className="flex items-center gap-2 pl-2 pr-1" aria-label="User menu">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={profile?.avatar_url || undefined} />
                   <AvatarFallback className="bg-primary text-primary-foreground text-sm">
