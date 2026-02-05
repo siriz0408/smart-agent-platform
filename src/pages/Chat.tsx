@@ -46,6 +46,8 @@ interface Message {
   content: string;
   timestamp: Date;
   embeddedComponents?: EmbeddedComponents;
+  error?: boolean;
+  errorMessage?: string;
 }
 
 export default function Chat() {
@@ -314,10 +316,22 @@ export default function Chat() {
         }
       },
       onError: (error) => {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
+        setMessages((prev) => {
+          // Remove the empty/partial assistant message if there is one
+          const cleaned = prev.filter(
+            (m) => !(m.id === assistantMessageId && m.role === "assistant" && !m.content)
+          );
+          return [
+            ...cleaned,
+            {
+              id: `error-${Date.now()}`,
+              role: "assistant" as const,
+              content: "",
+              timestamp: new Date(),
+              error: true,
+              errorMessage: error.message || "Something went wrong. Please try again.",
+            },
+          ];
         });
       },
       onUsageLimitExceeded: (info) => {
@@ -327,6 +341,26 @@ export default function Chat() {
     });
 
     if (!result) return;
+  };
+
+  const handleRetry = () => {
+    if (isStreaming) return;
+    // Find the last user message before the error
+    const errorIdx = messages.findLastIndex((m) => m.error);
+    if (errorIdx === -1) return;
+    const lastUserMsg = messages
+      .slice(0, errorIdx)
+      .findLast((m) => m.role === "user");
+    if (!lastUserMsg) return;
+
+    // Remove the error message and re-submit
+    setMessages((prev) => prev.filter((m) => !m.error));
+    setInput(lastUserMsg.content);
+    // Use setTimeout to let state settle before triggering submit
+    setTimeout(() => {
+      const form = document.querySelector<HTMLFormElement>("[data-chat-form]");
+      form?.requestSubmit();
+    }, 100);
   };
 
   const handleNewChat = () => {
@@ -674,10 +708,33 @@ export default function Chat() {
                     )}
                   >
                     {message.role === "assistant" && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-                        <Bot className="h-5 w-5 text-primary-foreground" />
+                      <div className={cn(
+                        "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg",
+                        message.error ? "bg-destructive" : "bg-primary"
+                      )}>
+                        {message.error ? (
+                          <AlertTriangle className="h-5 w-5 text-destructive-foreground" />
+                        ) : (
+                          <Bot className="h-5 w-5 text-primary-foreground" />
+                        )}
                       </div>
                     )}
+                    {message.error ? (
+                      <Card className="max-w-[80%] p-4 border-destructive/50 bg-destructive/5">
+                        <p className="text-sm text-destructive font-medium mb-1">Failed to get response</p>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {message.errorMessage}
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRetry}
+                          disabled={isStreaming}
+                        >
+                          Retry
+                        </Button>
+                      </Card>
+                    ) : (
                     <Card
                       className={cn(
                         "max-w-[80%] p-4",
@@ -796,6 +853,7 @@ export default function Chat() {
                         <UserMessageContent content={message.content} />
                       )}
                     </Card>
+                    )}
                     {message.role === "user" && (
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
                         <User className="h-5 w-5 text-muted-foreground" />
@@ -833,7 +891,7 @@ export default function Chat() {
 
           {/* Input Area - Glean style */}
           <div className="border-t border-border bg-background p-3 sm:p-4 lg:p-6">
-            <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+            <form onSubmit={handleSubmit} data-chat-form className="max-w-3xl mx-auto">
               {/* Input container - Glean style rounded (no overflow-hidden to allow dropdown) */}
               <div className="border border-border rounded-2xl bg-card shadow-sm">
                 {/* Text input area */}

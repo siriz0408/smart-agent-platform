@@ -93,6 +93,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete }: Notification
           e.stopPropagation();
           onDelete(notification.id);
         }}
+        aria-label="Delete notification"
       >
         <Trash2 className="h-3 w-3" />
       </Button>
@@ -115,7 +116,7 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground">
+        <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-foreground" aria-label="Notifications">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">

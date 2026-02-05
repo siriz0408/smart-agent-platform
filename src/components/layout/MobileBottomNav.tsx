@@ -173,7 +173,7 @@ export function MobileBottomNav() {
 
       {/* More Menu Sheet */}
       <Sheet open={showMoreMenu} onOpenChange={setShowMoreMenu}>
-        <SheetContent side="bottom" className="h-[80vh]">
+        <SheetContent side="bottom" className="max-h-[80vh]">
           <SheetHeader>
             <SheetTitle>More</SheetTitle>
           </SheetHeader>

@@ -50,7 +50,13 @@ export function AppHeader() {
           </div>
         )}
         
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={() => navigate("/help")}
+          aria-label="Help"
+        >
           <HelpCircle className="h-5 w-5" />
         </Button>
         

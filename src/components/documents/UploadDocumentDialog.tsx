@@ -403,12 +403,24 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
 
           {/* Upload Progress */}
           {uploading && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span>Uploading...</span>
-                <span>{progress}%</span>
+            <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="font-medium truncate">{file?.name}</span>
               </div>
               <Progress value={progress} className="h-2" />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {progress < 30
+                    ? "Preparing upload..."
+                    : progress < 70
+                      ? "Uploading file..."
+                      : progress < 100
+                        ? "Saving document..."
+                        : "Complete!"}
+                </span>
+                <span>{progress}%</span>
+              </div>
             </div>
           )}
         </div>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -28,6 +29,9 @@ export default function Settings() {
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const location = useLocation();
+
+  const defaultTab = location.hash?.replace("#", "") || "profile";
 
   const initials = profile?.full_name
     ?.split(" ")
@@ -61,239 +65,256 @@ export default function Settings() {
           </p>
         </div>
 
-        <div className="space-y-4 md:space-y-6">
-          {/* Profile Section */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-                <User className="h-5 w-5" />
-                Profile
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
-                Your personal information and account details
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
-                  <AvatarImage src={profile?.avatar_url || undefined} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-lg sm:text-xl">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-base sm:text-lg truncate">
-                    {profile?.full_name || "User"}
+        <Tabs
+          defaultValue={defaultTab}
+          onValueChange={(value) => {
+            window.history.replaceState(null, "", `#${value}`);
+          }}
+        >
+          <TabsList className="w-full justify-start overflow-x-auto mb-6">
+            <TabsTrigger value="profile" className="gap-1.5">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">Profile</span>
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="gap-1.5">
+              <Bell className="h-4 w-4" />
+              <span className="hidden sm:inline">Notifications</span>
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="gap-1.5">
+              <Palette className="h-4 w-4" />
+              <span className="hidden sm:inline">Appearance</span>
+            </TabsTrigger>
+            <TabsTrigger value="security" className="gap-1.5">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Security</span>
+            </TabsTrigger>
+            <TabsTrigger value="billing" className="gap-1.5">
+              <CreditCard className="h-4 w-4" />
+              <span className="hidden sm:inline">More</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-4 md:space-y-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <User className="h-5 w-5" />
+                  Profile
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Your personal information and account details
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-lg sm:text-xl">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-base sm:text-lg truncate">
+                      {profile?.full_name || "User"}
+                    </div>
+                    <div className="text-sm text-muted-foreground truncate">{user?.email}</div>
+                    {profile?.title && (
+                      <div className="text-xs sm:text-sm text-muted-foreground truncate">{profile.title}</div>
+                    )}
                   </div>
-                  <div className="text-sm text-muted-foreground truncate">{user?.email}</div>
-                  {profile?.title && (
-                    <div className="text-xs sm:text-sm text-muted-foreground truncate">{profile.title}</div>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full sm:w-auto mt-2 sm:mt-0"
+                    onClick={() => setIsEditProfileOpen(true)}
+                  >
+                    Edit Profile
+                  </Button>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto mt-2 sm:mt-0"
-                  onClick={() => setIsEditProfileOpen(true)}
-                >
-                  Edit Profile
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          <EditProfileDialog
-            open={isEditProfileOpen}
-            onOpenChange={setIsEditProfileOpen}
-          />
+            <ProfileExtensions />
+            <CredentialsManagement />
+            <SocialLinksManagement />
+            <PhotoGalleryManagement />
+          </TabsContent>
 
-          {/* Notifications */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notifications
-              </CardTitle>
-              <CardDescription>
-                Configure how you receive notifications
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="email-notifications">Email Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive email updates about your activity
-                  </p>
+          {/* Notifications Tab */}
+          <TabsContent value="notifications" className="space-y-4 md:space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notifications
+                </CardTitle>
+                <CardDescription>
+                  Configure how you receive notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="email-notifications">Email Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive email updates about your activity
+                    </p>
+                  </div>
+                  <Switch
+                    id="email-notifications"
+                    checked={preferences.emailNotifications}
+                    onCheckedChange={(checked) => updatePreference("emailNotifications", checked)}
+                  />
                 </div>
-                <Switch
-                  id="email-notifications"
-                  checked={preferences.emailNotifications}
-                  onCheckedChange={(checked) => updatePreference("emailNotifications", checked)}
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="push-notifications">Push Notifications</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Receive push notifications in your browser
-                  </p>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="push-notifications">Push Notifications</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive push notifications in your browser
+                    </p>
+                  </div>
+                  <Switch
+                    id="push-notifications"
+                    checked={preferences.pushNotifications}
+                    onCheckedChange={(checked) => updatePreference("pushNotifications", checked)}
+                  />
                 </div>
-                <Switch
-                  id="push-notifications"
-                  checked={preferences.pushNotifications}
-                  onCheckedChange={(checked) => updatePreference("pushNotifications", checked)}
-                />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="deal-updates">Deal Updates</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Get notified when deals move stages
-                  </p>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="deal-updates">Deal Updates</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when deals move stages
+                    </p>
+                  </div>
+                  <Switch
+                    id="deal-updates"
+                    checked={preferences.dealUpdates}
+                    onCheckedChange={(checked) => updatePreference("dealUpdates", checked)}
+                  />
                 </div>
-                <Switch
-                  id="deal-updates"
-                  checked={preferences.dealUpdates}
-                  onCheckedChange={(checked) => updatePreference("dealUpdates", checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          {/* Appearance */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Palette className="h-5 w-5" />
-                Appearance
-              </CardTitle>
-              <CardDescription>
-                Customize the look and feel of the app
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label htmlFor="dark-mode">Dark Mode</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Switch between light and dark themes
-                  </p>
+          {/* Appearance Tab */}
+          <TabsContent value="appearance" className="space-y-4 md:space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Appearance
+                </CardTitle>
+                <CardDescription>
+                  Customize the look and feel of the app
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="dark-mode">Dark Mode</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Switch between light and dark themes
+                    </p>
+                  </div>
+                  <Switch
+                    id="dark-mode"
+                    checked={preferences.darkMode}
+                    onCheckedChange={(checked) => updatePreference("darkMode", checked)}
+                  />
                 </div>
-                <Switch
-                  id="dark-mode"
-                  checked={preferences.darkMode}
-                  onCheckedChange={(checked) => updatePreference("darkMode", checked)}
-                />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Data Export */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5" />
-                Data Export
-              </CardTitle>
-              <CardDescription>
-                Download your data in CSV or JSON format
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">
-                    Export contacts, properties, and deals. You own your data.
-                  </p>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Data Export
+                </CardTitle>
+                <CardDescription>
+                  Download your data in CSV or JSON format
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Export contacts, properties, and deals. You own your data.
+                    </p>
+                  </div>
+                  <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Export Data
+                  </Button>
                 </div>
-                <Button variant="outline" onClick={() => setIsExportDialogOpen(true)}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Export Data
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-          <DataExportDialog
-            open={isExportDialogOpen}
-            onOpenChange={setIsExportDialogOpen}
-          />
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-4 md:space-y-6">
+            <div id="privacy-section">
+              <PrivacySettings />
+            </div>
+          </TabsContent>
 
-          <KeyboardShortcutsDialog
-            open={isShortcutsOpen}
-            onOpenChange={setIsShortcutsOpen}
-          />
+          {/* Billing & More Tab */}
+          <TabsContent value="billing" className="space-y-4 md:space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <Link to="/settings/billing">
+                <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+                  <CardContent className="p-4 flex items-center gap-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
+                      <CreditCard className="h-5 w-5 text-accent-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium">Billing & Subscription</div>
+                      <div className="text-sm text-muted-foreground">
+                        Manage your plan and payments
+                      </div>
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  </CardContent>
+                </Card>
+              </Link>
 
-          {/* Professional Profile Extensions */}
-          <ProfileExtensions />
-
-          {/* Credentials & Certifications */}
-          <CredentialsManagement />
-
-          {/* Social Media Links */}
-          <SocialLinksManagement />
-
-          {/* Photo Gallery */}
-          <PhotoGalleryManagement />
-
-          {/* Privacy Settings */}
-          <PrivacySettings />
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <Link to="/settings/billing">
-              <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+              <Card
+                className="cursor-pointer hover:border-primary/50 transition-colors"
+                onClick={() => setIsShortcutsOpen(true)}
+              >
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                    <CreditCard className="h-5 w-5 text-accent-foreground" />
+                    <Keyboard className="h-5 w-5 text-accent-foreground" />
                   </div>
                   <div className="flex-1">
-                    <div className="font-medium">Billing & Subscription</div>
+                    <div className="font-medium">Keyboard Shortcuts</div>
                     <div className="text-sm text-muted-foreground">
-                      Manage your plan and payments
+                      View all available shortcuts
                     </div>
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </CardContent>
               </Card>
-            </Link>
+            </div>
+          </TabsContent>
+        </Tabs>
 
-            <Card
-              className="cursor-pointer hover:border-primary/50 transition-colors"
-              onClick={() => setIsShortcutsOpen(true)}
-            >
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                  <Keyboard className="h-5 w-5 text-accent-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium">Keyboard Shortcuts</div>
-                  <div className="text-sm text-muted-foreground">
-                    View all available shortcuts
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </CardContent>
-            </Card>
-
-            <Card className="cursor-pointer hover:border-primary/50 transition-colors">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
-                  <Shield className="h-5 w-5 text-accent-foreground" />
-                </div>
-                <div className="flex-1">
-                  <div className="font-medium">Security</div>
-                  <div className="text-sm text-muted-foreground">
-                    Password and two-factor auth
-                  </div>
-                </div>
-                <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+        {/* Dialogs */}
+        <EditProfileDialog
+          open={isEditProfileOpen}
+          onOpenChange={setIsEditProfileOpen}
+        />
+        <DataExportDialog
+          open={isExportDialogOpen}
+          onOpenChange={setIsExportDialogOpen}
+        />
+        <KeyboardShortcutsDialog
+          open={isShortcutsOpen}
+          onOpenChange={setIsShortcutsOpen}
+        />
       </div>
     </AppLayout>
   );

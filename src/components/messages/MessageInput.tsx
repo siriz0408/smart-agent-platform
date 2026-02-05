@@ -108,6 +108,7 @@ export function MessageInput({ onSend, disabled, conversationId }: MessageInputP
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled || isSending}
           className="shrink-0"
+          aria-label="Attach file"
         >
           <Paperclip className="h-4 w-4" />
         </Button>
@@ -127,6 +128,7 @@ export function MessageInput({ onSend, disabled, conversationId }: MessageInputP
           disabled={(!content.trim() && !hasAttachments) || disabled || isSending}
           size="icon"
           className="shrink-0"
+          aria-label="Send message"
         >
           <Send className="h-4 w-4" />
         </Button>
@@ -173,6 +175,7 @@ function AttachmentPreview({ attachment, onRemove }: AttachmentPreviewProps) {
         size="icon"
         className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
         onClick={onRemove}
+        aria-label="Remove attachment"
       >
         <X className="h-3 w-3" />
       </Button>

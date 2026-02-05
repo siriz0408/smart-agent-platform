@@ -1,7 +1,7 @@
 import { useOnboarding, OnboardingStep } from "@/hooks/useOnboarding";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { X } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { WelcomeStep } from "./steps/WelcomeStep";
 import { ProfileSetupStep } from "./steps/ProfileSetupStep";
 import { RoleSelectionStep } from "./steps/RoleSelectionStep";
@@ -43,6 +43,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     }
   };
 
+  const showBackButton = currentStepIndex > 0 && currentStep !== "completion";
+
   const renderStep = () => {
     const stepProps = {
       data,
@@ -81,9 +83,21 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       {/* Header */}
       <header className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-4 flex-1">
-          <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">SA</span>
-          </div>
+          {showBackButton ? (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={goToPreviousStep}
+              aria-label="Go back"
+              className="h-10 w-10"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          ) : (
+            <div className="h-10 w-10 rounded-xl bg-primary flex items-center justify-center">
+              <span className="text-primary-foreground font-bold">SA</span>
+            </div>
+          )}
           <div className="flex-1 max-w-xs">
             <div className="text-xs text-muted-foreground mb-1">
               Step {currentStepIndex + 1} of {totalSteps}
@@ -108,7 +122,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       {/* Content */}
       <main className="flex-1 flex items-center justify-center p-4">
         <div className="w-full max-w-lg">
-          {renderStep()}
+          <div key={currentStep} className="animate-in fade-in-50 duration-300">
+            {renderStep()}
+          </div>
         </div>
       </main>
     </div>

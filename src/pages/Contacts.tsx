@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2, Upload } from "lucide-react";
+import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2, Upload, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PresenceDot } from "@/components/messages/PresenceDot";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -8,6 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -67,6 +86,9 @@ export default function Contacts() {
   const [isPipelineDialogOpen, setIsPipelineDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [filterTypes, setFilterTypes] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -185,12 +207,23 @@ export default function Contacts() {
   const filteredContacts = contacts.filter((contact) => {
     const fullName = `${contact.first_name} ${contact.last_name}`.toLowerCase();
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       fullName.includes(query) ||
       (contact.email?.toLowerCase().includes(query) ?? false) ||
-      (contact.phone?.includes(query) ?? false)
-    );
+      (contact.phone?.includes(query) ?? false);
+    const matchesFilter =
+      filterTypes.length === 0 || filterTypes.includes(contact.contact_type || "");
+    return matchesSearch && matchesFilter;
   });
+
+  const totalPages = Math.ceil(filteredContacts.length / pageSize);
+  const paginatedContacts = filteredContacts.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  // Reset page when filters/search change
+  const resetPage = () => setCurrentPage(1);
 
   const buyerCount = contacts.filter((c) => c.contact_type === "buyer" || c.contact_type === "both").length;
   const sellerCount = contacts.filter((c) => c.contact_type === "seller" || c.contact_type === "both").length;
@@ -277,13 +310,58 @@ export default function Contacts() {
             <Input
               placeholder="Search contacts..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
               className="pl-10"
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon" className="relative" aria-label="Filter contacts">
+                <Filter className="h-4 w-4" />
+                {filterTypes.length > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                    {filterTypes.length}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-56">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-medium">Filter by Type</h4>
+                  {filterTypes.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto py-1 px-2 text-xs"
+                      onClick={() => { setFilterTypes([]); resetPage(); }}
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+                {Object.keys(contactTypeColors).map((type) => (
+                  <label key={type} className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={filterTypes.includes(type)}
+                      onCheckedChange={(checked) => {
+                        setFilterTypes((prev) =>
+                          checked
+                            ? [...prev, type]
+                            : prev.filter((t) => t !== type)
+                        );
+                        resetPage();
+                      }}
+                    />
+                    <Badge variant="secondary" className={contactTypeColors[type]}>
+                      {type.charAt(0).toUpperCase() + type.slice(1)}
+                    </Badge>
+                  </label>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
 
         {/* Contacts Table / Cards */}
@@ -308,11 +386,11 @@ export default function Contacts() {
             ) : filteredContacts.length === 0 ? (
               <Card>
                 <CardContent className="py-12 text-center text-muted-foreground">
-                  {searchQuery ? "No contacts match your search" : "No contacts yet. Add your first contact!"}
+                  {searchQuery || filterTypes.length > 0 ? "No contacts match your search or filters" : "No contacts yet. Add your first contact!"}
                 </CardContent>
               </Card>
             ) : (
-              filteredContacts.map((contact) => (
+              paginatedContacts.map((contact) => (
                 <Card
                   key={contact.id}
                   className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
@@ -341,7 +419,7 @@ export default function Contacts() {
                           </div>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-11 w-11 flex-shrink-0">
+                              <Button variant="ghost" size="icon" className="h-11 w-11 flex-shrink-0" aria-label="Contact actions">
                                 <MoreHorizontal className="h-5 w-5" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -394,10 +472,15 @@ export default function Contacts() {
                         </div>
                         <div className="space-y-1 text-sm">
                           {contact.email && (
-                            <div className="flex items-center gap-2">
-                              <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                              <span className="truncate">{contact.email}</span>
-                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <div className="flex items-center gap-2">
+                                  <Mail className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                                  <span className="truncate">{contact.email}</span>
+                                </div>
+                              </TooltipTrigger>
+                              <TooltipContent>{contact.email}</TooltipContent>
+                            </Tooltip>
                           )}
                           {contact.phone && (
                             <div className="flex items-center gap-2 text-muted-foreground">
@@ -457,11 +540,11 @@ export default function Contacts() {
               ) : filteredContacts.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    {searchQuery ? "No contacts match your search" : "No contacts yet. Add your first contact!"}
+                    {searchQuery || filterTypes.length > 0 ? "No contacts match your search or filters" : "No contacts yet. Add your first contact!"}
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredContacts.map((contact) => (
+                paginatedContacts.map((contact) => (
                   <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
                     <TableCell onClick={() => handleViewDetails(contact)}>
                       <div className="flex items-center gap-3">
@@ -522,7 +605,7 @@ export default function Contacts() {
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Contact actions">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -571,6 +654,54 @@ export default function Contacts() {
             </TableBody>
           </Table>
         </Card>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredContacts.length)} of {filteredContacts.length}
+            </p>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                  let pageNum: number;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+                  return (
+                    <PaginationItem key={pageNum}>
+                      <PaginationLink
+                        isActive={currentPage === pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className="cursor-pointer"
+                      >
+                        {pageNum}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
         )}
 
         {/* Contact Detail Sheet */}

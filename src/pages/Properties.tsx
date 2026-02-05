@@ -1,10 +1,36 @@
 import { useState } from "react";
-import { Plus, Search, Filter, Grid, List, Bed, Bath, Square, MapPin, DollarSign, Home, Heart, Users } from "lucide-react";
+import { Plus, Search, Filter, Grid, List, Bed, Bath, Square, MapPin, DollarSign, Home, Heart, Users, X } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -44,6 +70,22 @@ export default function Properties() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [isDetailSheetOpen, setIsDetailSheetOpen] = useState(false);
+  const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 12;
+  const [filterMinBeds, setFilterMinBeds] = useState<string>("");
+  const [filterMinBaths, setFilterMinBaths] = useState<string>("");
+
+  const activeFilterCount =
+    filterStatuses.length +
+    (filterMinBeds ? 1 : 0) +
+    (filterMinBaths ? 1 : 0);
+
+  const clearAllFilters = () => {
+    setFilterStatuses([]);
+    setFilterMinBeds("");
+    setFilterMinBaths("");
+  };
 
   const handlePropertyClick = (property: Property) => {
     setSelectedProperty(property);
@@ -162,11 +204,25 @@ export default function Properties() {
 
   const filteredProperties = properties.filter((property) => {
     const query = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       property.address.toLowerCase().includes(query) ||
-      property.city.toLowerCase().includes(query)
-    );
+      property.city.toLowerCase().includes(query);
+    const matchesStatus =
+      filterStatuses.length === 0 || filterStatuses.includes(property.status || "");
+    const matchesBeds =
+      !filterMinBeds || (property.bedrooms ?? 0) >= parseInt(filterMinBeds);
+    const matchesBaths =
+      !filterMinBaths || (property.bathrooms ?? 0) >= parseInt(filterMinBaths);
+    return matchesSearch && matchesStatus && matchesBeds && matchesBaths;
   });
+
+  const totalPages = Math.ceil(filteredProperties.length / pageSize);
+  const paginatedProperties = filteredProperties.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
+  const resetPage = () => setCurrentPage(1);
 
   const activeListings = properties.filter((p) => p.status === "active").length;
   const totalValue = properties
@@ -263,19 +319,98 @@ export default function Properties() {
                 <Input
                   placeholder="Search properties..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
                   className="pl-10"
                 />
               </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="icon" className="relative" aria-label="Filter properties">
+                    <Filter className="h-4 w-4" />
+                    {activeFilterCount > 0 && (
+                      <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-sm font-medium">Filters</h4>
+                      {activeFilterCount > 0 && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-auto py-1 px-2 text-xs"
+                          onClick={clearAllFilters}
+                        >
+                          <X className="h-3 w-3 mr-1" />
+                          Clear all
+                        </Button>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Status</p>
+                      {Object.keys(statusColors).map((status) => (
+                        <label key={status} className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={filterStatuses.includes(status)}
+                            onCheckedChange={(checked) => {
+                              setFilterStatuses((prev) =>
+                                checked
+                                  ? [...prev, status]
+                                  : prev.filter((s) => s !== status)
+                              );
+                            }}
+                          />
+                          <Badge variant="secondary" className={statusColors[status]}>
+                            {status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}
+                          </Badge>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Min Bedrooms</p>
+                      <Select value={filterMinBeds} onValueChange={(v) => setFilterMinBeds(v === "any" ? "" : v)}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any</SelectItem>
+                          <SelectItem value="1">1+</SelectItem>
+                          <SelectItem value="2">2+</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                          <SelectItem value="4">4+</SelectItem>
+                          <SelectItem value="5">5+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Min Bathrooms</p>
+                      <Select value={filterMinBaths} onValueChange={(v) => setFilterMinBaths(v === "any" ? "" : v)}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Any" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="any">Any</SelectItem>
+                          <SelectItem value="1">1+</SelectItem>
+                          <SelectItem value="2">2+</SelectItem>
+                          <SelectItem value="3">3+</SelectItem>
+                          <SelectItem value="4">4+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <div className="flex items-center border rounded-lg">
                 <Button
                   variant={viewMode === "grid" ? "secondary" : "ghost"}
                   size="icon"
                   className="rounded-r-none"
                   onClick={() => setViewMode("grid")}
+                  aria-label="Grid view"
                 >
                   <Grid className="h-4 w-4" />
                 </Button>
@@ -284,6 +419,7 @@ export default function Properties() {
                   size="icon"
                   className="rounded-l-none"
                   onClick={() => setViewMode("list")}
+                  aria-label="List view"
                 >
                   <List className="h-4 w-4" />
                 </Button>
@@ -322,7 +458,7 @@ export default function Properties() {
                   ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3"
                   : "space-y-4"
               )}>
-                {filteredProperties.map((property, index) => {
+                {paginatedProperties.map((property, index) => {
                   const photoUrl = property.photos?.[0] || getPlaceholderImage(index);
 
                   return (
@@ -334,6 +470,7 @@ export default function Properties() {
                               src={photoUrl}
                               alt={property.address}
                               className="object-cover w-full h-full"
+                              loading="lazy"
                             />
                             <Badge
                               className={cn(
@@ -382,6 +519,7 @@ export default function Properties() {
                             src={photoUrl}
                             alt={property.address}
                             className="w-32 h-24 object-cover rounded-lg"
+                            loading="lazy"
                           />
                           <div className="flex-1">
                             <div className="flex items-center justify-between mb-1">
@@ -423,6 +561,54 @@ export default function Properties() {
                     </Card>
                   );
                 })}
+              </div>
+            )}
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-muted-foreground">
+                  Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredProperties.length)} of {filteredProperties.length}
+                </p>
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious
+                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      let pageNum: number;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      return (
+                        <PaginationItem key={pageNum}>
+                          <PaginationLink
+                            isActive={currentPage === pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className="cursor-pointer"
+                          >
+                            {pageNum}
+                          </PaginationLink>
+                        </PaginationItem>
+                      );
+                    })}
+                    <PaginationItem>
+                      <PaginationNext
+                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </TabsContent>
@@ -505,6 +691,7 @@ export default function Properties() {
                                   src={prop.photo}
                                   alt={prop.address}
                                   className="w-full h-full object-cover"
+                                  loading="lazy"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
@@ -522,9 +709,14 @@ export default function Properties() {
                                 ? `$${prop.price.toLocaleString()}`
                                 : "Price N/A"}
                             </p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {prop.address}
-                            </p>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {prop.address}
+                                </p>
+                              </TooltipTrigger>
+                              <TooltipContent>{prop.address}</TooltipContent>
+                            </Tooltip>
                           </div>
                         ))}
                         {buyer.properties.length > 5 && (

@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,48 +9,61 @@ import { RoleProvider } from "@/contexts/RoleContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { KeyboardShortcutsProvider } from "@/components/keyboard/KeyboardShortcutsProvider";
+import { ErrorBoundary } from "@/lib/errorTracking";
+import { ErrorFallback } from "@/components/ErrorFallback";
+import { Loader2 } from "lucide-react";
 
-// Pages
-import Home from "./pages/Home";
+// Critical path - eager loaded
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import ResetPassword from "./pages/ResetPassword";
-import Chat from "./pages/Chat";
-import Agents from "./pages/Agents";
-import AgentCreate from "./pages/AgentCreate";
-import AgentEdit from "./pages/AgentEdit";
-import ActionQueue from "./pages/ActionQueue";
-import AdminAgents from "./pages/AdminAgents";
-import AdminAgentEdit from "./pages/AdminAgentEdit";
-import AdminTeammates from "./pages/AdminTeammates";
-import AdminDataSources from "./pages/AdminDataSources";
-import Contacts from "./pages/Contacts";
-import ContactDetail from "./pages/ContactDetail";
-import Pipeline from "./pages/Pipeline";
-import Properties from "./pages/Properties";
-import PropertyDetail from "./pages/PropertyDetail";
-import PropertySearch from "./pages/PropertySearch";
-import SavedProperties from "./pages/SavedProperties";
-import MyListing from "./pages/MyListing";
-import MyJourney from "./pages/MyJourney";
-import Documents from "./pages/Documents";
-import DocumentDetail from "./pages/DocumentDetail";
-import DocumentChat from "./pages/DocumentChat";
-import SearchResults from "./pages/SearchResults";
-import Messages from "./pages/Messages";
-import Admin from "./pages/Admin";
-import Settings from "./pages/Settings";
-import Billing from "./pages/Billing";
-import Tools from "./pages/Tools";
-import TrialExpired from "./pages/TrialExpired";
 import NotFound from "./pages/NotFound";
-import Terms from "./pages/Terms";
-import Help from "./pages/Help";
-import Privacy from "./pages/Privacy";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Landing from "./pages/Landing";
-import Onboarding from "./pages/Onboarding";
+
+// Lazy loaded pages
+const Home = lazy(() => import("./pages/Home"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Chat = lazy(() => import("./pages/Chat"));
+const Agents = lazy(() => import("./pages/Agents"));
+const AgentCreate = lazy(() => import("./pages/AgentCreate"));
+const AgentEdit = lazy(() => import("./pages/AgentEdit"));
+const ActionQueue = lazy(() => import("./pages/ActionQueue"));
+const AdminAgents = lazy(() => import("./pages/AdminAgents"));
+const AdminAgentEdit = lazy(() => import("./pages/AdminAgentEdit"));
+const AdminTeammates = lazy(() => import("./pages/AdminTeammates"));
+const AdminDataSources = lazy(() => import("./pages/AdminDataSources"));
+const Contacts = lazy(() => import("./pages/Contacts"));
+const ContactDetail = lazy(() => import("./pages/ContactDetail"));
+const Pipeline = lazy(() => import("./pages/Pipeline"));
+const Properties = lazy(() => import("./pages/Properties"));
+const PropertyDetail = lazy(() => import("./pages/PropertyDetail"));
+const PropertySearch = lazy(() => import("./pages/PropertySearch"));
+const SavedProperties = lazy(() => import("./pages/SavedProperties"));
+const MyListing = lazy(() => import("./pages/MyListing"));
+const MyJourney = lazy(() => import("./pages/MyJourney"));
+const Documents = lazy(() => import("./pages/Documents"));
+const DocumentDetail = lazy(() => import("./pages/DocumentDetail"));
+const DocumentChat = lazy(() => import("./pages/DocumentChat"));
+const SearchResults = lazy(() => import("./pages/SearchResults"));
+const Messages = lazy(() => import("./pages/Messages"));
+const Admin = lazy(() => import("./pages/Admin"));
+const Settings = lazy(() => import("./pages/Settings"));
+const Billing = lazy(() => import("./pages/Billing"));
+const Tools = lazy(() => import("./pages/Tools"));
+const TrialExpired = lazy(() => import("./pages/TrialExpired"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Help = lazy(() => import("./pages/Help"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const About = lazy(() => import("./pages/About"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+
+function LoadingSpinner() {
+  return (
+    <div className="flex h-screen items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient();
 
@@ -63,6 +77,10 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <KeyboardShortcutsProvider>
+            <ErrorBoundary fallback={({ error, resetError }) => (
+              <ErrorFallback error={error} resetError={resetError} />
+            )}>
+            <Suspense fallback={<LoadingSpinner />}>
             <Routes>
               {/* Public routes */}
               <Route path="/" element={<Landing />} />
@@ -255,6 +273,8 @@ const App = () => (
               {/* Catch-all */}
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
+            </ErrorBoundary>
             </KeyboardShortcutsProvider>
           </BrowserRouter>
           </TooltipProvider>

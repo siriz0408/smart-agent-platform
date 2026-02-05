@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Sparkles,
@@ -12,12 +13,14 @@ import {
   Shield,
   Zap,
   CheckCircle2,
-  ArrowRight
+  ArrowRight,
+  Menu,
 } from "lucide-react";
 
 export default function Landing() {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
@@ -37,7 +40,8 @@ export default function Landing() {
             </div>
             <span className="text-xl font-bold">Smart Agent</span>
           </div>
-          <nav className="flex items-center gap-4">
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-4">
             <a href="/about" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
               About
             </a>
@@ -51,6 +55,39 @@ export default function Landing() {
               <a href="/signup">Get Started</a>
             </Button>
           </nav>
+
+          {/* Mobile nav */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-64">
+              <nav className="flex flex-col gap-4 mt-8">
+                <a
+                  href="/about"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  About
+                </a>
+                <a
+                  href="/contact"
+                  className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Contact
+                </a>
+                <Button variant="ghost" asChild className="justify-start">
+                  <a href="/login" onClick={() => setMobileMenuOpen(false)}>Log In</a>
+                </Button>
+                <Button asChild>
+                  <a href="/signup" onClick={() => setMobileMenuOpen(false)}>Get Started</a>
+                </Button>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </header>
 

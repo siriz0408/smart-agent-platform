@@ -85,7 +85,7 @@ export function DealCard({
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0">
+              <Button variant="ghost" size="icon" className="h-6 w-6 flex-shrink-0" aria-label="Deal actions">
                 <MoreHorizontal className="h-3.5 w-3.5" />
               </Button>
             </DropdownMenuTrigger>

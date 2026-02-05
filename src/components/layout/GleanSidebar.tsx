@@ -18,6 +18,11 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -162,32 +167,39 @@ export function GleanSidebar() {
 
             return (
               <li key={item.href}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex flex-col items-center justify-center py-3 gap-1.5",
-                    "transition-all duration-200 rounded-lg",
-                    "min-h-[64px]", // Touch target compliance
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
-                  )}
-                >
-                  <div className="relative">
-                    <item.icon className="h-6 w-6" />
-                    {item.label === 'Messages' && totalUnread > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 text-[9px] font-semibold"
-                      >
-                        {totalUnread > 99 ? '99+' : totalUnread}
-                      </Badge>
-                    )}
-                  </div>
-                  <span className="text-[10px] font-medium text-center leading-tight px-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex flex-col items-center justify-center py-3 gap-1.5",
+                        "transition-all duration-200 rounded-lg",
+                        "min-h-[64px]", // Touch target compliance
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "text-white/70 hover:bg-white/10 hover:text-white"
+                      )}
+                    >
+                      <div className="relative">
+                        <item.icon className="h-6 w-6" />
+                        {item.label === 'Messages' && totalUnread > 0 && (
+                          <Badge
+                            variant="destructive"
+                            className="absolute -top-1 -right-1 h-4 min-w-[16px] px-1 text-[9px] font-semibold"
+                          >
+                            {totalUnread > 99 ? '99+' : totalUnread}
+                          </Badge>
+                        )}
+                      </div>
+                      <span className="text-[10px] font-medium text-center leading-tight px-1">
+                        {item.label}
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
                     {item.label}
-                  </span>
-                </Link>
+                  </TooltipContent>
+                </Tooltip>
               </li>
             );
           })}
@@ -204,22 +216,29 @@ export function GleanSidebar() {
 
             return (
               <li key={item.href}>
-                <Link
-                  to={item.href}
-                  className={cn(
-                    "flex flex-col items-center justify-center py-2 gap-1",
-                    "transition-all duration-200 rounded-lg",
-                    "min-h-[56px]",
-                    isActive
-                      ? "bg-white/20 text-white"
-                      : "text-white/70 hover:bg-white/10 hover:text-white"
-                  )}
-                >
-                  <item.icon className="h-5 w-5" />
-                  <span className="text-[10px] font-medium text-center leading-tight px-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to={item.href}
+                      className={cn(
+                        "flex flex-col items-center justify-center py-2 gap-1",
+                        "transition-all duration-200 rounded-lg",
+                        "min-h-[56px]",
+                        isActive
+                          ? "bg-white/20 text-white"
+                          : "text-white/70 hover:bg-white/10 hover:text-white"
+                      )}
+                    >
+                      <item.icon className="h-5 w-5" />
+                      <span className="text-[10px] font-medium text-center leading-tight px-1">
+                        {item.label}
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  <TooltipContent side="right">
                     {item.label}
-                  </span>
-                </Link>
+                  </TooltipContent>
+                </Tooltip>
               </li>
             );
           })}
@@ -237,7 +256,7 @@ export function GleanSidebar() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="h-10 w-10 rounded-full overflow-hidden mx-auto hover:ring-2 hover:ring-white/30 transition-all">
+            <button className="h-10 w-10 rounded-full overflow-hidden mx-auto hover:ring-2 hover:ring-white/30 transition-all" aria-label="User menu">
               <Avatar className="h-full w-full">
                 <AvatarFallback className="bg-white/20 text-white text-sm font-semibold">
                   {user?.email?.[0]?.toUpperCase() || 'U'}
