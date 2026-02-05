@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 
 export interface SearchParams {
@@ -46,7 +46,6 @@ export function SaveSearchDialog({
   searchParams,
 }: SaveSearchDialogProps) {
   const { profile } = useAuth();
-  const { toast } = useToast();
   const [searchName, setSearchName] = useState(
     `Homes in ${searchParams.location || "your area"}`
   );
@@ -56,20 +55,12 @@ export function SaveSearchDialog({
 
   const handleSave = async () => {
     if (!profile?.tenant_id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to save searches",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "You must be logged in to save searches" });
       return;
     }
 
     if (!searchName.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Please enter a name for this search",
-        variant: "destructive",
-      });
+      toast.error("Validation Error", { description: "Please enter a name for this search" });
       return;
     }
 
@@ -87,19 +78,12 @@ export function SaveSearchDialog({
 
       if (error) throw error;
 
-      toast({
-        title: "Search Saved",
-        description: `You'll receive ${notificationFrequency} notifications for "${searchName}"`,
-      });
+      toast.success("Search Saved", { description: `You'll receive ${notificationFrequency} notifications for "${searchName}"` });
 
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving search:", error);
-      toast({
-        title: "Error",
-        description: "Failed to save search. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to save search. Please try again." });
     } finally {
       setIsSaving(false);
     }

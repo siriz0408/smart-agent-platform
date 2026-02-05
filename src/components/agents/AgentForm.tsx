@@ -47,7 +47,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
@@ -119,7 +119,6 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingPrompt, setIsGeneratingPrompt] = useState(false);
   const { user, profile } = useAuth();
-  const { toast } = useToast();
   const isEditMode = !!agent;
 
   const form = useForm<AgentFormData>({
@@ -157,11 +156,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
     const category = form.getValues("category");
 
     if (!name) {
-      toast({
-        title: "Name required",
-        description: "Please enter an agent name first so AI can generate relevant instructions.",
-        variant: "destructive",
-      });
+      toast.error("Name required", { description: "Please enter an agent name first so AI can generate relevant instructions." });
       return;
     }
 
@@ -187,18 +182,11 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
       
       if (data.prompt) {
         form.setValue("system_prompt", data.prompt);
-        toast({
-          title: "Prompt generated",
-          description: "AI has suggested a system prompt. Feel free to edit it!",
-        });
+        toast.success("Prompt generated", { description: "AI has suggested a system prompt. Feel free to edit it!" });
       }
     } catch (error) {
       console.error("Error generating prompt:", error);
-      toast({
-        title: "Generation failed",
-        description: "Could not generate prompt. Please try again or write your own.",
-        variant: "destructive",
-      });
+      toast.error("Generation failed", { description: "Could not generate prompt. Please try again or write your own." });
     } finally {
       setIsGeneratingPrompt(false);
     }
@@ -206,11 +194,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
 
   const onSubmit = async (data: AgentFormData) => {
     if (!user?.id || !profile?.tenant_id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to save an agent",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "You must be logged in to save an agent" });
       return;
     }
 
@@ -236,10 +220,7 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
 
         if (error) throw error;
 
-        toast({
-          title: "Agent updated",
-          description: "Your agent has been updated successfully.",
-        });
+        toast.success("Agent updated", { description: "Your agent has been updated successfully." });
       } else {
         // Create new agent
         const insertPayload: TablesInsert<"ai_agents"> & { data_sources?: string[] } = {
@@ -259,20 +240,13 @@ export function AgentForm({ agent, onSuccess, onCancel }: AgentFormProps) {
 
         if (error) throw error;
 
-        toast({
-          title: "Agent created",
-          description: "Your agent has been created successfully.",
-        });
+        toast.success("Agent created", { description: "Your agent has been created successfully." });
       }
 
       onSuccess();
     } catch (error) {
       console.error("Error saving agent:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save agent",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: error instanceof Error ? error.message : "Failed to save agent" });
     } finally {
       setIsSubmitting(false);
     }

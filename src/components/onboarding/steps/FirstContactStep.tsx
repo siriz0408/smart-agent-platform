@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, Users, SkipForward } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { OnboardingData } from "@/hooks/useOnboarding";
 
 interface FirstContactStepProps {
@@ -17,7 +17,6 @@ interface FirstContactStepProps {
 }
 
 export function FirstContactStep({ data, updateData, onNext, onBack, onSkip }: FirstContactStepProps) {
-  const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   
   const [firstName, setFirstName] = useState("");
@@ -29,11 +28,7 @@ export function FirstContactStep({ data, updateData, onNext, onBack, onSkip }: F
     e.preventDefault();
     
     if (!firstName.trim() || !lastName.trim()) {
-      toast({
-        title: "Name required",
-        description: "Please enter the contact's first and last name.",
-        variant: "destructive",
-      });
+      toast.error("Name required", { description: "Please enter the contact's first and last name." });
       return;
     }
 
@@ -50,20 +45,13 @@ export function FirstContactStep({ data, updateData, onNext, onBack, onSkip }: F
 
       if (error) throw error;
 
-      toast({
-        title: "Contact added!",
-        description: `${firstName} ${lastName} has been added to your contacts.`,
-      });
+      toast.success("Contact added!", { description: `${firstName} ${lastName} has been added to your contacts.` });
 
       updateData({ contactAdded: true });
       onNext();
     } catch (error) {
       console.error("Failed to add contact:", error);
-      toast({
-        title: "Error",
-        description: "Failed to add contact. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Error", { description: "Failed to add contact. Please try again." });
     } finally {
       setIsLoading(false);
     }

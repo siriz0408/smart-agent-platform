@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, ArrowRight, FileText, Upload, SkipForward, CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDocumentIndexing } from "@/hooks/useDocumentIndexing";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import type { OnboardingData } from "@/hooks/useOnboarding";
 
 interface FirstDocumentStepProps {
@@ -16,7 +16,6 @@ interface FirstDocumentStepProps {
 }
 
 export function FirstDocumentStep({ data, updateData, onNext, onBack, onSkip }: FirstDocumentStepProps) {
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -28,20 +27,12 @@ export function FirstDocumentStep({ data, updateData, onNext, onBack, onSkip }: 
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"];
     
     if (!allowedTypes.includes(file.type)) {
-      toast({
-        title: "Invalid file type",
-        description: "Please upload a PDF, Word document, or text file.",
-        variant: "destructive",
-      });
+      toast.error("Invalid file type", { description: "Please upload a PDF, Word document, or text file." });
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload a file smaller than 10MB.",
-        variant: "destructive",
-      });
+      toast.error("File too large", { description: "Please upload a file smaller than 10MB." });
       return;
     }
 
@@ -66,19 +57,12 @@ export function FirstDocumentStep({ data, updateData, onNext, onBack, onSkip }: 
 
     try {
       await uploadAndIndexDocument(uploadedFile);
-      toast({
-        title: "Document uploaded!",
-        description: "Your document is being processed by our AI.",
-      });
+      toast.success("Document uploaded!", { description: "Your document is being processed by our AI." });
       updateData({ documentUploaded: true });
       onNext();
     } catch (error) {
       console.error("Upload failed:", error);
-      toast({
-        title: "Upload failed",
-        description: "Failed to upload document. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("Upload failed", { description: "Failed to upload document. Please try again." });
     }
   };
 

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export interface ActionQueueItem {
   id: string;
@@ -42,7 +42,6 @@ export interface ActionQueueFilters {
 
 export function useActionQueue(filters?: ActionQueueFilters) {
   const { user } = useAuth();
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   // Fetch action queue items
@@ -99,18 +98,11 @@ export function useActionQueue(filters?: ActionQueueFilters) {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Action approved",
-        description: "The action has been approved and will be executed.",
-      });
+      toast.success("Action approved", { description: "The action has been approved and will be executed." });
       queryClient.invalidateQueries({ queryKey: ["action_queue"] });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to approve action",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to approve action", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -129,18 +121,11 @@ export function useActionQueue(filters?: ActionQueueFilters) {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Action rejected",
-        description: "The action has been rejected and will not be executed.",
-      });
+      toast.success("Action rejected", { description: "The action has been rejected and will not be executed." });
       queryClient.invalidateQueries({ queryKey: ["action_queue"] });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to reject action",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to reject action", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -156,18 +141,11 @@ export function useActionQueue(filters?: ActionQueueFilters) {
       return data;
     },
     onSuccess: (count) => {
-      toast({
-        title: "Actions approved",
-        description: `${count} action(s) have been approved.`,
-      });
+      toast.success("Actions approved", { description: `${count} action(s) have been approved.` });
       queryClient.invalidateQueries({ queryKey: ["action_queue"] });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to approve actions",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to approve actions", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -201,21 +179,15 @@ export function useActionQueue(filters?: ActionQueueFilters) {
     },
     onSuccess: (result) => {
       const successCount = result.results?.filter((r: { result: { success: boolean } }) => r.result.success).length || 0;
-      toast({
-        title: successCount > 0 ? "Action executed" : "Action failed",
-        description: successCount > 0 
-          ? "The action was executed successfully."
-          : "The action failed to execute. Check the error details.",
-        variant: successCount > 0 ? "default" : "destructive",
-      });
+      if (successCount > 0) {
+        toast.success("Action executed", { description: "The action was executed successfully." });
+      } else {
+        toast.error("Action failed", { description: "The action failed to execute. Check the error details." });
+      }
       queryClient.invalidateQueries({ queryKey: ["action_queue"] });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to execute action",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to execute action", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
@@ -248,19 +220,15 @@ export function useActionQueue(filters?: ActionQueueFilters) {
       return result;
     },
     onSuccess: (result) => {
-      toast({
-        title: "Actions processed",
-        description: `${result.successful} of ${result.processed} action(s) executed successfully.`,
-        variant: result.failed > 0 ? "destructive" : "default",
-      });
+      if (result.failed > 0) {
+        toast.error("Actions processed", { description: `${result.successful} of ${result.processed} action(s) executed successfully.` });
+      } else {
+        toast.success("Actions processed", { description: `${result.successful} of ${result.processed} action(s) executed successfully.` });
+      }
       queryClient.invalidateQueries({ queryKey: ["action_queue"] });
     },
     onError: (error) => {
-      toast({
-        title: "Failed to execute actions",
-        description: error instanceof Error ? error.message : "Unknown error",
-        variant: "destructive",
-      });
+      toast.error("Failed to execute actions", { description: error instanceof Error ? error.message : "Unknown error" });
     },
   });
 
