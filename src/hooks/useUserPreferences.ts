@@ -1,96 +1,139 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useCallback, useMemo } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/lib/logger";
+import type { Tables } from "@/integrations/supabase/types";
 
-export interface UserPreferences {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  dealUpdates: boolean;
-  darkMode: boolean;
-  // AI Settings
-  aiModel?: "default" | "fast" | "advanced";
-  searchMode?: "myData" | "web";
-  responseLength?: "short" | "medium" | "long";
-  thinkingMode?: boolean;
-}
+type UserPreference = Tables<"user_preferences">;
 
-const STORAGE_KEY = "smart-agent-preferences";
-
-const defaultPreferences: UserPreferences = {
+// Default preferences when none exist
+const DEFAULT_PREFERENCES = {
+  thinkingMode: false,
   emailNotifications: true,
-  pushNotifications: true,
+  pushNotifications: false,
   dealUpdates: true,
   darkMode: false,
-  // AI Settings defaults
   aiModel: "default",
-  searchMode: "myData",
+  searchMode: "web",
   responseLength: "medium",
-  thinkingMode: false,
 };
 
-function getStoredPreferences(): UserPreferences {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      return { ...defaultPreferences, ...JSON.parse(stored) };
-    }
-  } catch (e) {
-    logger.error("Failed to parse stored preferences:", e);
-  }
-  return defaultPreferences;
-}
+type PreferenceKey = keyof typeof DEFAULT_PREFERENCES;
 
-function applyDarkMode(isDark: boolean) {
-  if (isDark) {
-    document.documentElement.classList.add("dark");
-  } else {
-    document.documentElement.classList.remove("dark");
-  }
-}
+/**
+ * Hook for the current user's preferences with update capability
+ * Used by Home.tsx, Chat.tsx, Settings.tsx, AISettingsPopover.tsx
+ */
+export function useUserPreferences(): {
+  preferences: typeof DEFAULT_PREFERENCES;
+  updatePreference: (key: PreferenceKey, value: boolean | string) => void;
+  isLoading: boolean;
+};
 
-export function useUserPreferences() {
-  const [preferences, setPreferences] = useState<UserPreferences>(getStoredPreferences);
-  const [isLoading, setIsLoading] = useState(true);
+/**
+ * Hook to fetch user preferences for a specific user (legacy signature)
+ * Used by UserPreferencesPanel.tsx
+ */
+export function useUserPreferences(userId: string | null | undefined, enabled?: boolean): ReturnType<typeof useQuery<UserPreference | null>>;
 
-  // Initialize preferences and apply dark mode on mount
-  useEffect(() => {
-    const stored = getStoredPreferences();
-    setPreferences(stored);
-    applyDarkMode(stored.darkMode);
-    setIsLoading(false);
-  }, []);
+/**
+ * Implementation that handles both signatures
+ */
+export function useUserPreferences(userId?: string | null | undefined, enabled = true) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
+  // Determine which user ID to use
+  const targetUserId = userId === undefined ? user?.id : userId;
+  const isCurrentUserMode = userId === undefined;
+  
+  const query = useQuery({
+    queryKey: ["user_preferences", targetUserId],
+    queryFn: async () => {
+      if (!targetUserId) return null;
 
-  // Save to localStorage whenever preferences change
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(preferences));
-    }
-  }, [preferences, isLoading]);
+      const { data, error } = await supabase
+        .from("user_preferences")
+        .select("*")
+        .eq("user_id", targetUserId)
+        .single();
 
-  const updatePreference = useCallback(<K extends keyof UserPreferences>(
-    key: K,
-    value: UserPreferences[K]
-  ) => {
-    setPreferences((prev) => {
-      const updated = { ...prev, [key]: value };
-
-      // Apply dark mode immediately when toggled
-      if (key === "darkMode") {
-        applyDarkMode(value as boolean);
+      if (error) {
+        // PGRST116 = no rows returned (user hasn't set preferences yet)
+        if (error.code === "PGRST116") {
+          logger.info(`No preferences found for user ${targetUserId}`);
+          return null;
+        }
+        logger.error("Error fetching user preferences:", error);
+        throw error;
       }
 
-      return updated;
-    });
-  }, []);
+      return data as UserPreference;
+    },
+    enabled: !!targetUserId && enabled,
+    staleTime: 1000 * 60 * 5, // 5 minutes - preferences don't change often
+  });
+  
+  // Mutation for updating preferences
+  const updateMutation = useMutation({
+    mutationFn: async ({ key, value }: { key: PreferenceKey; value: boolean | string }) => {
+      if (!targetUserId) throw new Error("No user ID");
 
-  const resetPreferences = useCallback(() => {
-    setPreferences(defaultPreferences);
-    applyDarkMode(defaultPreferences.darkMode);
-  }, []);
+      const { error } = await supabase
+        .from("user_preferences")
+        .upsert({
+          user_id: targetUserId,
+          [key]: value,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: "user_id",
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user_preferences", targetUserId] });
+    },
+  });
+  
+  // Merged preferences with defaults
+  const preferences = useMemo(() => ({
+    ...DEFAULT_PREFERENCES,
+    ...(query.data || {}),
+  }), [query.data]);
+  
+  // Update function
+  const updatePreference = useCallback((key: PreferenceKey, value: boolean | string) => {
+    updateMutation.mutate({ key, value });
+  }, [updateMutation]);
+  
+  // Return different shapes based on usage mode
+  if (isCurrentUserMode) {
+    return {
+      preferences,
+      updatePreference,
+      isLoading: query.isLoading,
+    };
+  }
+  
+  // Legacy mode - return query result
+  return query;
+}
+
+/**
+ * Helper hook to check if a contact has a linked user with preferences
+ * @param contact - The contact object
+ */
+export function useHasLinkedUserPreferences(contact: { user_id?: string | null } | null) {
+  const result = useUserPreferences(
+    contact?.user_id,
+    !!contact?.user_id
+  ) as ReturnType<typeof useQuery<UserPreference | null>>;
 
   return {
-    preferences,
-    updatePreference,
-    resetPreferences,
-    isLoading,
+    hasPreferences: !!result.data,
+    preferences: result.data,
+    isLoading: result.isLoading,
   };
 }
