@@ -23,6 +23,9 @@ dist-ssr
 # Test artifacts - sensitive traces (keep reports)
 test-artifacts/playwright-output/
 test-artifacts/.playwright-artifacts*/
+test-artifacts/screenshots/
+test-artifacts/*.png
+backups/
 
 # Editor directories and files
 .vscode/*
