@@ -8,7 +8,7 @@
 -- MCP Call Logs: Unified logging for all MCP calls
 CREATE TABLE public.mcp_call_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id),
   agent_run_id UUID REFERENCES public.agent_runs(id) ON DELETE SET NULL,
 
@@ -47,7 +47,7 @@ CREATE TABLE public.mcp_call_logs (
 -- Test Runs: Tracks Playwright test executions
 CREATE TABLE public.test_runs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
 
   -- Test configuration
   test_suite TEXT NOT NULL, -- 'e2e', 'smoke', 'visual', etc.
@@ -98,7 +98,7 @@ CREATE TABLE public.test_runs (
 -- Visual Baselines: Reference images for visual regression testing
 CREATE TABLE public.visual_baselines (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
 
   -- Test identification
   test_name TEXT NOT NULL,
@@ -131,7 +131,7 @@ CREATE TABLE public.visual_baselines (
 -- Property Price History: Tracks price changes over time
 CREATE TABLE public.property_price_history (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
   property_id UUID REFERENCES public.properties(id) ON DELETE CASCADE,
   external_property_id UUID REFERENCES public.external_properties(id) ON DELETE CASCADE,
 
@@ -149,17 +149,17 @@ CREATE TABLE public.property_price_history (
   snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
 
   -- Metadata
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-  -- Index for efficient queries
-  CONSTRAINT unique_property_snapshot UNIQUE(property_id, snapshot_date) WHERE property_id IS NOT NULL,
-  CONSTRAINT unique_external_property_snapshot UNIQUE(external_property_id, snapshot_date) WHERE external_property_id IS NOT NULL
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Partial unique indexes for efficient queries (must be created separately)
+CREATE UNIQUE INDEX unique_property_snapshot ON public.property_price_history(property_id, snapshot_date) WHERE property_id IS NOT NULL;
+CREATE UNIQUE INDEX unique_external_property_snapshot ON public.property_price_history(external_property_id, snapshot_date) WHERE external_property_id IS NOT NULL;
 
 -- Property Sync Logs: Tracks property data synchronization operations
 CREATE TABLE public.property_sync_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  tenant_id UUID NOT NULL REFERENCES public.tenants(id) ON DELETE CASCADE,
+  tenant_id UUID NOT NULL REFERENCES public.workspaces(id) ON DELETE CASCADE,
 
   -- Sync details
   sync_type TEXT NOT NULL CHECK (sync_type IN (
