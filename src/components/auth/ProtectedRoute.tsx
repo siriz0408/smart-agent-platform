@@ -28,7 +28,14 @@ export function ProtectedRoute({
   const { isTrialExpired, isLoading: subscriptionLoading } = useSubscription();
   const location = useLocation();
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:loadingCheck',message:'ProtectedRoute loading states',data:{authLoading:loading,subscriptionLoading,roleLoading,path:location.pathname,hasUser:!!user,hasProfile:!!profile},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H2-H3-H4'})}).catch(()=>{});
+  // #endregion
+
   if (loading || subscriptionLoading || roleLoading) {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:showingSpinner',message:'ProtectedRoute SHOWING LOADING SPINNER',data:{authLoading:loading,subscriptionLoading,roleLoading,path:location.pathname},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1-H2-H3-H4'})}).catch(()=>{});
+    // #endregion
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
@@ -46,6 +53,10 @@ export function ProtectedRoute({
   const isOnboardingExempt = skipOnboardingCheck || 
     onboardingExemptPaths.some(path => location.pathname.startsWith(path));
   
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:onboarding',message:'Onboarding check',data:{path:location.pathname,hasProfile:!!profile,onboardingCompleted:profile?.onboarding_completed,isOnboardingExempt,willRedirectToOnboarding:!isOnboardingExempt && profile && profile.onboarding_completed === false},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2B-H2C'})}).catch(()=>{});
+  // #endregion
+
   if (!isOnboardingExempt && profile && profile.onboarding_completed === false) {
     return <Navigate to="/onboarding" replace />;
   }
@@ -57,6 +68,10 @@ export function ProtectedRoute({
     // Super admin check - only Sam's email can access super_admin routes
     const requiresSuperAdmin = requiredRoles.includes("super_admin") && requiredRoles.length === 1;
     const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:roleCheck',message:'Role-based access check',data:{path:location.pathname,userEmail:user.email,SUPER_ADMIN_EMAIL,isSuperAdmin,requiredRoles,activeRole,availableRoles,requiresSuperAdmin},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A-H1C-H3A'})}).catch(()=>{});
+    // #endregion
     
     // For routes that ONLY require super_admin, verify email
     if (requiresSuperAdmin && !isSuperAdmin) {
@@ -70,6 +85,10 @@ export function ProtectedRoute({
     const hasAccess = isSuperAdmin || (isAdminRoute
       ? requiredRoles.some(r => availableRoles.includes(r))
       : requiredRoles.includes(activeRole));
+    
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProtectedRoute.tsx:accessResult',message:'Access decision',data:{path:location.pathname,hasAccess,isAdminRoute,willDeny:!hasAccess},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3A-H3C'})}).catch(()=>{});
+    // #endregion
     
     if (!hasAccess) {
       return <Navigate to="/dashboard" replace />;

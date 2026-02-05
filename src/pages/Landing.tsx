@@ -16,11 +16,18 @@ import {
 } from "lucide-react";
 
 export default function Landing() {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const navigate = useNavigate();
+
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Landing.tsx:render',message:'Landing page render',data:{hasSession:!!session,authLoading:loading},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A'})}).catch(()=>{});
+  // #endregion
 
   // Redirect authenticated users to dashboard
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'Landing.tsx:redirect',message:'Landing redirect check',data:{hasSession:!!session,willRedirect:!!session},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A'})}).catch(()=>{});
+    // #endregion
     if (session) {
       navigate("/dashboard");
     }

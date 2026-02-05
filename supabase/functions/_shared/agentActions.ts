@@ -40,7 +40,17 @@ export type ActionType =
   | 'schedule_task'
   | 'enroll_drip'
   | 'notify_user'
-  | 'assign_tags';
+  | 'assign_tags'
+  // MCP Actions
+  | 'playwright_run_test'
+  | 'playwright_run_suite'
+  | 'playwright_compare_visual'
+  | 'zillow_enrich_property'
+  | 'zillow_check_price_change'
+  | 'zillow_search_properties'
+  | 'mls_search'
+  | 'vercel_deploy_status'
+  | 'supabase_query';
 
 export interface ActionRequest {
   type: ActionType;
@@ -315,24 +325,228 @@ const validators: Record<ActionType, (params: Record<string, unknown>) => Valida
 
   assign_tags: (params) => {
     const errors: string[] = [];
-    
+
     if (!params.contact_id) {
       errors.push('contact_id is required');
     }
     if (params.contact_id && !isUuid(params.contact_id)) {
       errors.push('contact_id must be a valid UUID');
     }
-    
+
     if (!params.tags || !Array.isArray(params.tags) || params.tags.length === 0) {
       errors.push('tags array is required and must not be empty');
     }
     if (params.tags && Array.isArray(params.tags) && (params.tags as unknown[]).some((tag) => !isNonEmptyString(tag))) {
       errors.push('tags must be a non-empty string array');
     }
-    
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  // ============================================================================
+  // MCP ACTION VALIDATORS
+  // ============================================================================
+
+  playwright_run_test: (params) => {
+    const errors: string[] = [];
+
+    if (!params.test_file) {
+      errors.push('test_file is required');
+    }
+
+    if (params.project && !['chromium', 'firefox', 'webkit', 'mobile'].includes(params.project as string)) {
+      errors.push('Invalid project. Must be chromium, firefox, webkit, or mobile');
+    }
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  playwright_run_suite: (params) => {
+    const errors: string[] = [];
+
+    if (!params.test_suite) {
+      errors.push('test_suite is required');
+    }
+
+    if (params.project && !['chromium', 'firefox', 'webkit', 'mobile'].includes(params.project as string)) {
+      errors.push('Invalid project. Must be chromium, firefox, webkit, or mobile');
+    }
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  playwright_compare_visual: (params) => {
+    const errors: string[] = [];
+
+    if (!params.test_name) {
+      errors.push('test_name is required');
+    }
+
+    if (!params.page_url) {
+      errors.push('page_url is required');
+    }
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  zillow_enrich_property: (params) => {
+    const errors: string[] = [];
+
+    if (!params.property_id && !params.address) {
+      errors.push('Either property_id or address is required');
+    }
+
+    if (params.property_id && !isUuid(params.property_id)) {
+      errors.push('property_id must be a valid UUID');
+    }
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  zillow_check_price_change: (params) => {
+    const errors: string[] = [];
+
+    if (!params.property_id && !params.external_property_id) {
+      errors.push('Either property_id or external_property_id is required');
+    }
+
+    if (params.property_id && !isUuid(params.property_id)) {
+      errors.push('property_id must be a valid UUID');
+    }
+
+    if (params.external_property_id && !isUuid(params.external_property_id)) {
+      errors.push('external_property_id must be a valid UUID');
+    }
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  zillow_search_properties: (params) => {
+    const errors: string[] = [];
+
+    if (!params.location) {
+      errors.push('location is required (city, state, or zip code)');
+    }
+
+    if (params.min_price && typeof params.min_price !== 'number') {
+      errors.push('min_price must be a number');
+    }
+
+    if (params.max_price && typeof params.max_price !== 'number') {
+      errors.push('max_price must be a number');
+    }
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  mls_search: (params) => {
+    const errors: string[] = [];
+
+    if (!params.location) {
+      errors.push('location is required');
+    }
+
+    // Future: Add MLS-specific validation
+    errors.push('MLS search not yet implemented');
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  vercel_deploy_status: (params) => {
+    const errors: string[] = [];
+
+    // Future: Add Vercel-specific validation
+    errors.push('Vercel deploy status not yet implemented');
+
+    return { valid: errors.length === 0, errors, sanitized_params: params };
+  },
+
+  supabase_query: (params) => {
+    const errors: string[] = [];
+
+    if (!params.query) {
+      errors.push('query is required');
+    }
+
+    // Security: Block dangerous operations
+    const query = (params.query as string)?.toLowerCase() || '';
+    if (query.includes('drop ') || query.includes('delete ') || query.includes('truncate ')) {
+      errors.push('Dangerous SQL operations are not allowed');
+    }
+
+    // Future: Add more validation
+    errors.push('Supabase query not yet implemented');
+
     return { valid: errors.length === 0, errors, sanitized_params: params };
   },
 };
+
+// ============================================================================
+// MCP HELPER FUNCTION
+// ============================================================================
+
+/**
+ * Execute an MCP action via the MCP Gateway
+ */
+async function executeMcpAction(
+  supabase: SupabaseClient,
+  mcpType: 'playwright' | 'zillow' | 'mls' | 'vercel' | 'supabase',
+  toolName: string,
+  params: Record<string, unknown>,
+  context: ActionContext
+): Promise<ActionResult> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+
+    // Call MCP Gateway
+    const response = await fetch(`${supabaseUrl}/functions/v1/mcp-gateway`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        mcp_type: mcpType,
+        tool_name: toolName,
+        params,
+        agent_run_id: context.agent_run_id,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+      throw new Error(result.error || `MCP Gateway error: ${response.status}`);
+    }
+
+    return {
+      success: true,
+      action_type: toolName as ActionType,
+      result: {
+        mcp_call_id: result.mcp_call_id,
+        data: result.data,
+        rate_limit: result.rate_limit,
+      },
+    };
+  } catch (error) {
+    logger.error('MCP action execution error', {
+      mcp_type: mcpType,
+      tool_name: toolName,
+      error: error instanceof Error ? error.message : String(error),
+    });
+
+    return {
+      success: false,
+      action_type: toolName as ActionType,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    };
+  }
+}
 
 // ============================================================================
 // EXECUTORS
@@ -946,8 +1160,8 @@ const executors: Record<ActionType, (
       return {
         success: true,
         action_type: 'assign_tags',
-        result: { 
-          contact_id: params.contact_id, 
+        result: {
+          contact_id: params.contact_id,
           tags: mergedTags,
           added_tags: newTags.filter(t => !existingTags.includes(t)),
         },
@@ -959,6 +1173,46 @@ const executors: Record<ActionType, (
         error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
+  },
+
+  // ============================================================================
+  // MCP ACTION EXECUTORS
+  // ============================================================================
+
+  playwright_run_test: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'playwright', 'playwright_run_test', params, context);
+  },
+
+  playwright_run_suite: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'playwright', 'playwright_run_suite', params, context);
+  },
+
+  playwright_compare_visual: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'playwright', 'playwright_compare_visual', params, context);
+  },
+
+  zillow_enrich_property: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'zillow', 'zillow_enrich_property', params, context);
+  },
+
+  zillow_check_price_change: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'zillow', 'zillow_check_price_change', params, context);
+  },
+
+  zillow_search_properties: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'zillow', 'zillow_search_properties', params, context);
+  },
+
+  mls_search: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'mls', 'mls_search', params, context);
+  },
+
+  vercel_deploy_status: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'vercel', 'vercel_deploy_status', params, context);
+  },
+
+  supabase_query: async (supabase, params, context) => {
+    return await executeMcpAction(supabase, 'supabase', 'supabase_query', params, context);
   },
 };
 
@@ -1152,5 +1406,15 @@ export function getActionDescriptions(): Record<ActionType, string> {
     enroll_drip: 'Enroll a contact in an email drip campaign',
     notify_user: 'Send an in-app notification to a user',
     assign_tags: 'Assign tags to a contact for categorization',
+    // MCP Actions
+    playwright_run_test: 'Run a specific Playwright E2E test file',
+    playwright_run_suite: 'Run a full Playwright test suite (e2e, smoke, visual)',
+    playwright_compare_visual: 'Compare screenshot against visual baseline for regression testing',
+    zillow_enrich_property: 'Enrich property data with Zillow information (price, details, photos)',
+    zillow_check_price_change: 'Check if a property\'s price has changed on Zillow',
+    zillow_search_properties: 'Search for properties on Zillow by location and filters',
+    mls_search: 'Search MLS listings (not yet implemented)',
+    vercel_deploy_status: 'Check Vercel deployment status (not yet implemented)',
+    supabase_query: 'Execute a read-only Supabase query (not yet implemented)',
   };
 }

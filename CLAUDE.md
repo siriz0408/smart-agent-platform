@@ -202,12 +202,305 @@ Project-specific skills are in `.claude/skills/smart-agent-*/SKILL.md`.
 
 ---
 
+## Feature Development Plugin
+
+**Location**: `plugins/feature-dev/`
+
+A comprehensive, structured workflow for planning and building new features with specialized agents for codebase exploration, architecture design, and quality review.
+
+### When to Use `/feature-dev`
+
+**✅ Use for:**
+- New features that touch multiple files
+- Features requiring architectural decisions
+- Complex integrations with existing code
+- Features where requirements are somewhat unclear
+
+**❌ Don't use for:**
+- Single-line bug fixes
+- Trivial changes
+- Well-defined, simple tasks
+- Urgent hotfixes
+
+### Command Usage
+
+```bash
+# Start guided feature development workflow
+/feature-dev Add user authentication with OAuth
+
+# Or simply
+/feature-dev
+```
+
+### The 7-Phase Workflow
+
+| Phase | Purpose | What Happens |
+|-------|---------|--------------|
+| **1. Discovery** | Understand requirements | Clarifies feature request, asks about problem and constraints |
+| **2. Codebase Exploration** | Learn existing patterns | Launches parallel `code-explorer` agents to analyze similar features and architecture |
+| **3. Clarifying Questions** | Resolve ambiguities | Identifies edge cases, integration points, error handling needs—**waits for answers** |
+| **4. Architecture Design** | Design approaches | Launches `code-architect` agents with different focuses (minimal/clean/pragmatic), presents trade-offs |
+| **5. Implementation** | Build the feature | Implements following chosen architecture and existing conventions |
+| **6. Quality Review** | Ensure quality | Launches parallel `code-reviewer` agents for bugs, quality, and conventions |
+| **7. Summary** | Document completion | Summarizes what was built, decisions made, files modified, next steps |
+
+### Specialized Agents
+
+The plugin includes three specialized agents (see `plugins/feature-dev/agents/`):
+
+| Agent | Purpose | Model |
+|-------|---------|-------|
+| **code-explorer** | Traces execution paths, maps architecture, documents dependencies | Sonnet |
+| **code-architect** | Designs feature architectures with implementation blueprints | Sonnet |
+| **code-reviewer** | Reviews for bugs, quality issues, convention adherence | Sonnet |
+
+### Manual Agent Invocation
+
+You can invoke agents individually without the full workflow:
+
+```bash
+# Explore a feature
+"Launch code-explorer to trace how authentication works"
+
+# Design architecture
+"Launch code-architect to design the caching layer"
+
+# Review code
+"Launch code-reviewer to check my recent changes"
+```
+
+### Best Practices
+
+1. **Use the full workflow for complex features** - The 7 phases ensure thorough planning
+2. **Answer clarifying questions thoughtfully** - Phase 3 prevents future confusion
+3. **Choose architecture deliberately** - Phase 4 gives you options for a reason
+4. **Don't skip code review** - Phase 6 catches issues before they reach production
+5. **Read the suggested files** - Phase 2 identifies key files—read them to understand context
+
+### Integration with Existing Workflow
+
+**Recommended workflow for new features:**
+
+```bash
+# 1. Use feature-dev for planning and architecture
+/feature-dev Add real-time messaging feature
+
+# 2. Follow the 7 phases (the plugin guides you)
+
+# 3. After implementation, run quality checks
+npm run lint
+npm run typecheck
+npm run test
+
+# 4. Deploy
+git add .
+git commit -m "feat: add real-time messaging"
+git push origin main
+```
+
+See [`plugins/feature-dev/README.md`](./plugins/feature-dev/README.md) for complete documentation.
+
+---
+
+## Compound Engineering Plugin
+
+**Location**: `plugins/compound-engineering/`
+
+AI-powered development tools from Every Inc. that get smarter with every use. Philosophy: **Each unit of engineering work should make subsequent units easier—not harder.**
+
+### Core Workflow
+
+```
+Plan → Work → Review → Compound → Repeat
+```
+
+| Command | Purpose | When to Use |
+|---------|---------|-------------|
+| `/workflows:brainstorm` | Explore requirements and approaches | Before planning features |
+| `/workflows:plan` | Turn ideas into detailed implementation plans | Planning phase |
+| `/workflows:work` | Execute plans with worktrees and task tracking | Implementation phase |
+| `/workflows:review` | Multi-agent code review before merging | Before merging PRs |
+| `/workflows:compound` | Document learnings to make future work easier | After completing work |
+
+### Components Overview
+
+| Component | Count | Description |
+|-----------|-------|-------------|
+| **Agents** | 29 | Specialized reviewers, researchers, designers |
+| **Commands** | 24 | Workflow automation and utilities |
+| **Skills** | 16 | Reusable expertise modules |
+| **MCP Servers** | 1 | Context7 for framework docs |
+
+### Key Agents by Category
+
+#### Review Agents (15)
+| Agent | Use When |
+|-------|----------|
+| `kieran-typescript-reviewer` | Reviewing TypeScript/React code ⭐ RELEVANT |
+| `security-sentinel` | Security audits and vulnerability checks |
+| `performance-oracle` | Performance analysis and optimization |
+| `pattern-recognition-specialist` | Analyzing patterns and anti-patterns |
+| `architecture-strategist` | Architectural decisions and compliance |
+| `code-simplicity-reviewer` | Final pass for simplicity/minimalism |
+| `agent-native-reviewer` | Verify features are agent-native |
+| `data-integrity-guardian` | Database migrations and data integrity ⭐ RELEVANT (Supabase) |
+| `deployment-verification-agent` | Go/No-Go deployment checklists |
+
+#### Research Agents (5)
+| Agent | Use When |
+|-------|----------|
+| `best-practices-researcher` | Gathering external best practices |
+| `framework-docs-researcher` | Researching framework documentation ⭐ RELEVANT (React, Supabase) |
+| `git-history-analyzer` | Analyzing code evolution |
+| `learnings-researcher` | Searching past solutions |
+| `repo-research-analyst` | Understanding repository conventions |
+
+#### Design Agents (3)
+| Agent | Use When |
+|-------|----------|
+| `design-implementation-reviewer` | Verifying UI matches designs |
+| `design-iterator` | Iteratively refining UI |
+| `figma-design-sync` | Syncing with Figma designs |
+
+### Useful Commands
+
+#### Workflow Commands
+```bash
+# Full workflow
+/workflows:brainstorm    # Explore approaches
+/workflows:plan          # Create implementation plan
+/workflows:work          # Execute with task tracking
+/workflows:review        # Multi-agent code review
+/workflows:compound      # Document learnings
+
+# Utility
+/deepen-plan            # Enhance plans with research agents
+/triage                 # Prioritize issues
+/changelog              # Create engaging changelogs
+```
+
+#### Testing & Quality
+```bash
+/reproduce-bug          # Reproduce bugs systematically
+/test-browser           # Run browser tests on PR-affected pages
+/resolve_parallel       # Resolve TODO comments in parallel
+/resolve_pr_parallel    # Resolve PR comments in parallel
+```
+
+### Key Skills
+
+| Skill | Description | Relevant to Project |
+|-------|-------------|-------------------|
+| `frontend-design` | Production-grade frontend interfaces | ✅ Yes |
+| `git-worktree` | Manage parallel development branches | ✅ Yes |
+| `file-todos` | File-based todo tracking | ✅ Yes |
+| `agent-browser` | CLI-based browser automation | ✅ Yes |
+| `compound-docs` | Capture solved problems as docs | ✅ Yes |
+| `create-agent-skills` | Guide for creating Claude Code skills | ✅ Yes |
+
+### Integration with Project Workflow
+
+**Recommended workflow for this project:**
+
+```bash
+# 1. Brainstorm and plan
+/workflows:brainstorm    # Explore feature requirements
+/workflows:plan          # Create detailed plan
+
+# 2. Work on feature
+/workflows:work          # Execute with task tracking
+
+# 3. Review before merging
+/workflows:review        # Multi-agent review
+# Relevant reviewers:
+# - kieran-typescript-reviewer (React/TS code)
+# - security-sentinel (Auth, API security)
+# - performance-oracle (Performance)
+# - data-integrity-guardian (Supabase schema)
+
+# 4. Run quality checks
+npm run lint
+npm run typecheck
+npm run test
+
+# 5. Document learnings
+/workflows:compound      # Capture patterns for future
+
+# 6. Deploy
+git push origin main
+```
+
+### MCP Server: Context7
+
+Framework documentation lookup for 100+ frameworks including:
+- **React** ⭐ (used in project)
+- **TypeScript** ⭐ (used in project)
+- **Supabase** ⭐ (used in project)
+- Next.js, Vue, Rails, Django, Laravel, etc.
+
+**Manual setup** (if not auto-loaded):
+
+Add to `.claude/settings.json`:
+```json
+{
+  "mcpServers": {
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp"
+    }
+  }
+}
+```
+
+### Philosophy: Compound Engineering
+
+Traditional development accumulates technical debt. Compound engineering inverts this:
+- **80% planning and review, 20% execution**
+- Plan thoroughly before writing code
+- Review to catch issues and capture learnings
+- Codify knowledge so it's reusable
+- Keep quality high so future changes are easy
+
+Each cycle compounds: plans inform future plans, reviews catch more issues, patterns get documented.
+
+See [`plugins/compound-engineering/README.md`](./plugins/compound-engineering/README.md) for complete documentation.
+
+---
+
 ## Development Guidelines
 
 ### Before Coding
-1. Check current project state (`.lovable/plan.md`, `TASK_BOARD.md`)
-2. Use brainstorming skill for new features
-3. Check if relevant skills are installed
+
+**Recommended workflow:**
+
+1. **Check project state**: Review `.lovable/plan.md`, `TASK_BOARD.md`
+
+2. **Choose your approach** based on task complexity:
+
+   **Option A: Compound Engineering Workflow** (⭐ RECOMMENDED for production features)
+   ```bash
+   /workflows:brainstorm    # Explore requirements
+   /workflows:plan          # Create detailed plan
+   /workflows:work          # Execute with tracking
+   /workflows:review        # Multi-agent review
+   /workflows:compound      # Document learnings
+   ```
+
+   **Option B: Feature Development Plugin** (for architectural deep-dives)
+   ```bash
+   /feature-dev <feature description>
+   # Guides through 7 phases: Discovery → Exploration → Questions →
+   # Architecture → Implementation → Review → Summary
+   ```
+
+   **Option C: Simple brainstorming** (for simple features)
+   - Use `smart-agent-brainstorming` skill
+
+3. **Check if relevant skills/agents are needed**
+   - TypeScript code? → `kieran-typescript-reviewer`
+   - Database changes? → `data-integrity-guardian`
+   - Security concerns? → `security-sentinel`
+   - Performance critical? → `performance-oracle`
 
 ### Quality Gates
 - Run `npm run lint` before committing

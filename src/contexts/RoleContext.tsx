@@ -42,13 +42,22 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   // Fetch user roles when user changes
   useEffect(() => {
     const fetchRoles = async () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:entry',message:'RoleContext fetchRoles called',data:{authLoading,hasUser:!!user,userId:user?.id,hasProfile:!!profile,profileTenantId:profile?.tenant_id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3A-H3B'})}).catch(()=>{});
+      // #endregion
       // Wait for auth to finish loading before making decisions
       if (authLoading) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:waitingAuth',message:'RoleContext waiting for auth',data:{authLoading},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3A'})}).catch(()=>{});
+        // #endregion
         return; // Keep loading=true until auth is done
       }
       
       // No user means no roles needed - safe to stop loading
       if (!user) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:noUser',message:'RoleContext no user - setting loading false',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3A'})}).catch(()=>{});
+        // #endregion
         setAvailableRoles([]);
         setCanSwitchRoles(false);
         setLoading(false);
@@ -57,15 +66,25 @@ export function RoleProvider({ children }: { children: ReactNode }) {
       
       // User exists but profile not yet loaded - wait for it
       if (!profile) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:waitingProfile',message:'RoleContext user exists but NO PROFILE - keeping loading=true',data:{userId:user.id,email:user.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3B'})}).catch(()=>{});
+        // #endregion
         return; // Keep loading=true until profile arrives
       }
 
       try {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:queryingRoles',message:'RoleContext querying user_roles',data:{userId:user.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3B'})}).catch(()=>{});
+        // #endregion
         // Fetch all roles for this user
         const { data: roleData, error } = await supabase
           .from("user_roles")
           .select("role")
           .eq("user_id", user.id);
+
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:rolesResult',message:'RoleContext user_roles result',data:{roles:roleData,error:error?.message||null,errorCode:error?.code||null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3B'})}).catch(()=>{});
+        // #endregion
 
         const roles = error ? ["agent" as AppRole] : (roleData?.map((r) => r.role) || ["agent" as AppRole]);
 
@@ -96,9 +115,15 @@ export function RoleProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem(ROLE_OVERRIDE_KEY);
         }
       } catch (err) {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:error',message:'RoleContext fetchRoles EXCEPTION',data:{error:String(err)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3B'})}).catch(()=>{});
+        // #endregion
         logger.error("Error in fetchRoles:", err);
         setAvailableRoles(["agent"]);
       } finally {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'RoleContext.tsx:fetchRoles:finally',message:'RoleContext setting loading=false',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3A-H3B'})}).catch(()=>{});
+        // #endregion
         setLoading(false);
       }
     };

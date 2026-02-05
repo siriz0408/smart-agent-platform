@@ -52,6 +52,12 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
   // Determine if user is super admin
   const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
 
+  // #region agent log
+  if (user && !authLoading) {
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WorkspaceContext.tsx:isSuperAdmin',message:'WorkspaceContext super admin check',data:{userEmail:user?.email,SUPER_ADMIN_EMAIL,isSuperAdmin,activeWorkspaceId:activeWorkspace?.id,workspacesCount:workspaces.length},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1B'})}).catch(()=>{});
+  }
+  // #endregion
+
   // Get current membership for active workspace
   const currentMembership = workspaces.find(w => w.workspace_id === activeWorkspace?.id) || null;
   
@@ -61,6 +67,9 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   // Fetch user's workspaces and active workspace
   const fetchWorkspaces = useCallback(async () => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WorkspaceContext.tsx:fetchWorkspaces:entry',message:'Fetching workspaces',data:{authLoading,hasUser:!!user,userId:user?.id,userEmail:user?.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3B'})}).catch(()=>{});
+    // #endregion
     if (authLoading || !user) {
       if (!authLoading) {
         setLoading(false);
@@ -70,15 +79,20 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
     try {
       // Fetch all workspace memberships
+      // Note: workspaces table doesn't have subscription_tier column
       const { data: memberships, error: membershipError } = await supabase
         .from("workspace_memberships")
         .select(`
           workspace_id,
           role,
           is_owner,
-          workspace:workspaces(id, name, slug, subscription_tier)
+          workspace:workspaces(id, name, slug)
         `)
         .eq("user_id", user.id);
+
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'WorkspaceContext.tsx:fetchWorkspaces:result',message:'Workspace memberships result',data:{membershipsCount:memberships?.length||0,memberships:memberships?.slice(0,3),error:membershipError?.message||null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3B'})}).catch(()=>{});
+      // #endregion
 
       if (membershipError) {
         logger.error("Error fetching workspace memberships:", membershipError);

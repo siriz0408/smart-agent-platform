@@ -41,6 +41,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:fetchProfile:entry',message:'Fetching profile',data:{userId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2A-H2B'})}).catch(()=>{});
+    // #endregion
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -48,12 +51,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .eq("user_id", userId)
         .single();
 
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:fetchProfile:result',message:'Profile fetch result',data:{profile:data,error:error?.message||null,errorCode:error?.code||null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2A-H2B'})}).catch(()=>{});
+      // #endregion
+
       if (error && error.code !== "PGRST116") {
         logger.error("Error fetching profile:", error);
       }
       
       setProfile(data as Profile | null);
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:fetchProfile:catch',message:'Profile fetch exception',data:{error:String(err)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2A-H2B'})}).catch(()=>{});
+      // #endregion
       logger.error("Error fetching profile:", err);
     }
   };
@@ -65,9 +75,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:useEffect:init',message:'Auth useEffect starting',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A-H1B'})}).catch(()=>{});
+    // #endregion
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:onAuthStateChange',message:'Auth state changed',data:{event:_event,hasSession:!!session,userId:session?.user?.id,email:session?.user?.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A'})}).catch(()=>{});
+        // #endregion
         setSession(session);
         setUser(session?.user ?? null);
 
@@ -83,7 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check for existing session
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:getSession:calling',message:'Calling getSession',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A-H1B'})}).catch(()=>{});
+    // #endregion
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:getSession:result',message:'getSession resolved',data:{hasSession:!!session,userId:session?.user?.id,email:session?.user?.email},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A-H1B'})}).catch(()=>{});
+      // #endregion
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -91,6 +113,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         fetchProfile(session.user.id);
       }
       
+      setLoading(false);
+    }).catch((err) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:getSession:error',message:'getSession FAILED',data:{error:String(err)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A-H1B'})}).catch(()=>{});
+      // #endregion
       setLoading(false);
     });
 
@@ -130,6 +157,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Determine if user is super admin
   const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
+
+  // #region agent log
+  if (user) {
+    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useAuth.tsx:isSuperAdmin',message:'Super admin check',data:{userEmail:user?.email,SUPER_ADMIN_EMAIL,isSuperAdmin,hasProfile:!!profile,onboardingCompleted:profile?.onboarding_completed},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1A-H1B'})}).catch(()=>{});
+  }
+  // #endregion
 
   return (
     <AuthContext.Provider
