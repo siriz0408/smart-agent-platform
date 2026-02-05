@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Mail, Phone, Building, Calendar, User as UserIcon, Tag, FileText, Trash2, DollarSign, Home, Clock, ChevronDown, ChevronRight, MessageSquare, Target } from "lucide-react";
+import { Mail, Phone, Building, Calendar, User as UserIcon, Tag, FileText, Trash2, DollarSign, Home, Clock, ChevronDown, ChevronRight, MessageSquare, Target, Link as LinkIcon, Unlink } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -53,6 +53,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import { ContactUserLinkModal } from "./ContactUserLinkModal";
+import { UserPreferencesPanel } from "./UserPreferencesPanel";
+import { ContactOwnershipSwitch } from "./ContactOwnershipSwitch";
+import { useAuth } from "@/hooks/useAuth";
+import { useContactUserLink } from "@/hooks/useContactUserLink";
 
 type Contact = Tables<"contacts">;
 
@@ -120,6 +125,8 @@ export function ContactDetailSheet({
 }: ContactDetailSheetProps) {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showUnlinkDialog, setShowUnlinkDialog] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
   const [buyerPrefsOpen, setBuyerPrefsOpen] = useState(false);
   const [sellerInfoOpen, setSellerInfoOpen] = useState(false);
   const [communicationOpen, setCommunicationOpen] = useState(false);
@@ -127,6 +134,8 @@ export function ContactDetailSheet({
   const [financialOpen, setFinancialOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { user, profile, isSuperAdmin } = useAuth();
+  const { unlinkContactFromUser, isUnlinking } = useContactUserLink();
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -330,10 +339,62 @@ export function ContactDetailSheet({
             <TabsContent value="details" className="mt-6">
               <ScrollArea className="h-[calc(100vh-280px)]">
                 <div className="space-y-6 pr-4">
+                  {/* User Linking & Ownership Controls */}
+                  <div className="space-y-3 pb-4 border-b">
+                    {/* Contact Ownership Switch */}
+                    {user && profile && (
+                      <ContactOwnershipSwitch
+                        contactId={contact.id}
+                        currentOwnershipType={contact.ownership_type || "workspace"}
+                        createdBy={contact.created_by || ""}
+                        currentUserId={user.id}
+                        isWorkspaceAdmin={isSuperAdmin || profile.primary_role === "admin"}
+                      />
+                    )}
+
+                    {/* User Linking Status */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {contact.user_id ? (
+                          <>
+                            <Badge variant="default" className="gap-1">
+                              <LinkIcon className="h-3 w-3" />
+                              Linked to Platform User
+                            </Badge>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setShowUnlinkDialog(true)}
+                              disabled={isUnlinking}
+                            >
+                              <Unlink className="h-3 w-3 mr-1" />
+                              Unlink
+                            </Button>
+                          </>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setShowLinkModal(true)}
+                            className="gap-2"
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                            Link to Platform User
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* User Preferences Panel (if linked) */}
+                  {contact.user_id && (
+                    <UserPreferencesPanel userId={contact.user_id} />
+                  )}
+
                   {/* Contact Info */}
                   <div className="space-y-4">
                     <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
-                      Contact Information
+                      Contact Information (Your CRM Notes)
                     </h3>
                     <div className="space-y-3">
                       {contact.email && (
@@ -986,6 +1047,39 @@ export function ContactDetailSheet({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deleteMutation.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <ContactUserLinkModal
+        open={showLinkModal}
+        onOpenChange={setShowLinkModal}
+        contactId={contact.id}
+        contactEmail={contact.email}
+        onLinked={() => {
+          queryClient.invalidateQueries({ queryKey: ["contacts"] });
+        }}
+      />
+
+      <AlertDialog open={showUnlinkDialog} onOpenChange={setShowUnlinkDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unlink Contact from Platform User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to unlink this contact from the platform user? This will remove the connection and hide the user's preferences.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                unlinkContactFromUser(contact.id);
+                setShowUnlinkDialog(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isUnlinking ? "Unlinking..." : "Unlink"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
