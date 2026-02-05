@@ -1213,13 +1213,6 @@ You are knowledgeable, professional, and helpful. When discussing legal or finan
 
 If asked about specific properties or contacts, let the user know you can help analyze data they share with you.`;
 
-const THINKING_MODE_SUFFIX = `\n\nIMPORTANT: The user has enabled Thinking Mode. Please approach this query with extended reasoning:
-1. Break down the problem into clear steps
-2. Show your reasoning process
-3. Consider multiple perspectives or approaches
-4. Explain your thought process as you work through the answer
-5. Provide a comprehensive, well-reasoned response`;
-
 const MULTI_DOC_SYSTEM_PROMPT = `
 ## Document Analysis Context
 
@@ -1434,7 +1427,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationId, includeDocuments, documentIds, mentionData, collectionRefs, thinkingMode } = await req.json();
+    const { messages, conversationId, includeDocuments, documentIds, mentionData, collectionRefs } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
@@ -1567,7 +1560,7 @@ serve(async (req) => {
               // Fetch data from ALL collections in parallel
               const collectionDataPromises = collectionRefs.map(async (ref: {collection: string}) => {
                 const collName = ref.collection.toLowerCase();
-                let results: Record<string, unknown>[] = [];
+                let results: Array<Record<string, unknown>> = [];
                 
                 await writeStatus(writer, encoder, "searching", `Searching your ${ref.collection}...`);
                 
@@ -2839,8 +2832,8 @@ Provide a brief, helpful response:
                 queryLower.includes("my " + collParams.collection) ||
                 queryLower.length < 2;
               
-              let searchResults: Record<string, unknown>[] = [];
-              let searchError: Error | null = null;
+              let searchResults: Array<Record<string, unknown>> = [];
+              let searchError: unknown = null;
               
               if (isGenericListQuery) {
                 // For generic "list all" queries, fetch directly from table instead of full-text search
@@ -3565,10 +3558,6 @@ Let them know you couldn't find relevant information in the selected documents a
     // ====================================================================
     // STANDARD AI RESPONSE (no property search or document context)
     // ====================================================================
-
-    // Apply thinking mode if enabled
-    const finalSystemPrompt = thinkingMode ? systemPrompt + THINKING_MODE_SUFFIX : systemPrompt;
-
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -3579,7 +3568,7 @@ Let them know you couldn't find relevant information in the selected documents a
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 4096,
-        system: finalSystemPrompt,
+        system: systemPrompt,
         messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
         stream: true,
       }),

@@ -11,12 +11,14 @@ import { describe, test, expect, beforeAll } from 'vitest';
 import { createClient } from '@supabase/supabase-js';
 
 // These will be set from environment variables
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || '';
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'http://localhost:54321';
+const supabaseKey = process.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'test-key';
 
+const hasSupabaseEnv = Boolean(process.env.VITE_SUPABASE_URL && process.env.VITE_SUPABASE_PUBLISHABLE_KEY);
 const supabase = createClient(supabaseUrl, supabaseKey);
+const describeWithEnv = hasSupabaseEnv ? describe : describe.skip;
 
-describe('Database Migration Verification', () => {
+describeWithEnv('Database Migration Verification', () => {
   describe('Sprint 1: Critical Performance Indexes', () => {
     test('document_chunks composite index exists', async () => {
       const { data, error } = await supabase.rpc('check_index_exists', {
