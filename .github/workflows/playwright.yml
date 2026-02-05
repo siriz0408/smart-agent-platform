@@ -1,0 +1,271 @@
+name: Playwright Tests (Agent-Triggered)
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_run_id:
+        description: 'Test Run ID from Supabase'
+        required: true
+        type: string
+      spec_file:
+        description: 'Specific test file to run (e.g., auth.spec.ts)'
+        required: false
+        type: string
+      test_suite:
+        description: 'Test suite to run (e2e, smoke, visual, all)'
+        required: false
+        type: string
+        default: 'e2e'
+      project:
+        description: 'Browser/device project (chromium, firefox, webkit, mobile, mobile-chrome)'
+        required: false
+        type: string
+        default: 'chromium'
+      callback_url:
+        description: 'Webhook URL to send results to'
+        required: true
+        type: string
+
+jobs:
+  test:
+    name: Run Playwright Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps ${{ inputs.project == 'mobile' && 'chromium' || inputs.project == 'mobile-chrome' && 'chromium' || inputs.project }}
+
+      - name: Determine test command
+        id: test-cmd
+        run: |
+          if [ -n "${{ inputs.spec_file }}" ]; then
+            # Run specific test file
+            echo "cmd=npx playwright test tests/e2e/${{ inputs.spec_file }} --project=${{ inputs.project }}" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.test_suite }}" == "all" ]; then
+            # Run all tests
+            echo "cmd=npx playwright test --project=${{ inputs.project }}" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.test_suite }}" == "smoke" ]; then
+            # Run smoke tests (tests marked with @smoke tag)
+            echo "cmd=npx playwright test --grep @smoke --project=${{ inputs.project }}" >> $GITHUB_OUTPUT
+          elif [ "${{ inputs.test_suite }}" == "visual" ]; then
+            # Run visual tests (tests marked with @visual tag)
+            echo "cmd=npx playwright test --grep @visual --project=${{ inputs.project }}" >> $GITHUB_OUTPUT
+          else
+            # Default: run all e2e tests
+            echo "cmd=npx playwright test --project=${{ inputs.project }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run Playwright tests
+        id: playwright
+        continue-on-error: true
+        env:
+          TEST_BASE_URL: ${{ secrets.TEST_BASE_URL || 'https://smart-agent-platform.vercel.app' }}
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          set +e
+          ${{ steps.test-cmd.outputs.cmd }}
+          TEST_EXIT_CODE=$?
+          echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          exit 0
+
+      - name: Parse test results
+        id: results
+        run: |
+          # Parse test results from JSON report
+          if [ -f "test-artifacts/playwright-results.json" ]; then
+            # Use jq to parse results (install if needed)
+            if ! command -v jq &> /dev/null; then
+              sudo apt-get update && sudo apt-get install -y jq
+            fi
+
+            TOTAL=$(jq '.suites[].specs | length' test-artifacts/playwright-results.json | awk '{s+=$1} END {print s}')
+            PASSED=$(jq '.suites[].specs[].tests[] | select(.status == "expected") | .status' test-artifacts/playwright-results.json | wc -l)
+            FAILED=$(jq '.suites[].specs[].tests[] | select(.status == "unexpected") | .status' test-artifacts/playwright-results.json | wc -l)
+            SKIPPED=$(jq '.suites[].specs[].tests[] | select(.status == "skipped") | .status' test-artifacts/playwright-results.json | wc -l)
+
+            # Get failed test names
+            FAILED_NAMES=$(jq -r '.suites[].specs[] | select(.tests[].status == "unexpected") | .title' test-artifacts/playwright-results.json | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+            echo "total=$TOTAL" >> $GITHUB_OUTPUT
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "failed=$FAILED" >> $GITHUB_OUTPUT
+            echo "skipped=$SKIPPED" >> $GITHUB_OUTPUT
+            echo "failed_names=$FAILED_NAMES" >> $GITHUB_OUTPUT
+
+            # Determine overall status
+            if [ "${{ steps.playwright.outputs.exit_code }}" -eq "0" ]; then
+              echo "status=passed" >> $GITHUB_OUTPUT
+            else
+              echo "status=failed" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "status=failed" >> $GITHUB_OUTPUT
+            echo "total=0" >> $GITHUB_OUTPUT
+            echo "passed=0" >> $GITHUB_OUTPUT
+            echo "failed=0" >> $GITHUB_OUTPUT
+            echo "skipped=0" >> $GITHUB_OUTPUT
+            echo "failed_names=[]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload artifacts to Supabase Storage
+        if: always()
+        id: upload-artifacts
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Install Supabase CLI if not available
+          if ! command -v supabase &> /dev/null; then
+            npm install -g supabase
+          fi
+
+          # Set Supabase credentials
+          export SUPABASE_ACCESS_TOKEN=$SUPABASE_SERVICE_KEY
+
+          # Upload HTML report if exists
+          REPORT_URL=""
+          if [ -d "test-artifacts/playwright-report" ]; then
+            # Zip the HTML report
+            cd test-artifacts/playwright-report
+            tar -czf ../playwright-report-${{ inputs.test_run_id }}.tar.gz .
+            cd ../..
+
+            # Upload to Supabase Storage
+            REPORT_URL="${SUPABASE_URL}/storage/v1/object/public/test-artifacts/${{ inputs.test_run_id }}/report.tar.gz"
+            curl -X POST \
+              "${SUPABASE_URL}/storage/v1/object/test-artifacts/${{ inputs.test_run_id }}/report.tar.gz" \
+              -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+              -H "Content-Type: application/gzip" \
+              --data-binary "@test-artifacts/playwright-report-${{ inputs.test_run_id }}.tar.gz"
+
+            echo "report_url=$REPORT_URL" >> $GITHUB_OUTPUT
+          fi
+
+          # Upload videos if they exist
+          VIDEO_URLS="[]"
+          if [ -d "test-artifacts/playwright-output" ] && [ "$(ls -A test-artifacts/playwright-output/*.webm 2>/dev/null)" ]; then
+            VIDEO_LIST="["
+            for video in test-artifacts/playwright-output/*.webm; do
+              if [ -f "$video" ]; then
+                VIDEO_NAME=$(basename "$video")
+                VIDEO_URL="${SUPABASE_URL}/storage/v1/object/public/test-artifacts/${{ inputs.test_run_id }}/videos/${VIDEO_NAME}"
+
+                curl -X POST \
+                  "${SUPABASE_URL}/storage/v1/object/test-artifacts/${{ inputs.test_run_id }}/videos/${VIDEO_NAME}" \
+                  -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+                  -H "Content-Type: video/webm" \
+                  --data-binary "@${video}"
+
+                VIDEO_LIST="${VIDEO_LIST}\"${VIDEO_URL}\","
+              fi
+            done
+            VIDEO_LIST="${VIDEO_LIST%,}]"
+            VIDEO_URLS="$VIDEO_LIST"
+          fi
+          echo "video_urls=$VIDEO_URLS" >> $GITHUB_OUTPUT
+
+          # Upload screenshots if they exist
+          SCREENSHOT_URLS="[]"
+          if [ -d "test-artifacts/playwright-output" ] && [ "$(ls -A test-artifacts/playwright-output/*.png 2>/dev/null)" ]; then
+            SCREENSHOT_LIST="["
+            for screenshot in test-artifacts/playwright-output/*.png; do
+              if [ -f "$screenshot" ]; then
+                SCREENSHOT_NAME=$(basename "$screenshot")
+                SCREENSHOT_URL="${SUPABASE_URL}/storage/v1/object/public/test-artifacts/${{ inputs.test_run_id }}/screenshots/${SCREENSHOT_NAME}"
+
+                curl -X POST \
+                  "${SUPABASE_URL}/storage/v1/object/test-artifacts/${{ inputs.test_run_id }}/screenshots/${SCREENSHOT_NAME}" \
+                  -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+                  -H "Content-Type: image/png" \
+                  --data-binary "@${screenshot}"
+
+                SCREENSHOT_LIST="${SCREENSHOT_LIST}\"${SCREENSHOT_URL}\","
+              fi
+            done
+            SCREENSHOT_LIST="${SCREENSHOT_LIST%,}]"
+            SCREENSHOT_URLS="$SCREENSHOT_LIST"
+          fi
+          echo "screenshot_urls=$SCREENSHOT_URLS" >> $GITHUB_OUTPUT
+
+          # Upload traces if they exist
+          TRACE_URLS="[]"
+          if [ -d "test-artifacts/playwright-output" ] && [ "$(ls -A test-artifacts/playwright-output/*.zip 2>/dev/null)" ]; then
+            TRACE_LIST="["
+            for trace in test-artifacts/playwright-output/*.zip; do
+              if [ -f "$trace" ]; then
+                TRACE_NAME=$(basename "$trace")
+                TRACE_URL="${SUPABASE_URL}/storage/v1/object/public/test-artifacts/${{ inputs.test_run_id }}/traces/${TRACE_NAME}"
+
+                curl -X POST \
+                  "${SUPABASE_URL}/storage/v1/object/test-artifacts/${{ inputs.test_run_id }}/traces/${TRACE_NAME}" \
+                  -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+                  -H "Content-Type: application/zip" \
+                  --data-binary "@${trace}"
+
+                TRACE_LIST="${TRACE_LIST}\"${TRACE_URL}\","
+              fi
+            done
+            TRACE_LIST="${TRACE_LIST%,}]"
+            TRACE_URLS="$TRACE_LIST"
+          fi
+          echo "trace_urls=$TRACE_URLS" >> $GITHUB_OUTPUT
+
+      - name: Send results to webhook
+        if: always()
+        env:
+          WEBHOOK_SECRET: ${{ secrets.PLAYWRIGHT_WEBHOOK_SECRET }}
+        run: |
+          # Prepare webhook payload
+          PAYLOAD=$(cat <<EOF
+          {
+            "test_run_id": "${{ inputs.test_run_id }}",
+            "status": "${{ steps.results.outputs.status }}",
+            "total_tests": ${{ steps.results.outputs.total || 0 }},
+            "passed_tests": ${{ steps.results.outputs.passed || 0 }},
+            "failed_tests": ${{ steps.results.outputs.failed || 0 }},
+            "skipped_tests": ${{ steps.results.outputs.skipped || 0 }},
+            "report_url": "${{ steps.upload-artifacts.outputs.report_url || '' }}",
+            "video_urls": ${{ steps.upload-artifacts.outputs.video_urls || '[]' }},
+            "screenshot_urls": ${{ steps.upload-artifacts.outputs.screenshot_urls || '[]' }},
+            "trace_urls": ${{ steps.upload-artifacts.outputs.trace_urls || '[]' }},
+            "failed_test_names": ${{ steps.results.outputs.failed_names || '[]' }},
+            "error_message": ""
+          }
+          EOF
+          )
+
+          # Send to webhook
+          curl -X POST "${{ inputs.callback_url }}" \
+            -H "Content-Type: application/json" \
+            -H "x-webhook-secret: ${WEBHOOK_SECRET}" \
+            -d "$PAYLOAD"
+
+      - name: Upload Playwright report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ inputs.test_run_id }}
+          path: test-artifacts/playwright-report/
+          retention-days: 30
+
+      - name: Upload test output artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-output-${{ inputs.test_run_id }}
+          path: test-artifacts/playwright-output/
+          retention-days: 30
