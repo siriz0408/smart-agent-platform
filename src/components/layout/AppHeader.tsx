@@ -101,11 +101,15 @@ export function AppHeader() {
               <DropdownMenuSeparator />
               {/* Admin link only for super_admin (Sam's email) */}
               {isSuperAdmin && (
-                <DropdownMenuItem asChild>
-                  <Link to="/admin" className="flex items-center gap-2 cursor-pointer">
-                    <Shield className="h-4 w-4" />
-                    Admin Console
-                  </Link>
+                <DropdownMenuItem 
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    setTimeout(() => navigate("/admin"), 0);
+                  }}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Shield className="h-4 w-4" />
+                  Admin Console
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem asChild>

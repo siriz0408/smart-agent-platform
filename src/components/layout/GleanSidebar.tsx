@@ -129,9 +129,6 @@ export function GleanSidebar() {
 
   // Add admin link ONLY for super_admin (Sam's email)
   // This hides the admin panel from all other users
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GleanSidebar.tsx:adminCheck',message:'Admin link visibility check',data:{isSuperAdmin,userEmail:user?.email,hasActiveWorkspace:!!activeWorkspace},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1B'})}).catch(()=>{});
-  // #endregion
   if (isSuperAdmin) {
     bottomItems.unshift({ icon: Shield, label: 'Admin', href: '/admin' });
   }

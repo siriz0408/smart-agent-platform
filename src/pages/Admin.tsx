@@ -29,7 +29,7 @@ const dataSources: DataSource[] = [
 
 export default function Admin() {
   const { availableRoles, isAdmin } = useRole();
-  const { profile } = useAuth();
+  const { profile, isSuperAdmin } = useAuth();
 
   // Determine display role (for badge - show actual role, not override)
   const actualAdminRole = availableRoles.includes('super_admin') ? 'super_admin' : 'admin';
@@ -82,8 +82,9 @@ export default function Admin() {
 
   // Defensive check: Verify user has admin privileges using availableRoles
   // This uses actual DB roles, not the override activeRole
+  // Also allows super admin via hardcoded email check (bypasses DB query)
   // Must be AFTER all hooks are called
-  if (!isAdmin) {
+  if (!isAdmin && !isSuperAdmin) {
     return <Navigate to="/" replace />;
   }
 
