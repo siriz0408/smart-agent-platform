@@ -1,4 +1,4 @@
-import { MoreHorizontal, DollarSign, Calendar, User, Check, AlertTriangle, Clock } from "lucide-react";
+import { MoreHorizontal, DollarSign, Calendar, User, Check, AlertTriangle, Clock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -39,6 +39,7 @@ interface DealWithRelations {
   expected_close_date: string | null;
   contacts: { first_name: string; last_name: string } | null;
   properties: { address: string } | null;
+  is_stalled?: boolean;
 }
 
 interface DealCardProps {
@@ -67,13 +68,15 @@ export function DealCard({
   const currentStage = stages.find((s) => s.id === deal.stage);
   const hasOverdue = milestoneIndicator && milestoneIndicator.overdueCount > 0;
   const hasUpcoming = milestoneIndicator && milestoneIndicator.upcomingCount > 0;
+  const isStalled = deal.is_stalled === true;
 
   return (
     <Card 
       className={cn(
         "cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200",
         isMoving && "opacity-70",
-        hasOverdue && "border-destructive/50"
+        hasOverdue && "border-destructive/50",
+        isStalled && !hasOverdue && "border-orange-500/50"
       )}
       onClick={() => onOpenDetail(deal.id)}
     >
@@ -153,9 +156,9 @@ export function DealCard({
           )}
         </div>
 
-        {/* Milestone indicators */}
-        {(hasOverdue || hasUpcoming) && (
-          <div className="flex items-center gap-2 mt-3 pl-6">
+        {/* Milestone indicators and stalled status */}
+        {(hasOverdue || hasUpcoming || isStalled) && (
+          <div className="flex items-center gap-2 mt-3 pl-6 flex-wrap">
             {hasOverdue && (
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -179,6 +182,19 @@ export function DealCard({
                 </TooltipTrigger>
                 <TooltipContent>
                   {milestoneIndicator.upcomingCount} milestone{milestoneIndicator.upcomingCount > 1 ? 's' : ''} due within 3 days
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {isStalled && !hasOverdue && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="text-xs gap-1 border-orange-500 text-orange-700 dark:text-orange-400">
+                    <AlertCircle className="h-3 w-3" />
+                    Stalled
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  No activity for more than 48 hours. Consider following up.
                 </TooltipContent>
               </Tooltip>
             )}

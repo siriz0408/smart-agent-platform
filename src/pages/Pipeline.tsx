@@ -23,6 +23,7 @@ interface DealWithRelations {
   expected_close_date: string | null;
   contacts: { first_name: string; last_name: string } | null;
   properties: { address: string } | null;
+  is_stalled?: boolean;
 }
 
 const buyerStages = [
@@ -98,7 +99,27 @@ export default function Pipeline() {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as DealWithRelations[];
+      
+      // Batch check stalled status for all deals
+      const dealIds = (data as DealWithRelations[]).map(d => d.id);
+      const stalledMap = new Map<string, boolean>();
+      
+      if (dealIds.length > 0) {
+        const { data: stalledData, error: stalledError } = await supabase
+          .rpc("get_stalled_deals", { p_deal_ids: dealIds });
+        
+        if (!stalledError && stalledData) {
+          stalledData.forEach((item: { deal_id: string; is_stalled: boolean }) => {
+            stalledMap.set(item.deal_id, item.is_stalled);
+          });
+        }
+      }
+      
+      // Add stalled status to each deal
+      return (data as DealWithRelations[]).map(deal => ({
+        ...deal,
+        is_stalled: stalledMap.get(deal.id) || false
+      }));
     },
   });
 

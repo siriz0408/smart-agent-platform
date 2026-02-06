@@ -28,6 +28,7 @@ interface DealWithRelations {
   expected_close_date: string | null;
   contacts: { first_name: string; last_name: string } | null;
   properties: { address: string } | null;
+  is_stalled?: boolean;
 }
 
 interface StageColumnProps {
