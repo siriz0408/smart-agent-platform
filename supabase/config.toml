@@ -63,6 +63,9 @@ verify_jwt = true
 [functions.execute-actions]
 verify_jwt = true
 
+[functions.execute-connector-action]
+verify_jwt = true
+
 [functions.process-agent-event]
 verify_jwt = true
 
