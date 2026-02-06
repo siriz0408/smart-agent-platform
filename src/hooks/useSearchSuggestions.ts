@@ -84,11 +84,19 @@ export function useSearchSuggestions(query: string) {
   }, [query]);
 
   // Get recent searches
+  // Show recent searches when query is empty or very short
   const recentSearches = useMemo(() => {
-    if (!query || query.length < 1) {
+    if (!query || query.length === 0) {
+      // Show all recent searches when input is empty
       return getRecentSearches().slice(0, 5);
     }
-    // Filter recent searches that match the query
+    if (query.length === 1) {
+      // Show recent searches that start with the query character
+      return getRecentSearches()
+        .filter((q) => q.toLowerCase().startsWith(query.toLowerCase()))
+        .slice(0, 5);
+    }
+    // For longer queries, filter by substring match
     return getRecentSearches()
       .filter((q) => q.toLowerCase().includes(query.toLowerCase()))
       .slice(0, 5);
@@ -164,8 +172,8 @@ export function useSearchSuggestions(query: string) {
   const suggestions = useMemo<SearchSuggestion[]>(() => {
     const result: SearchSuggestion[] = [];
 
-    // Add recent searches (only if query is empty or very short)
-    if (recentSearches.length > 0 && (!query || query.length < 2)) {
+    // Add recent searches (show when query is empty or matches)
+    if (recentSearches.length > 0) {
       recentSearches.forEach((q) => {
         result.push({
           type: "recent",

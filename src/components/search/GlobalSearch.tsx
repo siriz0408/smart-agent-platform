@@ -39,9 +39,12 @@ export const GlobalSearch = memo(function GlobalSearch() {
     enabled: query.length >= 2,
   });
 
-  // Get search suggestions for autocomplete (when query length < 2)
+  // Get search suggestions for autocomplete
+  // Show suggestions when:
+  // - Query is empty (show recent searches)
+  // - Query length is 1 (show entity suggestions)
   const { suggestions, isLoading: isLoadingSuggestions } = useSearchSuggestions(query);
-  const showSuggestions = query.length >= 1 && query.length < 2;
+  const showSuggestions = query.length < 2;
   const showResults = query.length >= 2;
 
   // rerender-functional-setstate: Use functional updates for stable callbacks
