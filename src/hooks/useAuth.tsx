@@ -7,6 +7,10 @@ import { setUserContext, clearUserContext } from "@/lib/errorTracking";
 // Super admin email - only this user has platform-wide admin access
 const SUPER_ADMIN_EMAIL = "siriz04081@gmail.com";
 
+// localStorage keys for role data (must be cleared on logout)
+const ROLE_STORAGE_KEY = "smart_agent_active_role";
+const ROLE_OVERRIDE_KEY = "smart_agent_role_override";
+
 interface Profile {
   id: string;
   user_id: string;
@@ -133,6 +137,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setSession(null);
     setProfile(null);
     clearUserContext();
+    
+    // Clear all auth-related localStorage data to prevent data leakage on shared devices
+    localStorage.removeItem(ROLE_STORAGE_KEY);
+    localStorage.removeItem(ROLE_OVERRIDE_KEY);
   };
 
   // Sync user context with Sentry for error tracking

@@ -191,6 +191,7 @@ Enable JWT verification for all functions (except webhooks)
 - **To:** PM-Experience
 - **Priority:** Critical
 - **Created:** 2026-02-05
+- **Resolved:** 2026-02-06
 
 **Issue:**
 Session tokens stored in localStorage are vulnerable to XSS attacks.
@@ -201,9 +202,13 @@ Security vulnerability for all users
 **Suggested Action:**
 Migrate to sessionStorage in Supabase client config
 
-**Status:** PENDING
+**Status:** RESOLVED
 
-**Target Date:** Feb 13
+**Resolution:**
+- ✅ Verified Supabase client already uses `sessionStorage` for session tokens (correct configuration)
+- ✅ Fixed `signOut` function to clear localStorage role data (`smart_agent_active_role`, `smart_agent_role_override`) on logout
+- ✅ Prevents data leakage on shared devices
+- ✅ Session tokens now properly isolated in sessionStorage (cleared on tab close)
 
 ---
 

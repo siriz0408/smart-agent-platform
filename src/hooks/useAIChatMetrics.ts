@@ -14,6 +14,7 @@ export interface AIChatMetric {
   message_id: string;
   conversation_id: string;
   user_id: string;
+  tenant_id?: string;
   response_time_ms: number;
   sources_cited_count: number;
   response_length: number;
@@ -49,6 +50,7 @@ export function useAIChatMetricsTracker() {
     conversationId: string,
     userId: string,
     content: string,
+    tenantId?: string,
     feedback?: "positive" | "negative" | null
   ) => {
     if (!startTimeRef.current) {
@@ -65,6 +67,7 @@ export function useAIChatMetricsTracker() {
       message_id: messageId,
       conversation_id: conversationId,
       user_id: userId,
+      tenant_id: tenantId,
       response_time_ms: responseTimeMs,
       sources_cited_count: sourcesCount,
       response_length: responseLength,
@@ -73,12 +76,24 @@ export function useAIChatMetricsTracker() {
 
     setCurrentMetrics(metric);
 
-    // Store metric in database (we'll create a table for this)
-    // For now, we'll store it in a local table or use ai_messages metadata
+    // Store metric in database
     try {
-      // TODO: Create ai_chat_metrics table in database
-      // For now, we can store metrics in a JSONB column or create a new table
-      console.log("AI Chat Metric:", metric);
+      const { error } = await supabase
+        .from("ai_chat_metrics")
+        .insert({
+          message_id: messageId,
+          conversation_id: conversationId,
+          user_id: userId,
+          tenant_id: tenantId,
+          response_time_ms: responseTimeMs,
+          sources_cited_count: sourcesCount,
+          response_length: responseLength,
+          user_feedback: feedback || null,
+        });
+
+      if (error) {
+        console.error("Failed to record AI chat metric:", error);
+      }
     } catch (error) {
       console.error("Failed to record AI chat metric:", error);
     }
@@ -106,16 +121,13 @@ export function useAIChatMetrics(
   return useQuery({
     queryKey: ["ai-chat-metrics", tenantId, startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async (): Promise<AIChatMetric[]> => {
-      // For now, calculate metrics from ai_messages table
-      // In the future, we'll query a dedicated ai_chat_metrics table
       const start = startDate?.toISOString() || null;
       const end = endDate?.toISOString() || null;
 
-      // Query assistant messages
+      // Query metrics from ai_chat_metrics table
       let query = supabase
-        .from("ai_messages")
-        .select("id, conversation_id, content, created_at, role")
-        .eq("role", "assistant")
+        .from("ai_chat_metrics")
+        .select("*")
         .order("created_at", { ascending: false });
 
       if (start) {
@@ -125,84 +137,26 @@ export function useAIChatMetrics(
         query = query.lte("created_at", end);
       }
 
-      const { data: messages, error } = await query;
+      if (tenantId) {
+        query = query.eq("tenant_id", tenantId);
+      }
+
+      const { data: metrics, error } = await query;
 
       if (error) throw error;
 
-      // Calculate metrics from messages
-      const metrics: AIChatMetric[] = [];
-
-      if (messages && messages.length > 0) {
-        // Get unique conversation IDs
-        const conversationIds = [...new Set(messages.map((m) => m.conversation_id))];
-
-        // Fetch conversations to get user_ids
-        const { data: conversations } = await supabase
-          .from("ai_conversations")
-          .select("id, user_id")
-          .in("id", conversationIds);
-
-        const conversationMap = new Map(
-          (conversations || []).map((c) => [c.id, c.user_id])
-        );
-
-        // Group messages by conversation and calculate response times
-        const conversationMessages = new Map<string, typeof messages>();
-        messages.forEach((msg) => {
-          if (!conversationMessages.has(msg.conversation_id)) {
-            conversationMessages.set(msg.conversation_id, []);
-          }
-          conversationMessages.get(msg.conversation_id)!.push(msg);
-        });
-
-        // For each conversation, calculate response times
-        for (const [conversationId, convMessages] of conversationMessages) {
-          // Get user messages for this conversation to calculate response times
-          const { data: userMessages } = await supabase
-            .from("ai_messages")
-            .select("id, created_at")
-            .eq("conversation_id", conversationId)
-            .eq("role", "user")
-            .order("created_at", { ascending: true });
-
-          const userId = conversationMap.get(conversationId) || "";
-
-          if (userMessages) {
-            convMessages.forEach((assistantMsg) => {
-              const { citations } = parseSourceCitations(assistantMsg.content);
-              const sourcesCount = citations.length;
-              const responseLength = assistantMsg.content.length;
-
-              // Find the previous user message to calculate response time
-              const assistantTime = new Date(assistantMsg.created_at);
-              let responseTimeMs = 0;
-
-              // Find the most recent user message before this assistant message
-              const previousUserMessages = userMessages.filter(
-                (um) => new Date(um.created_at) < assistantTime
-              );
-              if (previousUserMessages.length > 0) {
-                const lastUserMessage = previousUserMessages[previousUserMessages.length - 1];
-                responseTimeMs = assistantTime.getTime() - new Date(lastUserMessage.created_at).getTime();
-              }
-
-              metrics.push({
-                id: assistantMsg.id,
-                message_id: assistantMsg.id,
-                conversation_id: conversationId,
-                user_id: userId,
-                response_time_ms: responseTimeMs,
-                sources_cited_count: sourcesCount,
-                response_length: responseLength,
-                user_feedback: null, // TODO: Add feedback tracking
-                created_at: assistantMsg.created_at,
-              });
-            });
-          }
-        }
-      }
-
-      return metrics;
+      return (metrics || []).map((m) => ({
+        id: m.id,
+        message_id: m.message_id,
+        conversation_id: m.conversation_id,
+        user_id: m.user_id,
+        tenant_id: m.tenant_id,
+        response_time_ms: m.response_time_ms,
+        sources_cited_count: m.sources_cited_count,
+        response_length: m.response_length,
+        user_feedback: m.user_feedback,
+        created_at: m.created_at,
+      }));
     },
     enabled: !!tenantId,
   });
@@ -215,16 +169,39 @@ export function useAIChatMetricsSummary(
   startDate?: Date,
   endDate?: Date
 ) {
-  const { data: metrics = [], isLoading } = useAIChatMetrics(startDate, endDate);
+  const { profile } = useAuth();
+  const tenantId = profile?.tenant_id;
 
-  const summary = metrics.length > 0
-    ? calculateSummary(metrics)
-    : null;
+  return useQuery({
+    queryKey: ["ai-chat-metrics-summary", tenantId, startDate?.toISOString(), endDate?.toISOString()],
+    queryFn: async (): Promise<AIChatMetricsSummary | null> => {
+      const { data, error } = await supabase.rpc("get_ai_chat_metrics_summary", {
+        p_tenant_id: tenantId || null,
+        p_start_date: startDate?.toISOString() || null,
+        p_end_date: endDate?.toISOString() || null,
+      });
 
-  return {
-    data: summary,
-    isLoading,
-  };
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        return null;
+      }
+
+      const result = data[0];
+      return {
+        total_conversations: Number(result.total_conversations) || 0,
+        avg_response_time_ms: Number(result.avg_response_time_ms) || 0,
+        avg_sources_per_response: Number(result.avg_sources_per_response) || 0,
+        avg_response_length: Number(result.avg_response_length) || 0,
+        total_responses: Number(result.total_responses) || 0,
+        positive_feedback_count: Number(result.positive_feedback_count) || 0,
+        negative_feedback_count: Number(result.negative_feedback_count) || 0,
+        feedback_rate: Number(result.feedback_rate) || 0,
+        quality_trend: (result.quality_trend as "improving" | "declining" | "stable") || "stable",
+      };
+    },
+    enabled: !!tenantId,
+  });
 }
 
 /**

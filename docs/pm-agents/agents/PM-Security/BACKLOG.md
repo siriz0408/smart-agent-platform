@@ -32,3 +32,4 @@
 | SEC-003 | Check auth flows | 2026-02-06 |
 | SEC-011 | Enable JWT verification in edge functions | 2026-02-06 |
 | SEC-004 | Scan for exposed secrets | 2026-02-06 |
+| SEC-012 | Migrate session storage to sessionStorage | 2026-02-06 |
