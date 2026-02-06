@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
+import { setUserContext, clearUserContext } from "@/lib/errorTracking";
 
 // Super admin email - only this user has platform-wide admin access
 const SUPER_ADMIN_EMAIL = "siriz04081@gmail.com";
@@ -128,7 +129,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setProfile(null);
+    clearUserContext();
   };
+
+  // Sync user context with Sentry for error tracking
+  useEffect(() => {
+    if (user && profile) {
+      setUserContext({
+        id: user.id,
+        email: user.email,
+        role: profile.primary_role,
+        tenant_id: profile.tenant_id,
+      });
+    } else if (!user) {
+      clearUserContext();
+    }
+  }, [user, profile]);
 
   // Determine if user is super admin
   const isSuperAdmin = user?.email === SUPER_ADMIN_EMAIL;
