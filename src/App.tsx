@@ -52,6 +52,7 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
 const Tools = lazy(() => import("./pages/Tools"));
+const Integrations = lazy(() => import("./pages/Integrations"));
 const TrialExpired = lazy(() => import("./pages/TrialExpired"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Help = lazy(() => import("./pages/Help"));
@@ -111,6 +112,7 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
               <Route path="/tools" element={<ProtectedRoute><Tools /></ProtectedRoute>} />
+              <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
               <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
 
               {/* Protected routes - Admin Only */}

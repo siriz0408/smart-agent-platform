@@ -14,6 +14,7 @@ import {
   Calculator,
   HelpCircle,
   ListTodo,
+  Plug2,
   LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -67,6 +68,7 @@ export function GleanSidebar() {
       { icon: Home, label: 'Home', href: '/dashboard' },
       { icon: MessageSquare, label: 'Chat', href: '/chat' },
       { icon: Calculator, label: 'Tools', href: '/tools' },
+      { icon: Plug2, label: 'Integrations', href: '/integrations' },
     ];
 
     const roleSpecificItems: Record<string, NavItem[]> = {
