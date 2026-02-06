@@ -1,6 +1,6 @@
 # PM-Security Backlog
 
-> **Last Updated:** 2026-02-06
+> **Last Updated:** 2026-02-06 (Cycle 7)
 
 ## In Progress
 
@@ -33,3 +33,4 @@
 | SEC-011 | Enable JWT verification in edge functions | 2026-02-06 |
 | SEC-004 | Scan for exposed secrets | 2026-02-06 |
 | SEC-012 | Migrate session storage to sessionStorage | 2026-02-06 |
+| SEC-005 | Review GDPR compliance | 2026-02-06 |

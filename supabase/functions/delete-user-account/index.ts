@@ -24,7 +24,9 @@ serve(async (req) => {
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    
+    // Create service role client for all operations
+    const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
       auth: {
         persistSession: false,
       },
@@ -32,7 +34,7 @@ serve(async (req) => {
 
     // Verify JWT and get user
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    const { data: { user }, error: authError } = await adminSupabase.auth.getUser(token);
 
     if (authError || !user) {
       logger.error("Invalid JWT token", { error: authError });
@@ -44,9 +46,6 @@ serve(async (req) => {
 
     const userId = user.id;
     logger.info("Starting GDPR account deletion", { userId, email: user.email });
-
-    // Use service role client for deletion operations
-    const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     const deletionSteps: Array<{ name: string; execute: () => Promise<void> }> = [];
 
