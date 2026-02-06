@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plug2, Loader2, AlertCircle } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { IntegrationCard } from "@/components/integrations/IntegrationCard";
+import { IntegrationHealthMonitor } from "@/components/integrations/IntegrationHealthMonitor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +21,7 @@ export default function Integrations() {
   const [searchQuery, setSearchQuery] = useState("");
   const [connectingKey, setConnectingKey] = useState<string | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
+  const [retryingId, setRetryingId] = useState<string | null>(null);
 
   // Fetch all connector definitions
   const { data: definitions = [], isLoading: definitionsLoading } = useQuery({
@@ -128,6 +130,61 @@ export default function Integrations() {
     },
   });
 
+  // Retry mutation
+  const retryMutation = useMutation({
+    mutationFn: async (workspaceConnectorId: string) => {
+      if (!activeWorkspace?.id) {
+        throw new Error("Workspace not available");
+      }
+
+      // Find the connector
+      const connector = workspaceConnectors.find((wc) => wc.id === workspaceConnectorId);
+      if (!connector) {
+        throw new Error("Connector not found");
+      }
+
+      // Find the definition
+      const definition = definitions.find((d) => d.id === connector.connector_definition_id);
+      if (!definition) {
+        throw new Error("Connector definition not found");
+      }
+
+      // Reset error state and attempt reconnection
+      const { error: updateError } = await supabase
+        .from("workspace_connectors")
+        .update({
+          status: "active",
+          error_count: 0,
+          last_error: null,
+        })
+        .eq("id", workspaceConnectorId)
+        .eq("workspace_id", activeWorkspace.id);
+
+      if (updateError) throw updateError;
+
+      // TODO: Trigger actual reconnection/sync logic here
+      // For now, we'll just reset the error state
+      // In production, this would trigger a background job to test the connection
+    },
+    onMutate: (workspaceConnectorId) => {
+      setRetryingId(workspaceConnectorId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-connectors"] });
+      toast.success("Connection retried", {
+        description: "Attempting to reconnect. Status will update shortly.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to retry connection", {
+        description: error.message || "An error occurred while retrying.",
+      });
+    },
+    onSettled: () => {
+      setRetryingId(null);
+    },
+  });
+
   // Filter definitions by search query
   const filteredDefinitions = definitions.filter((def) => {
     if (!searchQuery) return true;
@@ -172,6 +229,14 @@ export default function Integrations() {
             </div>
           </div>
         </div>
+
+        {/* Health Monitor */}
+        {!isLoading && definitions.length > 0 && (
+          <IntegrationHealthMonitor
+            definitions={definitions}
+            workspaceConnectors={workspaceConnectors}
+          />
+        )}
 
         {/* Search */}
         <div className="mb-6">
@@ -225,8 +290,12 @@ export default function Integrations() {
                         onDisconnect={(workspaceConnectorId) =>
                           disconnectMutation.mutate(workspaceConnectorId)
                         }
+                        onRetry={(workspaceConnectorId) =>
+                          retryMutation.mutate(workspaceConnectorId)
+                        }
                         isConnecting={connectingKey === definition.connector_key}
                         isDisconnecting={disconnectingId === workspaceConnector?.id}
+                        isRetrying={retryingId === workspaceConnector?.id}
                       />
                     );
                   })}

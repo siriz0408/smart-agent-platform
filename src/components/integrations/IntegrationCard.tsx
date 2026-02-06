@@ -1,7 +1,8 @@
-import { Mail, Calendar, Video, FileText, Building2, Zap, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Mail, Calendar, Video, FileText, Building2, Zap, AlertCircle, CheckCircle2, Clock, RefreshCw, XCircle, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { ConnectorDefinition, ConnectorStatus } from "@/types/connector";
 
@@ -14,13 +15,17 @@ interface WorkspaceConnector {
   error_count: number;
 }
 
+type HealthStatus = "healthy" | "degraded" | "error" | "disconnected";
+
 interface IntegrationCardProps {
   definition: ConnectorDefinition;
   workspaceConnector?: WorkspaceConnector;
   onConnect: (connectorKey: string) => void;
   onDisconnect: (workspaceConnectorId: string) => void;
+  onRetry?: (workspaceConnectorId: string) => void;
   isConnecting?: boolean;
   isDisconnecting?: boolean;
+  isRetrying?: boolean;
 }
 
 // Icon mapping for connectors
@@ -49,13 +54,44 @@ export function IntegrationCard({
   workspaceConnector,
   onConnect,
   onDisconnect,
+  onRetry,
   isConnecting = false,
   isDisconnecting = false,
+  isRetrying = false,
 }: IntegrationCardProps) {
   const isConnected = workspaceConnector?.status === "active";
   const hasError = workspaceConnector?.status === "error" || (workspaceConnector?.error_count ?? 0) > 0;
   const Icon = connectorIcons[definition.connector_key] || Zap;
   const categoryColor = categoryColors[definition.category] || categoryColors.document_management;
+
+  // Calculate health status
+  const getHealthStatus = (): HealthStatus => {
+    if (!workspaceConnector || workspaceConnector.status !== "active") {
+      return "disconnected";
+    }
+    
+    if (workspaceConnector.status === "error" || workspaceConnector.error_count > 5) {
+      return "error";
+    }
+    
+    if (workspaceConnector.error_count > 0 || workspaceConnector.status === "expired") {
+      return "degraded";
+    }
+    
+    // Check if last sync is too old (more than 24 hours)
+    if (workspaceConnector.last_sync_at) {
+      const syncDate = new Date(workspaceConnector.last_sync_at);
+      const now = new Date();
+      const diffHours = (now.getTime() - syncDate.getTime()) / 3600000;
+      if (diffHours > 24) {
+        return "degraded";
+      }
+    }
+    
+    return "healthy";
+  };
+
+  const healthStatus = getHealthStatus();
 
   const formatLastSync = (lastSyncAt: string | null) => {
     if (!lastSyncAt) return "Never synced";
@@ -74,6 +110,46 @@ export function IntegrationCard({
     
     return syncDate.toLocaleDateString();
   };
+
+  const getHealthStatusConfig = () => {
+    switch (healthStatus) {
+      case "healthy":
+        return {
+          color: "bg-green-500",
+          borderColor: "border-green-500",
+          icon: CheckCircle2,
+          label: "Healthy",
+          description: "Integration is working normally",
+        };
+      case "degraded":
+        return {
+          color: "bg-yellow-500",
+          borderColor: "border-yellow-500",
+          icon: AlertTriangle,
+          label: "Degraded",
+          description: "Integration has minor issues",
+        };
+      case "error":
+        return {
+          color: "bg-red-500",
+          borderColor: "border-red-500",
+          icon: XCircle,
+          label: "Error",
+          description: "Integration has critical issues",
+        };
+      default:
+        return {
+          color: "bg-gray-400",
+          borderColor: "border-gray-400",
+          icon: XCircle,
+          label: "Disconnected",
+          description: "Integration is not connected",
+        };
+    }
+  };
+
+  const healthConfig = getHealthStatusConfig();
+  const HealthIcon = healthConfig.icon;
 
   return (
     <Card className={cn(
