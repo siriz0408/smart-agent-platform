@@ -11,6 +11,7 @@ import { CreateDealDialog } from "@/components/deals/CreateDealDialog";
 import { EditDealDialog } from "@/components/deals/EditDealDialog";
 import { DealDetailSheet } from "@/components/deals/DealDetailSheet";
 import { StageColumn } from "@/components/pipeline/StageColumn";
+import { PipelineAnalytics } from "@/components/pipeline/PipelineAnalytics";
 import { useMilestoneIndicators } from "@/hooks/useMilestoneIndicators";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
@@ -240,15 +241,17 @@ export default function Pipeline() {
           </div>
           <div className="flex items-center gap-2">
             {/* View toggle - only show on larger screens */}
-            <div className="hidden sm:flex border rounded-lg p-0.5">
+            <div className="hidden sm:flex border rounded-lg p-0.5" role="group" aria-label="View mode toggle">
               <Button
                 variant={viewMode === "list" ? "secondary" : "ghost"}
                 size="sm"
                 className="h-8 px-2"
                 onClick={() => setViewMode(viewMode === "list" ? "auto" : "list")}
                 title="List view"
+                aria-label="Switch to list view"
+                aria-pressed={viewMode === "list"}
               >
-                <List className="h-4 w-4" />
+                <List className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
                 variant={viewMode === "kanban" ? "secondary" : "ghost"}
@@ -256,12 +259,19 @@ export default function Pipeline() {
                 className="h-8 px-2"
                 onClick={() => setViewMode(viewMode === "kanban" ? "auto" : "kanban")}
                 title="Kanban view"
+                aria-label="Switch to kanban view"
+                aria-pressed={viewMode === "kanban"}
               >
-                <LayoutGrid className="h-4 w-4" />
+                <LayoutGrid className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
-            <Button onClick={() => setDialogOpen(true)} size="sm" className="h-9">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button 
+              onClick={() => setDialogOpen(true)} 
+              size="sm" 
+              className="h-9"
+              aria-label="Add new deal"
+            >
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Add Deal</span>
               <span className="sm:hidden">Add</span>
             </Button>
@@ -286,6 +296,9 @@ export default function Pipeline() {
           onOpenChange={setDetailSheetOpen}
           stages={stages}
         />
+
+        {/* Pipeline Analytics */}
+        <PipelineAnalytics dealType={dealType} stages={stages} />
 
         {/* Pipeline Tabs */}
         <Tabs defaultValue={type} className="flex-1 flex flex-col">
