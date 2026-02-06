@@ -13,7 +13,6 @@
 | ID | Item | Priority | Effort | Notes |
 |----|------|----------|--------|-------|
 | INT-003 | Research MLS options | P1 | L | **RECOMMENDED THIS WEEK** |
-| INT-007 | Implement Gmail connector | P1 | L | First integration to build (after framework) |
 | INT-008 | Build integration management UI | P1 | M | PM-Experience handoff |
 | INT-004 | Plan email sync | P2 | L | Framework complete, ready to plan |
 | INT-005 | Create API docs | P2 | M | Blocked until public API exists |
