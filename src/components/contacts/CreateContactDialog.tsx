@@ -3,9 +3,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
 import { Loader2, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUsageLimits } from "@/hooks/useUsageLimits";
+import { UsageLimitDialog } from "@/components/agents/UsageLimitDialog";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { validatePhone } from "@/lib/contactValidation";
@@ -96,12 +99,21 @@ interface CreateContactDialogProps {
 export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogProps) {
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
+  const { usage, plan, isLoading: limitsLoading } = useUsageLimits();
   const [buyerPrefsOpen, setBuyerPrefsOpen] = useState(false);
   const [sellerInfoOpen, setSellerInfoOpen] = useState(false);
   const [communicationOpen, setCommunicationOpen] = useState(false);
   const [leadTrackingOpen, setLeadTrackingOpen] = useState(false);
   const [financialOpen, setFinancialOpen] = useState(false);
   const [timelineOpen, setTimelineOpen] = useState(false);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  
+  // Check if contact limit is reached
+  const isContactLimitReached = usage.contacts.limit !== -1 && usage.contacts.current >= usage.contacts.limit;
+  
+  // Check if near limit (80% or more)
+  const contactsPercent = usage.contacts.limit === -1 ? 0 : (usage.contacts.current / usage.contacts.limit) * 100;
+  const isNearContactLimit = usage.contacts.limit !== -1 && contactsPercent >= 80 && !isContactLimitReached;
 
   const form = useForm<ContactFormData>({
     resolver: zodResolver(contactSchema),
@@ -231,6 +243,12 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
   });
 
   const onSubmit = (data: ContactFormData) => {
+    // Check usage limits before creating contact
+    if (isContactLimitReached) {
+      setShowLimitDialog(true);
+      return;
+    }
+    
     createContactMutation.mutate(data);
   };
 
@@ -247,6 +265,34 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
         <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Usage Limit Warning */}
+              {isNearContactLimit && (
+                <Alert variant="default" className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+                  <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+                  <AlertDescription className="text-sm">
+                    You're using {Math.round(contactsPercent)}% of your contact limit ({usage.contacts.current} / {usage.contacts.limit}).{" "}
+                    <Link to="/billing" className="font-medium underline hover:no-underline">
+                      Upgrade your plan
+                    </Link>{" "}
+                    to add more contacts.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {/* Limit Reached Warning */}
+              {isContactLimitReached && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    You've reached your contact limit ({usage.contacts.current} / {usage.contacts.limit}).{" "}
+                    <Link to="/billing" className="font-medium underline hover:no-underline">
+                      Upgrade your plan
+                    </Link>{" "}
+                    to add more contacts.
+                  </AlertDescription>
+                </Alert>
+              )}
+              
               {/* Duplicate Warning */}
               {duplicateContact && email && (
                 <Alert variant="destructive">
@@ -789,10 +835,15 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createContactMutation.isPending}>
-                  {createContactMutation.isPending && (
+                <Button type="submit" disabled={createContactMutation.isPending || isContactLimitReached || limitsLoading}>
+                  {createContactMutation.isPending ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  )}
+                  ) : isContactLimitReached ? (
+                    <>
+                      <AlertTriangle className="mr-2 h-4 w-4" />
+                      Limit Reached
+                    </>
+                  ) : null}
                   Create Contact
                 </Button>
               </div>
@@ -800,6 +851,22 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
           </Form>
         </ScrollArea>
       </DialogContent>
+      
+      {/* Usage Limit Dialog */}
+      <UsageLimitDialog
+        open={showLimitDialog}
+        onOpenChange={setShowLimitDialog}
+        limitType="contacts"
+        usageData={
+          isContactLimitReached
+            ? {
+                current_usage: usage.contacts.current,
+                usage_limit: usage.contacts.limit,
+                plan_name: plan,
+              }
+            : undefined
+        }
+      />
     </Dialog>
   );
 }

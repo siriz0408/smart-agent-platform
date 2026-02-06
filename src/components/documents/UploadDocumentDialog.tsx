@@ -22,6 +22,11 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUsageLimits } from "@/hooks/useUsageLimits";
+import { UsageLimitDialog } from "@/components/agents/UsageLimitDialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 
@@ -54,6 +59,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialogProps) {
   const { profile, user } = useAuth();
   const queryClient = useQueryClient();
+  const { usage, plan, isLoading: limitsLoading } = useUsageLimits();
   
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
@@ -64,6 +70,14 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [showLimitDialog, setShowLimitDialog] = useState(false);
+  
+  // Check if document limit is reached
+  const isDocumentLimitReached = usage.documents.limit !== -1 && usage.documents.current >= usage.documents.limit;
+  
+  // Check if near limit (80% or more)
+  const documentsPercent = usage.documents.limit === -1 ? 0 : (usage.documents.current / usage.documents.limit) * 100;
+  const isNearDocumentLimit = usage.documents.limit !== -1 && documentsPercent >= 80 && !isDocumentLimitReached;
 
   // Fetch deals for linking
   const { data: deals = [] } = useQuery({
@@ -163,6 +177,12 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
       return;
     }
 
+    // Check usage limits before uploading
+    if (isDocumentLimitReached) {
+      setShowLimitDialog(true);
+      return;
+    }
+
     setUploading(true);
     setProgress(10);
 
@@ -242,6 +262,34 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Usage Limit Warning */}
+          {isNearDocumentLimit && (
+            <Alert variant="default" className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950">
+              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+              <AlertDescription className="text-sm">
+                You're using {Math.round(documentsPercent)}% of your document limit ({usage.documents.current} / {usage.documents.limit}).{" "}
+                <Link to="/billing" className="font-medium underline hover:no-underline">
+                  Upgrade your plan
+                </Link>{" "}
+                to upload more documents.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {/* Limit Reached Warning */}
+          {isDocumentLimitReached && (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription>
+                You've reached your document limit ({usage.documents.current} / {usage.documents.limit}).{" "}
+                <Link to="/billing" className="font-medium underline hover:no-underline">
+                  Upgrade your plan
+                </Link>{" "}
+                to upload more documents.
+              </AlertDescription>
+            </Alert>
+          )}
+          
           {/* Dropzone */}
           <div
             onDrop={handleDrop}
@@ -411,11 +459,16 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
           <Button variant="outline" onClick={handleClose} disabled={uploading}>
             Cancel
           </Button>
-          <Button onClick={handleUpload} disabled={!file || uploading}>
+          <Button onClick={handleUpload} disabled={!file || uploading || isDocumentLimitReached || limitsLoading}>
             {uploading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                 Uploading...
+              </>
+            ) : isDocumentLimitReached ? (
+              <>
+                <X className="h-4 w-4 mr-2" />
+                Limit Reached
               </>
             ) : (
               <>
@@ -426,6 +479,22 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
           </Button>
         </DialogFooter>
       </DialogContent>
+      
+      {/* Usage Limit Dialog */}
+      <UsageLimitDialog
+        open={showLimitDialog}
+        onOpenChange={setShowLimitDialog}
+        limitType="documents"
+        usageData={
+          isDocumentLimitReached
+            ? {
+                current_usage: usage.documents.current,
+                usage_limit: usage.documents.limit,
+                plan_name: plan,
+              }
+            : undefined
+        }
+      />
     </Dialog>
   );
 }
