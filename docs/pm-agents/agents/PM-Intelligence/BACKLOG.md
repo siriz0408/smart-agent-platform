@@ -1,6 +1,6 @@
 # PM-Intelligence Backlog
 
-> **Last Updated:** 2026-02-05
+> **Last Updated:** 2026-02-06
 
 ---
 
@@ -63,24 +63,6 @@ Create `docs/pm-agents/agents/PM-Intelligence/PROMPTS.md` documenting:
 
 ---
 
-### INT-002: Audit RAG retrieval quality
-**Priority:** P0 | **Effort:** M | **Vision:** 9
-
-**Objective:** Audit the quality of RAG (retrieval) responses.
-
-**Steps:**
-1. Read `supabase/functions/search-documents/index.ts`
-2. Document the current retrieval parameters
-3. Create `docs/pm-agents/agents/PM-Intelligence/RAG_AUDIT.md`
-4. Note: chunk size, overlap, similarity threshold, max results
-5. Identify potential improvements
-
-**Acceptance Criteria:**
-- [ ] Current parameters documented
-- [ ] Improvement recommendations listed
-
----
-
 ## Backlog
 
 | ID | Item | Priority | Notes |
@@ -99,6 +81,7 @@ Create `docs/pm-agents/agents/PM-Intelligence/PROMPTS.md` documenting:
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
 | INT-000 | PM-Intelligence setup | 2026-02-05 | Initial |
+| INT-002 | Audit RAG retrieval quality | 2026-02-06 | RAG_AUDIT.md created with full analysis |
 
 ---
 
