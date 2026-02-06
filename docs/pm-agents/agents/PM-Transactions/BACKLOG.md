@@ -1,6 +1,6 @@
 # PM-Transactions Backlog
 
-> **Last Updated:** 2026-02-06
+> **Last Updated:** 2026-02-06 (TRX-002 completed)
 
 ## In Progress
 
