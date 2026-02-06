@@ -28,3 +28,4 @@
 | GRW-000 | PM-Growth setup | 2026-02-05 |
 | GRW-001 | Initial domain audit | 2026-02-06 |
 | GRW-006 | Complete workspace billing migration | 2026-02-06 |
+| GRW-007 | Implement trial signup flow | 2026-02-06 |

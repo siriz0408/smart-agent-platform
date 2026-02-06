@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Check, CreditCard, Zap, Crown, Loader2, FileText } from "lucide-react";
+import { Check, CreditCard, Zap, Crown, Loader2, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -326,23 +326,8 @@ export default function Billing() {
                   </CardHeader>
                   <CardContent>
                     <div className="mb-4">
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-3xl font-bold">${plan.price}</span>
-                        <span className="text-muted-foreground">/month</span>
-                      </div>
-                      {plan.id !== "free" && !isTrialing && (
-                        <div className="mt-2 flex items-center gap-1.5">
-                          <Badge variant="secondary" className="text-xs font-medium bg-primary/10 text-primary border-primary/20">
-                            <Sparkles className="h-3 w-3 mr-1" />
-                            14-Day Free Trial
-                          </Badge>
-                        </div>
-                      )}
-                      {plan.id !== "free" && (
-                        <p className="text-xs text-muted-foreground mt-2">
-                          Start your free trial today. No charges until trial ends.
-                        </p>
-                      )}
+                      <span className="text-3xl font-bold">${plan.price}</span>
+                      <span className="text-muted-foreground">/month</span>
                     </div>
                     <ul className="space-y-2">
                       {plan.features.map((feature) => (
