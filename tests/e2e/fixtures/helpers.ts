@@ -39,3 +39,28 @@ export async function navigateTo(page: Page, _linkName: RegExp, urlPath: string)
   // Small wait for React hydration
   await page.waitForTimeout(500);
 }
+
+/**
+ * Check if any of multiple selectors are visible
+ * Replaces invalid .or() chaining pattern
+ */
+export async function anyVisible(page: Page, selectors: Array<() => ReturnType<Page['getByText']> | ReturnType<Page['getByRole']> | ReturnType<Page['locator']>>): Promise<boolean> {
+  for (const selectorFn of selectors) {
+    const selector = selectorFn();
+    const isVisible = await selector.isVisible().catch(() => false);
+    if (isVisible) return true;
+  }
+  return false;
+}
+
+/**
+ * Get the first visible selector from multiple options
+ */
+export async function firstVisible(page: Page, selectors: Array<() => ReturnType<Page['getByText']> | ReturnType<Page['getByRole']> | ReturnType<Page['locator']>>) {
+  for (const selectorFn of selectors) {
+    const selector = selectorFn();
+    const isVisible = await selector.isVisible().catch(() => false);
+    if (isVisible) return selector;
+  }
+  return null;
+}

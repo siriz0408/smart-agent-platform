@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { MilestoneList } from "./MilestoneList";
 import { AddNoteDialog } from "./AddNoteDialog";
+import { DealSuggestions } from "./DealSuggestions";
 
 interface Stage {
   id: string;
@@ -453,6 +454,11 @@ export function DealDetailSheet({
                   </div>
                 )}
               </div>
+
+              <Separator />
+
+              {/* AI Suggestions */}
+              <DealSuggestions dealId={deal.id} />
 
               <Separator />
 

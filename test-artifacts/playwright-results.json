@@ -10,18 +10,14 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
+    "metadata": {},
     "preserveOutput": "always",
     "projects": [
       {
         "outputDir": "/Users/sam.irizarry/Downloads/ReAgentOS_V1/test-artifacts/playwright-output",
         "repeatEach": 1,
         "retries": 2,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "chromium",
         "name": "chromium",
         "testDir": "/Users/sam.irizarry/Downloads/ReAgentOS_V1/tests/e2e",
@@ -29,15 +25,13 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       },
       {
         "outputDir": "/Users/sam.irizarry/Downloads/ReAgentOS_V1/test-artifacts/playwright-output",
         "repeatEach": 1,
         "retries": 2,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "mobile-chrome",
         "name": "mobile-chrome",
         "testDir": "/Users/sam.irizarry/Downloads/ReAgentOS_V1/tests/e2e",
@@ -45,7 +39,7 @@
         "testMatch": [
           "**/*.@(spec|test).?(c|m)[jt]s?(x)"
         ],
-        "timeout": 60000
+        "timeout": 30000
       }
     ],
     "quiet": false,
@@ -85,132 +79,23 @@
       "timeout": 120000
     }
   },
-  "suites": [
+  "suites": [],
+  "errors": [
     {
-      "title": "admin-agents-delete.spec.ts",
-      "file": "admin-agents-delete.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [],
-      "suites": [
-        {
-          "title": "Admin Agents Delete",
-          "file": "admin-agents-delete.spec.ts",
-          "line": 9,
-          "column": 6,
-          "specs": [
-            {
-              "title": "should show delete option in dropdown for super admin on admin agents page",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3170,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-02-06T00:15:28.246Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "c10acbfc592244dc9228-c46c34f752ba18cb8bf0",
-              "file": "admin-agents-delete.spec.ts",
-              "line": 14,
-              "column": 3
-            },
-            {
-              "title": "should show danger zone section in agent edit page for super admin",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3435,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-02-06T00:15:31.657Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "c10acbfc592244dc9228-a23e5ea5ce060d125a6c",
-              "file": "admin-agents-delete.spec.ts",
-              "line": 42,
-              "column": 3
-            },
-            {
-              "title": "should show delete confirmation dialog when clicking delete",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 60000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3546,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-02-06T00:15:35.100Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "c10acbfc592244dc9228-2ed6afd4a3799427f17a",
-              "file": "admin-agents-delete.spec.ts",
-              "line": 76,
-              "column": 3
-            }
-          ]
-        }
-      ]
+      "message": "SyntaxError: /Users/sam.irizarry/Downloads/ReAgentOS_V1/tests/e2e/billing.spec.ts: Unexpected token, expected \",\" (291:63)\n\n  289 |       \n  290 |       const portalButton = page.getByRole('button', { name: /customer portal/i })\n> 291 |         .or(page.getByRole('button', { name: /manage.*billing/i));\n      |                                                                ^\n  292 |       \n  293 |       const hasPortalButton = await portalButton.isVisible().catch(() => false);\n  294 |       ",
+      "stack": "SyntaxError: /Users/sam.irizarry/Downloads/ReAgentOS_V1/tests/e2e/billing.spec.ts: Unexpected token, expected \",\" (291:63)\n\n  289 |       \n  290 |       const portalButton = page.getByRole('button', { name: /customer portal/i })\n> 291 |         .or(page.getByRole('button', { name: /manage.*billing/i));\n      |                                                                ^\n  292 |       \n  293 |       const hasPortalButton = await portalButton.isVisible().catch(() => false);\n  294 |       ",
+      "location": {
+        "file": "/Users/sam.irizarry/Downloads/ReAgentOS_V1/tests/e2e/billing.spec.ts",
+        "line": 291,
+        "column": 63
+      },
+      "snippet": "   at billing.spec.ts:291\n\n  289 |       \n  290 |       const portalButton = page.getByRole('button', { name: /customer portal/i })\n> 291 |         .or(page.getByRole('button', { name: /manage.*billing/i));\n      |                                                               ^\n  292 |       \n  293 |       const hasPortalButton = await portalButton.isVisible().catch(() => false);\n  294 |       "
     }
   ],
-  "errors": [],
   "stats": {
-    "startTime": "2026-02-06T00:15:27.690Z",
-    "duration": 10983.599,
-    "expected": 3,
+    "startTime": "2026-02-06T18:44:17.010Z",
+    "duration": 18753.898999999998,
+    "expected": 0,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

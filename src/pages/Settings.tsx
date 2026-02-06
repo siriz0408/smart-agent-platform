@@ -16,6 +16,7 @@ import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { DataExportDialog } from "@/components/settings/DataExportDialog";
+import { DataDeletionDialog } from "@/components/settings/DataDeletionDialog";
 import { KeyboardShortcutsDialog } from "@/components/settings/KeyboardShortcutsDialog";
 import { ProfileExtensions } from "@/components/settings/ProfileExtensions";
 import { PrivacySettings } from "@/components/settings/PrivacySettings";
@@ -30,6 +31,7 @@ export default function Settings() {
   const { data: profileCompletion } = useProfileCompletion();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
+  const [isDeletionDialogOpen, setIsDeletionDialogOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
   const location = useLocation();
 
@@ -367,6 +369,38 @@ export default function Settings() {
             <div id="privacy-section">
               <PrivacySettings />
             </div>
+
+            <Card className="border-destructive/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-destructive">
+                  <Shield className="h-5 w-5" />
+                  Account Deletion
+                </CardTitle>
+                <CardDescription>
+                  Permanently delete your account and all associated data (GDPR Right to Erasure)
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      This will permanently delete your account, all your data, and cannot be undone.
+                      We recommend exporting your data first.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      In compliance with GDPR Article 17, your data will be deleted within 30 days.
+                    </p>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => setIsDeletionDialogOpen(true)}
+                  >
+                    <Shield className="h-4 w-4 mr-2" />
+                    Delete Account
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Billing & More Tab */}

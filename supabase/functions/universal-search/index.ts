@@ -199,8 +199,10 @@ Deno.serve(async (req) => {
 
     // ========================================================================
     // Call simplified keyword search RPC function (using admin client)
+    // Track latency for metrics (DIS-008)
     // ========================================================================
 
+    const searchStartTime = Date.now();
     const { data: results, error: searchError } = await supabaseAdmin.rpc(
       "search_all_entities",
       {
@@ -210,6 +212,7 @@ Deno.serve(async (req) => {
         p_match_count_per_type: matchCountPerType,
       }
     );
+    const searchLatencyMs = Date.now() - searchStartTime;
 
     if (searchError) {
       console.error("❌ RPC error:", searchError);
@@ -219,6 +222,7 @@ Deno.serve(async (req) => {
         query: query,
         tenant_id: tenantId,
         entity_types: entityTypes,
+        latency_ms: searchLatencyMs,
       });
     }
 
@@ -237,11 +241,13 @@ Deno.serve(async (req) => {
     }
 
     // ========================================================================
-    // Log zero results for analytics (DIS-004)
+    // Log ALL searches for comprehensive metrics (DIS-008)
+    // Track successful + zero results to calculate Search Success Rate
     // ========================================================================
 
     const resultCount = results?.length || 0;
-    if (resultCount === 0 && query.length >= 2) {
+    
+    if (query.length >= 2) {
       // Parse query for analysis
       const queryWords = query
         .toLowerCase()
@@ -253,9 +259,9 @@ Deno.serve(async (req) => {
       const isNumeric = /^\d+$/.test(query.trim());
       const isSingleWord = queryWords.length === 1;
 
-      // Log zero result asynchronously (don't block response)
+      // Log ALL searches to search_metrics table (asynchronously, don't block response)
       supabaseAdmin
-        .from("zero_results_log")
+        .from("search_metrics")
         .insert({
           tenant_id: tenantId,
           user_id: user.id,
@@ -263,6 +269,8 @@ Deno.serve(async (req) => {
           query_length: query.length,
           entity_types: entityTypes,
           match_count_per_type: matchCountPerType,
+          result_count: resultCount,
+          latency_ms: searchLatencyMs,
           query_words: queryWords,
           query_word_count: queryWords.length,
           has_special_chars: hasSpecialChars,
@@ -271,14 +279,43 @@ Deno.serve(async (req) => {
         })
         .then(({ error }) => {
           if (error) {
-            console.error("❌ Failed to log zero result:", error);
+            console.error("❌ Failed to log search metric:", error);
           } else {
-            console.log("📊 Logged zero result for analytics");
+            console.log("📊 Logged search metric for analytics");
           }
         })
         .catch((err) => {
-          console.error("❌ Error logging zero result:", err);
+          console.error("❌ Error logging search metric:", err);
         });
+
+      // Also log zero results to zero_results_log for backward compatibility (DIS-004)
+      if (resultCount === 0) {
+        supabaseAdmin
+          .from("zero_results_log")
+          .insert({
+            tenant_id: tenantId,
+            user_id: user.id,
+            query: query.trim(),
+            query_length: query.length,
+            entity_types: entityTypes,
+            match_count_per_type: matchCountPerType,
+            query_words: queryWords,
+            query_word_count: queryWords.length,
+            has_special_chars: hasSpecialChars,
+            is_numeric: isNumeric,
+            is_single_word: isSingleWord,
+          })
+          .then(({ error }) => {
+            if (error) {
+              console.error("❌ Failed to log zero result:", error);
+            } else {
+              console.log("📊 Logged zero result for analytics");
+            }
+          })
+          .catch((err) => {
+            console.error("❌ Error logging zero result:", err);
+          });
+      }
     }
 
     // ========================================================================

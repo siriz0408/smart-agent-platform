@@ -85,7 +85,7 @@ export function useGrowthMetrics() {
       };
       
       let totalTrials = 0;
-      let convertedTrials = 0;
+      const convertedTrials = 0;
       let paidUsers = 0;
       let freeUsers = 0;
       let newPaidSubscriptions = 0;

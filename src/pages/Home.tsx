@@ -227,6 +227,16 @@ export default function Home() {
             </div>
           ) : (
             <div className="max-w-3xl mx-auto space-y-6">
+              {/* Aria-live region for screen readers to announce new messages */}
+              <div aria-live="polite" aria-atomic="false" className="sr-only">
+                {messages.length > 0 && (
+                  <span>
+                    {messages[messages.length - 1].role === "assistant"
+                      ? "AI assistant sent a message"
+                      : "You sent a message"}
+                  </span>
+                )}
+              </div>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -292,15 +302,15 @@ export default function Home() {
                 </div>
               )}
               {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-                <div className="flex gap-4">
+                <div className="flex gap-4" aria-busy="true" aria-live="polite">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
-                    <Bot className="h-5 w-5 text-primary-foreground" />
+                    <Bot className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
                   </div>
                   <Card className="p-4">
-                    <div className="flex gap-1">
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" />
-                      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" />
+                    <div className="flex gap-1" role="status" aria-label="AI is thinking">
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.3s]" aria-hidden="true" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground [animation-delay:-0.15s]" aria-hidden="true" />
+                      <span className="h-2 w-2 animate-bounce rounded-full bg-muted-foreground" aria-hidden="true" />
                     </div>
                   </Card>
                 </div>

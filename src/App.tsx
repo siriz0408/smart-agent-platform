@@ -201,6 +201,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/admin/conversion-funnel"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <ConversionFunnel />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/admin/data-health"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin', 'admin']}>

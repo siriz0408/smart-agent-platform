@@ -27,24 +27,34 @@ test.describe('Billing Page', () => {
   test.describe('Billing Page Display', () => {
     test('should display billing page', async ({ page }) => {
       // Should show billing/subscription content
-      await expect(
-        page.getByText(/billing/i).or(page.getByText(/subscription/i)).or(page.getByText(/plan/i))
-      ).toBeVisible({ timeout: 10000 });
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const planText = page.getByText(/plan/i);
+      
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      const hasPlan = await planText.isVisible().catch(() => false);
+      
+      expect(hasBilling || hasSubscription || hasPlan).toBe(true);
     });
 
     test('should display pricing plans', async ({ page }) => {
       // Should show plan cards (Free, Starter, Professional, Team)
-      const freePlan = page.getByText(/free/i).or(page.getByText(/\$0/i));
-      const starterPlan = page.getByText(/starter/i).or(page.getByText(/\$29/i));
-      const professionalPlan = page.getByText(/professional/i).or(page.getByText(/\$79/i));
-      const teamPlan = page.getByText(/team/i).or(page.getByText(/\$199/i));
+      const freePlan1 = page.getByText(/free/i);
+      const freePlan2 = page.getByText(/\$0/i);
+      const starterPlan1 = page.getByText(/starter/i);
+      const starterPlan2 = page.getByText(/\$29/i);
+      const professionalPlan1 = page.getByText(/professional/i);
+      const professionalPlan2 = page.getByText(/\$79/i);
+      const teamPlan1 = page.getByText(/team/i);
+      const teamPlan2 = page.getByText(/\$199/i);
       
       // At least one plan should be visible
       const plansVisible = await Promise.all([
-        freePlan.isVisible().catch(() => false),
-        starterPlan.isVisible().catch(() => false),
-        professionalPlan.isVisible().catch(() => false),
-        teamPlan.isVisible().catch(() => false),
+        freePlan1.isVisible().catch(() => false) || freePlan2.isVisible().catch(() => false),
+        starterPlan1.isVisible().catch(() => false) || starterPlan2.isVisible().catch(() => false),
+        professionalPlan1.isVisible().catch(() => false) || professionalPlan2.isVisible().catch(() => false),
+        teamPlan1.isVisible().catch(() => false) || teamPlan2.isVisible().catch(() => false),
       ]);
       
       expect(plansVisible.some(v => v)).toBe(true);
@@ -52,11 +62,16 @@ test.describe('Billing Page', () => {
 
     test('should display current plan', async ({ page }) => {
       // Should show current plan indicator
-      const currentPlanIndicator = page.getByText(/current plan/i).or(page.getByText(/your plan/i));
+      const currentPlanIndicator1 = page.getByText(/current plan/i);
+      const currentPlanIndicator2 = page.getByText(/your plan/i);
       
       // May or may not be visible depending on implementation
       // Just verify page loaded successfully
-      await expect(page.getByText(/billing/i).or(page.getByText(/subscription/i))).toBeVisible();
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      expect(hasBilling || hasSubscription).toBe(true);
     });
 
     test('should display plan features', async ({ page }) => {
@@ -64,16 +79,22 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for common feature keywords
-      const features = page.getByText(/ai queries/i)
-        .or(page.getByText(/document/i))
-        .or(page.getByText(/support/i))
-        .or(page.getByText(/unlimited/i));
+      const feature1 = page.getByText(/ai queries/i);
+      const feature2 = page.getByText(/document/i);
+      const feature3 = page.getByText(/support/i);
+      const feature4 = page.getByText(/unlimited/i);
       
       // At least some features should be visible
-      const hasFeatures = await features.isVisible().catch(() => false);
+      const hasFeatures = await feature1.isVisible().catch(() => false) ||
+                          await feature2.isVisible().catch(() => false) ||
+                          await feature3.isVisible().catch(() => false) ||
+                          await feature4.isVisible().catch(() => false);
       // This is optional - features may be in expandable sections
       if (hasFeatures) {
-        await expect(features.first()).toBeVisible();
+        const visibleFeature = await feature1.isVisible().catch(() => false) ? feature1 :
+                              await feature2.isVisible().catch(() => false) ? feature2 :
+                              await feature3.isVisible().catch(() => false) ? feature3 : feature4;
+        await expect(visibleFeature.first()).toBeVisible();
       }
     });
   });
@@ -83,14 +104,20 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for upgrade buttons
-      const upgradeButtons = page.getByRole('button', { name: /upgrade/i })
-        .or(page.getByRole('button', { name: /select/i }))
-        .or(page.getByRole('button', { name: /get started/i }));
+      const upgradeButton1 = page.getByRole('button', { name: /upgrade/i });
+      const upgradeButton2 = page.getByRole('button', { name: /select/i });
+      const upgradeButton3 = page.getByRole('button', { name: /get started/i });
       
       // At least one button should be visible
-      const buttonCount = await upgradeButtons.count();
-      if (buttonCount > 0) {
-        await expect(upgradeButtons.first()).toBeVisible();
+      const count1 = await upgradeButton1.count();
+      const count2 = await upgradeButton2.count();
+      const count3 = await upgradeButton3.count();
+      const totalCount = count1 + count2 + count3;
+      
+      if (totalCount > 0) {
+        const firstButton = count1 > 0 ? upgradeButton1.first() :
+                           count2 > 0 ? upgradeButton2.first() : upgradeButton3.first();
+        await expect(firstButton).toBeVisible();
       }
     });
 
@@ -98,25 +125,33 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for popular badge near Professional plan
-      const popularBadge = page.getByText(/popular/i).or(page.getByText(/recommended/i));
-      const hasPopularBadge = await popularBadge.isVisible().catch(() => false);
+      const popularBadge1 = page.getByText(/popular/i);
+      const popularBadge2 = page.getByText(/recommended/i);
+      const hasPopularBadge = await popularBadge1.isVisible().catch(() => false) ||
+                             await popularBadge2.isVisible().catch(() => false);
       
       // Popular badge may or may not be visible depending on current plan
       // Just verify page structure is correct
-      await expect(page.getByText(/billing/i).or(page.getByText(/subscription/i))).toBeVisible();
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      expect(hasBilling || hasSubscription).toBe(true);
     });
 
     test('should disable upgrade button for current plan', async ({ page }) => {
       await page.waitForTimeout(1000);
       
       // Current plan button should be disabled or show "Current Plan"
-      const currentPlanButton = page.getByRole('button', { name: /current plan/i })
-        .or(page.getByRole('button', { name: /active/i }));
+      const currentPlanButton1 = page.getByRole('button', { name: /current plan/i });
+      const currentPlanButton2 = page.getByRole('button', { name: /active/i });
       
-      const hasCurrentPlanButton = await currentPlanButton.isVisible().catch(() => false);
+      const hasCurrentPlanButton = await currentPlanButton1.isVisible().catch(() => false) ||
+                                   await currentPlanButton2.isVisible().catch(() => false);
       if (hasCurrentPlanButton) {
         // Button should be disabled or show current state
-        const isDisabled = await currentPlanButton.isDisabled().catch(() => false);
+        const button = await currentPlanButton1.isVisible().catch(() => false) ? currentPlanButton1 : currentPlanButton2;
+        const isDisabled = await button.isDisabled().catch(() => false);
         expect(isDisabled || true).toBe(true); // Either disabled or shows current state
       }
     });
@@ -127,13 +162,17 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Find an upgrade button (skip current plan)
-      const upgradeButtons = page.getByRole('button', { name: /upgrade/i })
-        .or(page.getByRole('button', { name: /select.*plan/i }));
+      const upgradeButton1 = page.getByRole('button', { name: /upgrade/i });
+      const upgradeButton2 = page.getByRole('button', { name: /select.*plan/i });
       
-      const buttonCount = await upgradeButtons.count();
+      const count1 = await upgradeButton1.count();
+      const count2 = await upgradeButton2.count();
+      const buttonCount = count1 + count2;
+      
       if (buttonCount > 0) {
         // Click first upgrade button
-        await upgradeButtons.first().click();
+        const button = count1 > 0 ? upgradeButton1.first() : upgradeButton2.first();
+        await button.click();
         
         // Should show loading state or redirect
         await page.waitForTimeout(2000);
@@ -156,12 +195,18 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Should show success message
-      const successToast = page.getByText(/success/i).or(page.getByText(/upgraded/i));
-      const hasSuccessMessage = await successToast.isVisible().catch(() => false);
+      const successToast1 = page.getByText(/success/i);
+      const successToast2 = page.getByText(/upgraded/i);
+      const hasSuccessMessage = await successToast1.isVisible().catch(() => false) ||
+                                await successToast2.isVisible().catch(() => false);
       
       // Success message may appear as toast notification
       // Just verify page loads without errors
-      await expect(page.getByText(/billing/i).or(page.getByText(/subscription/i))).toBeVisible();
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      expect(hasBilling || hasSubscription).toBe(true);
     });
 
     test('should handle Stripe cancel redirect', async ({ page }) => {
@@ -170,7 +215,11 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Should show cancel message or just return to billing page
-      await expect(page.getByText(/billing/i).or(page.getByText(/subscription/i))).toBeVisible();
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      expect(hasBilling || hasSubscription).toBe(true);
     });
   });
 
@@ -179,12 +228,15 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for usage section
-      const usageSection = page.getByText(/usage/i).or(page.getByText(/queries/i));
-      const hasUsageSection = await usageSection.isVisible().catch(() => false);
+      const usageSection1 = page.getByText(/usage/i);
+      const usageSection2 = page.getByText(/queries/i);
+      const hasUsageSection = await usageSection1.isVisible().catch(() => false) ||
+                              await usageSection2.isVisible().catch(() => false);
       
       // Usage may be displayed in a chart or list
       if (hasUsageSection) {
-        await expect(usageSection.first()).toBeVisible();
+        const section = await usageSection1.isVisible().catch(() => false) ? usageSection1 : usageSection2;
+        await expect(section.first()).toBeVisible();
       }
     });
 
@@ -192,15 +244,19 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for limit information
-      const limits = page.getByText(/\d+.*queries/i)
-        .or(page.getByText(/\d+.*documents/i))
-        .or(page.getByText(/limit/i));
+      const limits1 = page.getByText(/\d+.*queries/i);
+      const limits2 = page.getByText(/\d+.*documents/i);
+      const limits3 = page.getByText(/limit/i);
       
-      const hasLimits = await limits.isVisible().catch(() => false);
+      const hasLimits = await limits1.isVisible().catch(() => false) ||
+                        await limits2.isVisible().catch(() => false) ||
+                        await limits3.isVisible().catch(() => false);
       
       // Limits may be shown per plan or in usage section
       if (hasLimits) {
-        await expect(limits.first()).toBeVisible();
+        const limit = await limits1.isVisible().catch(() => false) ? limits1 :
+                     await limits2.isVisible().catch(() => false) ? limits2 : limits3;
+        await expect(limit.first()).toBeVisible();
       }
     });
 
@@ -222,12 +278,15 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for trial information
-      const trialInfo = page.getByText(/trial/i).or(page.getByText(/days remaining/i));
-      const hasTrialInfo = await trialInfo.isVisible().catch(() => false);
+      const trialInfo1 = page.getByText(/trial/i);
+      const trialInfo2 = page.getByText(/days remaining/i);
+      const hasTrialInfo = await trialInfo1.isVisible().catch(() => false) ||
+                           await trialInfo2.isVisible().catch(() => false);
       
       // Trial info may or may not be visible depending on account status
       if (hasTrialInfo) {
-        await expect(trialInfo.first()).toBeVisible();
+        const info = await trialInfo1.isVisible().catch(() => false) ? trialInfo1 : trialInfo2;
+        await expect(info.first()).toBeVisible();
       }
     });
   });
@@ -237,12 +296,15 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for invoice section
-      const invoiceSection = page.getByText(/invoice/i).or(page.getByText(/payment history/i));
-      const hasInvoiceSection = await invoiceSection.isVisible().catch(() => false);
+      const invoiceSection1 = page.getByText(/invoice/i);
+      const invoiceSection2 = page.getByText(/payment history/i);
+      const hasInvoiceSection = await invoiceSection1.isVisible().catch(() => false) ||
+                                await invoiceSection2.isVisible().catch(() => false);
       
       // Invoices may only be visible for paid plans
       if (hasInvoiceSection) {
-        await expect(invoiceSection.first()).toBeVisible();
+        const section = await invoiceSection1.isVisible().catch(() => false) ? invoiceSection1 : invoiceSection2;
+        await expect(section.first()).toBeVisible();
       }
     });
 
@@ -250,13 +312,17 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Look for download invoice buttons
-      const downloadButtons = page.getByRole('button', { name: /download/i })
-        .or(page.getByRole('link', { name: /invoice/i }));
+      const downloadButton1 = page.getByRole('button', { name: /download/i });
+      const downloadLink1 = page.getByRole('link', { name: /invoice/i });
       
-      const buttonCount = await downloadButtons.count();
+      const count1 = await downloadButton1.count();
+      const count2 = await downloadLink1.count();
+      const buttonCount = count1 + count2;
+      
       if (buttonCount > 0) {
         // Download functionality should be available
-        await expect(downloadButtons.first()).toBeVisible();
+        const button = count1 > 0 ? downloadButton1.first() : downloadLink1.first();
+        await expect(button).toBeVisible();
       }
     });
   });
@@ -265,29 +331,37 @@ test.describe('Billing Page', () => {
     test('should provide access to customer portal', async ({ page }) => {
       await page.waitForTimeout(1000);
       
-      // Look for customer portal button
-      const portalButton = page.getByRole('button', { name: /customer portal/i })
-        .or(page.getByRole('button', { name: /manage.*billing/i))
-        .or(page.getByRole('link', { name: /portal/i }));
+      // Look for customer portal button - check multiple possible selectors
+      const portalButton1 = page.getByRole('button', { name: /customer portal/i });
+      const portalButton2 = page.getByRole('button', { name: /manage.*billing/i });
+      const portalLink = page.getByRole('link', { name: /portal/i });
       
-      const hasPortalButton = await portalButton.isVisible().catch(() => false);
+      const hasPortalButton = await portalButton1.isVisible().catch(() => false) ||
+                              await portalButton2.isVisible().catch(() => false) ||
+                              await portalLink.isVisible().catch(() => false);
       
       // Portal access may only be available for paid plans
       if (hasPortalButton) {
-        await expect(portalButton.first()).toBeVisible();
+        // At least one portal access element should be visible
+        const visible = await portalButton1.isVisible().catch(() => false) ||
+                       await portalButton2.isVisible().catch(() => false) ||
+                       await portalLink.isVisible().catch(() => false);
+        expect(visible).toBe(true);
       }
     });
 
     test('should open customer portal when clicked', async ({ page }) => {
       await page.waitForTimeout(1000);
       
-      const portalButton = page.getByRole('button', { name: /customer portal/i })
-        .or(page.getByRole('button', { name: /manage.*billing/i));
+      const portalButton1 = page.getByRole('button', { name: /customer portal/i });
+      const portalButton2 = page.getByRole('button', { name: /manage.*billing/i });
       
-      const hasPortalButton = await portalButton.isVisible().catch(() => false);
+      const hasPortalButton = await portalButton1.isVisible().catch(() => false) ||
+                              await portalButton2.isVisible().catch(() => false);
       
       if (hasPortalButton) {
-        await portalButton.first().click();
+        const button = await portalButton1.isVisible().catch(() => false) ? portalButton1 : portalButton2;
+        await button.first().click();
         await page.waitForTimeout(2000);
         
         // Should redirect to Stripe customer portal
@@ -328,7 +402,11 @@ test.describe('Billing Page', () => {
       await page.waitForTimeout(1000);
       
       // Billing page should still be visible
-      await expect(page.getByText(/billing/i).or(page.getByText(/subscription/i))).toBeVisible();
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      expect(hasBilling || hasSubscription).toBe(true);
       
       // Plans should be stacked vertically on mobile
       const planCards = page.locator('[class*="card"]');
@@ -340,7 +418,11 @@ test.describe('Billing Page', () => {
 
     test('should handle empty state gracefully', async ({ page }) => {
       // Page should load even if no subscription data
-      await expect(page.getByText(/billing/i).or(page.getByText(/subscription/i))).toBeVisible();
+      const billingText = page.getByText(/billing/i);
+      const subscriptionText = page.getByText(/subscription/i);
+      const hasBilling = await billingText.isVisible().catch(() => false);
+      const hasSubscription = await subscriptionText.isVisible().catch(() => false);
+      expect(hasBilling || hasSubscription).toBe(true);
     });
   });
 });

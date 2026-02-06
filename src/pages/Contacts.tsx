@@ -281,11 +281,11 @@ export default function Contacts() {
         />
 
         {/* Stats */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-4" aria-busy={isLoading} aria-live="polite">
           <Card>
             <CardContent className="p-4">
               {isLoading ? (
-                <Skeleton className="h-8 w-12" />
+                <Skeleton className="h-8 w-12" aria-label="Loading total contacts" />
               ) : (
                 <div className="text-2xl font-semibold">{contacts.length}</div>
               )}
@@ -621,23 +621,23 @@ export default function Contacts() {
                 <TableHead className="w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody>
+            <TableBody aria-busy={isLoading} aria-live="polite">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Skeleton className="h-9 w-9 rounded-full" />
+                        <Skeleton className="h-9 w-9 rounded-full" aria-hidden="true" />
                         <div className="space-y-1">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-4 w-32" aria-hidden="true" />
+                          <Skeleton className="h-3 w-24" aria-hidden="true" />
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell><Skeleton className="h-4 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                    <TableCell><Skeleton className="h-4 w-40" aria-hidden="true" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-16" aria-hidden="true" /></TableCell>
+                    <TableCell><Skeleton className="h-5 w-24" aria-hidden="true" /></TableCell>
+                    <TableCell><Skeleton className="h-8 w-8" aria-hidden="true" /></TableCell>
                   </TableRow>
                 ))
               ) : filteredContacts.length === 0 ? (

@@ -279,11 +279,11 @@ export default function Documents() {
             </div>
 
           {/* Stats */}
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-4" aria-busy={isLoading} aria-live="polite">
             <Card>
               <CardContent className="p-4">
                 {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-8 w-12" aria-label="Loading total documents" />
                 ) : (
                   <div className="text-2xl font-semibold">{documents.length}</div>
                 )}
@@ -293,7 +293,7 @@ export default function Documents() {
             <Card>
               <CardContent className="p-4">
                 {isLoading ? (
-                  <Skeleton className="h-8 w-12" />
+                  <Skeleton className="h-8 w-12" aria-label="Loading indexed count" />
                 ) : (
                   <div className="text-2xl font-semibold">{indexedCount}</div>
                 )}
@@ -303,7 +303,7 @@ export default function Documents() {
             <Card>
               <CardContent className="p-4">
                 {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-16" aria-label="Loading total size" />
                 ) : (
                   <div className="text-2xl font-semibold">{formatFileSize(totalSize)}</div>
                 )}
@@ -358,18 +358,18 @@ export default function Documents() {
             <TabsContent value={selectedCategory} className="mt-6">
               {isMobile ? (
                 /* Mobile: Card Layout */
-                <div className="space-y-4">
+                <div className="space-y-4" aria-busy={isLoading} aria-live="polite">
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => (
                       <Card key={i} className="overflow-hidden">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <Skeleton className="h-12 w-12 rounded-lg" />
+                            <Skeleton className="h-12 w-12 rounded-lg" aria-hidden="true" />
                             <div className="flex-1 space-y-2">
-                              <Skeleton className="h-4 w-full" />
-                              <Skeleton className="h-3 w-2/3" />
+                              <Skeleton className="h-4 w-full" aria-hidden="true" />
+                              <Skeleton className="h-3 w-2/3" aria-hidden="true" />
                             </div>
-                            <Skeleton className="h-11 w-11 rounded-full" />
+                            <Skeleton className="h-11 w-11 rounded-full" aria-hidden="true" />
                           </div>
                         </CardContent>
                       </Card>
@@ -475,24 +475,24 @@ export default function Documents() {
                         <TableHead className="w-[50px]"></TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody aria-busy={isLoading} aria-live="polite">
                       {isLoading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                           <TableRow key={i}>
                             <TableCell>
                               <div className="flex items-center gap-3">
-                                <Skeleton className="h-9 w-9 rounded-lg" />
+                                <Skeleton className="h-9 w-9 rounded-lg" aria-hidden="true" />
                                 <div className="space-y-1">
-                                  <Skeleton className="h-4 w-48" />
-                                  <Skeleton className="h-3 w-24" />
+                                  <Skeleton className="h-4 w-48" aria-hidden="true" />
+                                  <Skeleton className="h-3 w-24" aria-hidden="true" />
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                            <TableCell><Skeleton className="h-5 w-16" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-12" /></TableCell>
-                            <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                            <TableCell><Skeleton className="h-8 w-8" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-16" aria-hidden="true" /></TableCell>
+                            <TableCell><Skeleton className="h-5 w-16" aria-hidden="true" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-12" aria-hidden="true" /></TableCell>
+                            <TableCell><Skeleton className="h-4 w-20" aria-hidden="true" /></TableCell>
+                            <TableCell><Skeleton className="h-8 w-8" aria-hidden="true" /></TableCell>
                           </TableRow>
                         ))
                       ) : filteredDocuments.length === 0 ? (

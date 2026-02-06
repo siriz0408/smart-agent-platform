@@ -675,18 +675,24 @@ export default function Properties() {
 
             {/* Properties Grid */}
             {isLoading ? (
-              <div className={cn(
-                viewMode === "grid"
-                  ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3"
-                  : "space-y-4"
-              )}>
+              <div 
+                className={cn(
+                  viewMode === "grid"
+                    ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3"
+                    : "space-y-4"
+                )}
+                aria-busy="true"
+                aria-live="polite"
+                role="status"
+                aria-label="Loading properties"
+              >
                 {Array.from({ length: 6 }).map((_, i) => (
                   <Card key={i} className="overflow-hidden">
-                    <Skeleton className="aspect-[4/3]" />
+                    <Skeleton className="aspect-[4/3]" aria-hidden="true" />
                     <CardContent className="p-4 space-y-2">
-                      <Skeleton className="h-6 w-32" />
-                      <Skeleton className="h-4 w-48" />
-                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-32" aria-hidden="true" />
+                      <Skeleton className="h-4 w-48" aria-hidden="true" />
+                      <Skeleton className="h-4 w-24" aria-hidden="true" />
                     </CardContent>
                   </Card>
                 ))}

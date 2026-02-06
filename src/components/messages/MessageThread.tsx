@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { TypingIndicator } from "./TypingIndicator";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/logger";
 
 interface Message {
   id: string;
@@ -241,6 +242,7 @@ interface AttachmentDisplayProps {
 function AttachmentDisplay({ attachment, isOwnMessage }: AttachmentDisplayProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [isLoadingUrl, setIsLoadingUrl] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const saveToDocuments = useSaveToDocuments();
   const getAttachmentUrl = useGetAttachmentUrl();
   const isImage = attachment.file_type.startsWith("image/");
@@ -249,6 +251,15 @@ function AttachmentDisplay({ attachment, isOwnMessage }: AttachmentDisplayProps)
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const getFileIcon = () => {
+    const ext = attachment.file_name.split(".").pop()?.toLowerCase();
+    if (ext === "pdf") return "📄";
+    if (["doc", "docx"].includes(ext || "")) return "📝";
+    if (["xls", "xlsx"].includes(ext || "")) return "📊";
+    if (["txt", "csv"].includes(ext || "")) return "📋";
+    return "📎";
   };
 
   const handleDownload = async () => {
@@ -260,6 +271,9 @@ function AttachmentDisplay({ attachment, isOwnMessage }: AttachmentDisplayProps)
       } else {
         toast.error("Failed to get download link");
       }
+    } catch (error) {
+      logger.error("Download error:", error);
+      toast.error("Failed to download file");
     } finally {
       setIsLoadingUrl(false);
     }
@@ -270,55 +284,74 @@ function AttachmentDisplay({ attachment, isOwnMessage }: AttachmentDisplayProps)
       await saveToDocuments.mutateAsync(attachment.id);
       toast.success("Saved to your documents!");
     } catch (error) {
+      logger.error("Save to documents error:", error);
       toast.error("Failed to save document");
     }
   };
 
   // Load image preview
   useEffect(() => {
-    if (isImage) {
-      getAttachmentUrl(attachment.storage_path).then(setUrl);
+    if (isImage && !imageError) {
+      getAttachmentUrl(attachment.storage_path)
+        .then(setUrl)
+        .catch((error) => {
+          logger.error("Failed to load image preview:", error);
+          setImageError(true);
+        });
     }
-  }, [attachment.storage_path, isImage, getAttachmentUrl]);
+  }, [attachment.storage_path, isImage, imageError, getAttachmentUrl]);
 
   return (
     <div
       className={cn(
-        "flex flex-col gap-2 p-2 rounded-lg border max-w-xs",
-        isOwnMessage ? "bg-primary/10" : "bg-muted"
+        "flex flex-col gap-2 p-3 rounded-lg border max-w-xs transition-colors hover:border-primary/50",
+        isOwnMessage ? "bg-primary/10 border-primary/20" : "bg-muted"
       )}
     >
-      {isImage && url && (
-        <img
-          src={url}
-          alt={attachment.file_name}
-          className="rounded max-h-48 object-cover cursor-pointer"
-          onClick={handleDownload}
-        />
+      {isImage && url && !imageError ? (
+        <div className="relative group">
+          <img
+            src={url}
+            alt={attachment.file_name}
+            className="rounded-lg max-h-64 w-full object-cover cursor-pointer border border-border"
+            onClick={handleDownload}
+            onError={() => setImageError(true)}
+          />
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 rounded-lg transition-colors pointer-events-none" />
+        </div>
+      ) : isImage && imageError && (
+        <div className="flex items-center justify-center h-32 bg-muted rounded-lg border border-border">
+          <div className="text-center">
+            <FileText className="h-8 w-8 mx-auto mb-1 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">Preview unavailable</p>
+          </div>
+        </div>
       )}
 
       <div className="flex items-center gap-2">
         {!isImage && (
-          <div className="h-10 w-10 bg-background rounded flex items-center justify-center shrink-0">
-            <FileText className="h-5 w-5 text-muted-foreground" />
+          <div className="h-12 w-12 bg-background rounded-lg flex items-center justify-center shrink-0 border border-border">
+            <span className="text-2xl">{getFileIcon()}</span>
           </div>
         )}
         <div className="flex-1 min-w-0">
-          <p className="text-xs font-medium truncate">{attachment.file_name}</p>
+          <p className="text-xs font-medium truncate" title={attachment.file_name}>
+            {attachment.file_name}
+          </p>
           <p className="text-xs text-muted-foreground">{formatSize(attachment.file_size)}</p>
         </div>
       </div>
 
-      <div className="flex gap-1">
+      <div className="flex gap-2">
         <Button
           variant="outline"
           size="sm"
-          className="flex-1 h-7 text-xs"
+          className="flex-1 h-8 text-xs"
           onClick={handleDownload}
           disabled={isLoadingUrl}
         >
           {isLoadingUrl ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="h-3 w-3 animate-spin mr-1" />
           ) : (
             <>
               <Download className="h-3 w-3 mr-1" />
@@ -330,16 +363,16 @@ function AttachmentDisplay({ attachment, isOwnMessage }: AttachmentDisplayProps)
           <Button
             variant="outline"
             size="sm"
-            className="flex-1 h-7 text-xs"
+            className="flex-1 h-8 text-xs"
             onClick={handleSaveToDocuments}
             disabled={saveToDocuments.isPending}
           >
             {saveToDocuments.isPending ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
             ) : (
               <>
                 <FolderPlus className="h-3 w-3 mr-1" />
-                Save to Docs
+                Save
               </>
             )}
           </Button>
