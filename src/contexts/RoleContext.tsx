@@ -43,6 +43,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   // Fetch user roles when user changes
   useEffect(() => {
     const fetchRoles = async () => {
+      
       // Wait for auth to finish loading before making decisions
       if (authLoading) {
         return; // Keep loading=true until auth is done

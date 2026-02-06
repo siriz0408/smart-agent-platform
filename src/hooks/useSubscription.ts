@@ -113,6 +113,7 @@ export function useSubscription() {
     queryClient.invalidateQueries({ queryKey: ["usage", workspaceId] });
   };
 
+  
   return {
     subscription,
     usage: usageQuery.data,

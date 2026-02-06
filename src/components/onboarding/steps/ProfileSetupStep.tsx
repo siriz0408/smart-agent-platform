@@ -20,9 +20,6 @@ export function ProfileSetupStep({ data, updateData, onNext, onBack }: ProfileSe
   const { profile } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
-  // #region agent log
-  fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:INIT',message:'ProfileSetupStep mounted',data:{hasProfile:!!profile,profileId:profile?.id,profileFullName:profile?.full_name},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,E'})}).catch(()=>{});
-  // #endregion
   
   const [fullName, setFullName] = useState(data.fullName || profile?.full_name || "");
   const [title, setTitle] = useState(data.title || profile?.title || "");
@@ -31,9 +28,6 @@ export function ProfileSetupStep({ data, updateData, onNext, onBack }: ProfileSe
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:ENTRY',message:'handleSubmit called',data:{fullName,title,phone,profileId:profile?.id,hasProfile:!!profile},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A'})}).catch(()=>{});
-    // #endregion
     
     if (!fullName.trim()) {
       toast.error("Name required", { description: "Please enter your name to continue." });
@@ -44,9 +38,6 @@ export function ProfileSetupStep({ data, updateData, onNext, onBack }: ProfileSe
     
     try {
       if (profile?.id) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:BEFORE_UPDATE',message:'About to update profile',data:{profileId:profile.id,fullName:fullName.trim()},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
         
         const { error } = await supabase
           .from("profiles")
@@ -58,31 +49,16 @@ export function ProfileSetupStep({ data, updateData, onNext, onBack }: ProfileSe
           })
           .eq("id", profile.id);
 
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:AFTER_UPDATE',message:'Profile update result',data:{error:error?.message||null,errorCode:error?.code||null},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-        // #endregion
 
         if (error) throw error;
       } else {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:NO_PROFILE',message:'No profile.id - skipping update',data:{profile},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'A,E'})}).catch(()=>{});
-        // #endregion
       }
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:BEFORE_NEXT',message:'Calling updateData and onNext',data:{fullName,title,phone},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
       
       updateData({ fullName, title, phone });
       onNext();
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:AFTER_NEXT',message:'onNext called successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'C'})}).catch(()=>{});
-      // #endregion
     } catch (error) {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'ProfileSetupStep.tsx:handleSubmit:ERROR',message:'Error in handleSubmit',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       
       console.error("Failed to update profile:", error);
       toast.error("Error", { description: "Failed to update profile. Please try again." });

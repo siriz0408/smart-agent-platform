@@ -61,6 +61,7 @@ export function WorkspaceProvider({ children }: { children: ReactNode }) {
 
   // Fetch user's workspaces and active workspace
   const fetchWorkspaces = useCallback(async () => {
+    
     if (authLoading || !user) {
       if (!authLoading) {
         setLoading(false);

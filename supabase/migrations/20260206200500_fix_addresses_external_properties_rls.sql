@@ -104,6 +104,7 @@ ON public.addresses FOR DELETE
 USING ((SELECT public.is_super_admin()));
 
 -- Service role can manage addresses (for edge functions)
+DROP POLICY IF EXISTS "addresses_service_role" ON public.addresses;
 CREATE POLICY "addresses_service_role"
 ON public.addresses FOR ALL
 USING (auth.role() = 'service_role');
@@ -148,6 +149,7 @@ TO service_role
 WITH CHECK (true);
 
 -- UPDATE: Only service role can update (via edge functions)
+DROP POLICY IF EXISTS "external_properties_update_service_role" ON public.external_properties;
 CREATE POLICY "external_properties_update_service_role"
 ON public.external_properties FOR UPDATE
 TO service_role

@@ -75,14 +75,8 @@ export function useOnboarding() {
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useOnboarding.ts:completeOnboarding:ENTRY',message:'completeOnboarding mutation started',data:{hasProfile:!!profile,profileId:profile?.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       
       if (!profile?.id) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useOnboarding.ts:completeOnboarding:NO_PROFILE',message:'Profile not found error',data:{profile},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D,E'})}).catch(()=>{});
-        // #endregion
         throw new Error("Profile not found");
       }
 
@@ -95,24 +89,15 @@ export function useOnboarding() {
         })
         .eq("id", profile.id);
 
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useOnboarding.ts:completeOnboarding:RESULT',message:'Onboarding completion result',data:{error:error?.message||null,errorCode:error?.code||null,profileId:profile.id},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
 
       if (error) throw error;
     },
     onSuccess: async () => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useOnboarding.ts:completeOnboarding:SUCCESS',message:'Onboarding completed successfully',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       
       // Refresh profile from AuthProvider to get updated onboarding_completed value
       // This is critical - profile is stored in AuthProvider state, not React Query
       await refreshProfile();
       
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useOnboarding.ts:completeOnboarding:PROFILE_REFRESHED',message:'Profile refreshed from AuthProvider',data:{},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H-FIX2'})}).catch(()=>{});
-      // #endregion
       
       // Also invalidate any React Query caches that might reference profile
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
@@ -122,9 +107,6 @@ export function useOnboarding() {
       toast.success("Welcome to Smart Agent!", { description: "You're all set up and ready to go." });
     },
     onError: (error) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useOnboarding.ts:completeOnboarding:ERROR',message:'Onboarding completion failed',data:{error:String(error)},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'D'})}).catch(()=>{});
-      // #endregion
       
       console.error("Failed to complete onboarding:", error);
       toast.error("Error", { description: "Failed to complete onboarding. Please try again." });
