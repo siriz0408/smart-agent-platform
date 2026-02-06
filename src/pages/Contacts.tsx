@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2, Upload, X } from "lucide-react";
+import { Plus, Search, Filter, Mail, Phone, MoreHorizontal, MessageSquare, UserPlus, Eye, Pencil, GitBranch, Trash2, Upload, X, AlertCircle, CheckCircle2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { PresenceDot } from "@/components/messages/PresenceDot";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -64,6 +64,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import {
+  calculateContactCompleteness,
+  getCompletenessVariant,
+  getCompletenessLabel,
+} from "@/lib/contactValidation";
 
 type Contact = Tables<"contacts"> & { user_id?: string | null };
 
@@ -205,12 +210,21 @@ export default function Contacts() {
   });
 
   const filteredContacts = contacts.filter((contact) => {
+    if (!searchQuery) {
+      const matchesFilter =
+        filterTypes.length === 0 || filterTypes.includes(contact.contact_type || "");
+      return matchesFilter;
+    }
+
     const fullName = `${contact.first_name} ${contact.last_name}`.toLowerCase();
     const query = searchQuery.toLowerCase();
     const matchesSearch =
       fullName.includes(query) ||
       (contact.email?.toLowerCase().includes(query) ?? false) ||
-      (contact.phone?.includes(query) ?? false);
+      (contact.phone?.includes(query) ?? false) ||
+      (contact.company?.toLowerCase().includes(query) ?? false) ||
+      (contact.notes?.toLowerCase().includes(query) ?? false) ||
+      (contact.tags?.some((tag) => tag.toLowerCase().includes(query)) ?? false);
     const matchesFilter =
       filterTypes.length === 0 || filterTypes.includes(contact.contact_type || "");
     return matchesSearch && matchesFilter;
@@ -319,11 +333,11 @@ export default function Contacts() {
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               id="contact-search"
-              placeholder="Search contacts..."
+              placeholder="Search by name, email, phone, company, tags, or notes..."
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
               className="pl-10"
-              aria-label="Search contacts by name, email, or phone"
+              aria-label="Search contacts by name, email, phone, company, tags, or notes"
             />
           </div>
           <Popover>
@@ -397,8 +411,70 @@ export default function Contacts() {
               ))
             ) : filteredContacts.length === 0 ? (
               <Card>
-                <CardContent className="py-12 text-center text-muted-foreground">
-                  {searchQuery || filterTypes.length > 0 ? "No contacts match your search or filters" : "No contacts yet. Add your first contact!"}
+                <CardContent className="py-12 px-6 text-center">
+                  {searchQuery || filterTypes.length > 0 ? (
+                    <div className="space-y-4">
+                      <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">No contacts found</h3>
+                        <p className="text-muted-foreground mb-4">
+                          No contacts match your search or filters. Try adjusting your search terms or filters.
+                        </p>
+                        <div className="flex gap-2 justify-center">
+                          {searchQuery && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSearchQuery("");
+                                resetPage();
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Clear search
+                            </Button>
+                          )}
+                          {filterTypes.length > 0 && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setFilterTypes([]);
+                                resetPage();
+                              }}
+                            >
+                              <X className="h-4 w-4 mr-2" />
+                              Clear filters
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-center">
+                        <div className="rounded-full bg-primary/10 p-4">
+                          <UserPlus className="h-8 w-8 text-primary" />
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">No contacts yet</h3>
+                        <p className="text-muted-foreground mb-6">
+                          Start building your CRM by adding your first contact or importing from CSV.
+                        </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                          <Button onClick={() => setIsCreateDialogOpen(true)}>
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add First Contact
+                          </Button>
+                          <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Import from CSV
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ) : (
@@ -422,9 +498,24 @@ export default function Contacts() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium">
-                              {contact.first_name} {contact.last_name}
-                            </p>
+                            <div className="flex items-center gap-2 mb-1">
+                              <p className="font-medium">
+                                {contact.first_name} {contact.last_name}
+                              </p>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Badge
+                                    variant={getCompletenessVariant(calculateContactCompleteness(contact))}
+                                    className="text-xs"
+                                  >
+                                    {calculateContactCompleteness(contact)}%
+                                  </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Data completeness: {getCompletenessLabel(calculateContactCompleteness(contact))}
+                                </TooltipContent>
+                              </Tooltip>
+                            </div>
                             {contact.company && (
                               <p className="text-sm text-muted-foreground">{contact.company}</p>
                             )}
@@ -551,8 +642,70 @@ export default function Contacts() {
                 ))
               ) : filteredContacts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    {searchQuery || filterTypes.length > 0 ? "No contacts match your search or filters" : "No contacts yet. Add your first contact!"}
+                  <TableCell colSpan={5} className="text-center py-12 px-6">
+                    {searchQuery || filterTypes.length > 0 ? (
+                      <div className="space-y-4">
+                        <AlertCircle className="h-12 w-12 mx-auto text-muted-foreground" />
+                        <div>
+                          <h3 className="font-semibold text-lg mb-2">No contacts found</h3>
+                          <p className="text-muted-foreground mb-4">
+                            No contacts match your search or filters. Try adjusting your search terms or filters.
+                          </p>
+                          <div className="flex gap-2 justify-center">
+                            {searchQuery && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setSearchQuery("");
+                                  resetPage();
+                                }}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Clear search
+                              </Button>
+                            )}
+                            {filterTypes.length > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setFilterTypes([]);
+                                  resetPage();
+                                }}
+                              >
+                                <X className="h-4 w-4 mr-2" />
+                                Clear filters
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex justify-center">
+                          <div className="rounded-full bg-primary/10 p-4">
+                            <UserPlus className="h-8 w-8 text-primary" />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-lg mb-2">No contacts yet</h3>
+                          <p className="text-muted-foreground mb-6">
+                            Start building your CRM by adding your first contact or importing from CSV.
+                          </p>
+                          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                            <Button onClick={() => setIsCreateDialogOpen(true)}>
+                              <Plus className="h-4 w-4 mr-2" />
+                              Add First Contact
+                            </Button>
+                            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
+                              <Upload className="h-4 w-4 mr-2" />
+                              Import from CSV
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -583,8 +736,23 @@ export default function Contacts() {
                           <ContactPresence userId={contact.user_id} />
                         </div>
                         <div>
-                          <div className="font-medium">
-                            {contact.first_name} {contact.last_name}
+                          <div className="flex items-center gap-2">
+                            <div className="font-medium">
+                              {contact.first_name} {contact.last_name}
+                            </div>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Badge
+                                  variant={getCompletenessVariant(calculateContactCompleteness(contact))}
+                                  className="text-xs"
+                                >
+                                  {calculateContactCompleteness(contact)}%
+                                </Badge>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                Data completeness: {getCompletenessLabel(calculateContactCompleteness(contact))}
+                              </TooltipContent>
+                            </Tooltip>
                           </div>
                           {contact.company && (
                             <div className="text-sm text-muted-foreground">

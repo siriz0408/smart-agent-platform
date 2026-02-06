@@ -163,7 +163,8 @@ export function useAIChat() {
       }
     } catch (error) {
       logger.error("AI chat error:", error);
-      toast.error("Error", { description: error instanceof Error ? error.message : "Failed to get AI response" });
+      const errorMessage = error instanceof Error ? error.message : "Failed to get AI response";
+      toast.error("Error", { description: errorMessage });
       // Remove the empty assistant message if error occurred before any content
       setMessages((prev) => {
         const last = prev[prev.length - 1];
@@ -172,6 +173,8 @@ export function useAIChat() {
         }
         return prev;
       });
+      // Re-throw error so component can handle it
+      throw error;
     } finally {
       setIsLoading(false);
     }

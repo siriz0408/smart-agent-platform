@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Sparkles, Bot, User, Plus, SlidersHorizontal, Lightbulb, ArrowUp } from "lucide-react";
+import { Sparkles, Bot, User, Plus, SlidersHorizontal, Lightbulb, ArrowUp, RotateCcw, AlertCircle, FileText, Users, TrendingUp, Upload, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -11,11 +11,17 @@ import { cn } from "@/lib/utils";
 import { MentionInput, ChatMarkdown, UserMessageContent, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, fetchMentionData, type Mention } from "@/hooks/useMentionSearch";
 import { supabase } from "@/integrations/supabase/client";
+import { QuickActionCard } from "@/components/dashboard/QuickActionCard";
+import { RecentActivityFeed } from "@/components/dashboard/RecentActivityFeed";
+import { StatsOverview } from "@/components/dashboard/StatsOverview";
 
-const quickActions = [
-  { label: "Featured", icon: Sparkles },
-  { label: "Recommended agents", icon: Bot },
-  { label: "Your agents", icon: Bot },
+const suggestedPrompts = [
+  "What can I afford on a $100k salary?",
+  "Calculate mortgage payments for a $400k home",
+  "What are the steps to buying a home?",
+  "Show me properties under $500k",
+  "What are closing costs on a $450k home?",
+  "Should I rent or buy?",
 ];
 
 export default function Home() {
@@ -27,7 +33,9 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [activeMentions, setActiveMentions] = useState<Mention[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [lastError, setLastError] = useState<{ message: string; userMessage: string } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLDivElement>(null);
 
   // Use thinking mode from preferences
   const thinkingMode = preferences.thinkingMode || false;
@@ -41,12 +49,68 @@ export default function Home() {
     scrollToBottom();
   }, [messages]);
 
+  // Keyboard shortcut: Cmd+K or Ctrl+K to focus input
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if user is typing in an input/textarea/contenteditable
+      const target = e.target as HTMLElement;
+      const isInputElement = 
+        target.tagName === "INPUT" || 
+        target.tagName === "TEXTAREA" || 
+        target.isContentEditable ||
+        target.closest('[contenteditable="true"]');
+      
+      // Only handle Cmd+K/Ctrl+K if not in an input element
+      if ((e.metaKey || e.ctrlKey) && e.key === "k" && !isInputElement) {
+        e.preventDefault();
+        // Focus the contenteditable div inside MentionInput
+        const editor = inputRef.current?.querySelector<HTMLElement>('[contenteditable="true"]');
+        if (editor) {
+          editor.focus();
+          // Move cursor to end
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.selectNodeContents(editor);
+          range.collapse(false);
+          sel?.removeAllRanges();
+          sel?.addRange(range);
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || isLoading) return;
     const message = input;
     setInput("");
-    await sendMessage(message, { thinkingMode });
+    setLastError(null);
+    try {
+      await sendMessage(message, { thinkingMode });
+    } catch (error) {
+      setLastError({
+        message: error instanceof Error ? error.message : "Failed to send message",
+        userMessage: message,
+      });
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!lastError || isLoading) return;
+    setLastError(null);
+    await sendMessage(lastError.userMessage, { thinkingMode });
+  };
+
+  const handleSuggestedPrompt = (prompt: string) => {
+    setInput(prompt);
+    // Focus the input after setting the value
+    setTimeout(() => {
+      const editor = inputRef.current?.querySelector<HTMLElement>('[contenteditable="true"]');
+      editor?.focus();
+    }, 0);
   };
 
   const firstName = profile?.full_name?.split(" ")[0] || "there";
@@ -67,7 +131,7 @@ export default function Home() {
               <p className="text-muted-foreground text-lg mb-4">
                 How can I help you with your real estate business today?
               </p>
-              <p className="text-sm text-muted-foreground mb-8 max-w-xl">
+              <p className="text-sm text-muted-foreground mb-6 max-w-xl">
                 Smart Agent is your AI-powered assistant for real estate professionals.
                 Analyze <a href="/documents" className="text-primary hover:underline">documents</a>, manage your{" "}
                 <a href="/contacts" className="text-primary hover:underline">CRM</a>, chat with multiple documents simultaneously,
@@ -78,6 +142,23 @@ export default function Home() {
                 </a> for real estate market insights.
               </p>
 
+              {/* Suggested Prompts */}
+              <div className="w-full max-w-2xl mb-6">
+                <p className="text-xs font-medium text-muted-foreground mb-3">Try asking:</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {suggestedPrompts.map((prompt, idx) => (
+                    <Button
+                      key={idx}
+                      variant="outline"
+                      className="h-auto py-2.5 px-4 text-left justify-start text-sm font-normal hover:bg-accent hover:text-accent-foreground"
+                      onClick={() => handleSuggestedPrompt(prompt)}
+                    >
+                      {prompt}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
               {/* Quick Actions */}
               <div className="flex flex-wrap gap-2 justify-center">
                 {quickActions.map((action) => (
@@ -85,7 +166,7 @@ export default function Home() {
                     key={action.label}
                     variant="outline"
                     className="gap-2"
-                    onClick={() => setInput(`Show me ${action.label.toLowerCase()}`)}
+                    onClick={() => handleSuggestedPrompt(`Show me ${action.label.toLowerCase()}`)}
                   >
                     <action.icon className="h-4 w-4" />
                     {action.label}
@@ -131,6 +212,34 @@ export default function Home() {
                   )}
                 </div>
               ))}
+              {lastError && (
+                <div className="flex gap-4 justify-start">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
+                    <AlertCircle className="h-5 w-5 text-destructive" />
+                  </div>
+                  <Card className="max-w-[80%] p-4 border-destructive/50 bg-destructive/5">
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-start gap-2">
+                        <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-destructive mb-1">Error sending message</p>
+                          <p className="text-sm text-muted-foreground">{lastError.message}</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleRetry}
+                        disabled={isLoading}
+                        className="w-fit gap-2"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        Retry
+                      </Button>
+                    </div>
+                  </Card>
+                </div>
+              )}
               {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
                 <div className="flex gap-4">
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary">
@@ -152,7 +261,7 @@ export default function Home() {
 
         {/* Input Area - Glean style */}
         <div className="border-t border-border bg-background p-3 sm:p-4 lg:p-6">
-          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto">
+          <form onSubmit={handleSubmit} className="max-w-3xl mx-auto" ref={inputRef}>
             {/* Input container - Glean style rounded (no overflow-hidden to allow dropdown) */}
             <div className="border border-border rounded-2xl bg-card shadow-sm">
               {/* Text input area */}
@@ -161,14 +270,20 @@ export default function Home() {
                   value={input}
                   onChange={setInput}
                   onMentionsChange={setActiveMentions}
-                  placeholder="Explore a topic..."
+                  placeholder="Explore a topic... (⌘K to focus)"
                   disabled={isLoading}
-                  ariaLabel="Chat input - type your message or use @ to mention documents, contacts, or properties"
+                  ariaLabel="Chat input - type your message or use @ to mention documents, contacts, or properties. Press Cmd+K or Ctrl+K to focus."
                   onSubmit={() => {
                     if (input.trim() && !isLoading) {
                       const message = input;
                       setInput("");
-                      sendMessage(message);
+                      setLastError(null);
+                      sendMessage(message, { thinkingMode }).catch((error) => {
+                        setLastError({
+                          message: error instanceof Error ? error.message : "Failed to send message",
+                          userMessage: message,
+                        });
+                      });
                     }
                   }}
                 />
