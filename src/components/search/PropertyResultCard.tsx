@@ -23,9 +23,11 @@ const propertyTypeLabels: Record<string, string> = {
 
 interface PropertyResultCardProps {
   result: SearchResult;
+  /** Optional callback invoked before navigation (for click tracking) */
+  onBeforeNavigate?: (entityType: string, entityId: string) => void;
 }
 
-export function PropertyResultCard({ result }: PropertyResultCardProps) {
+export function PropertyResultCard({ result, onBeforeNavigate }: PropertyResultCardProps) {
   const navigate = useNavigate();
 
   const price = result.metadata?.price as number | undefined;
@@ -36,6 +38,7 @@ export function PropertyResultCard({ result }: PropertyResultCardProps) {
   const squareFeet = result.metadata?.square_feet as number | undefined;
 
   const handleClick = () => {
+    onBeforeNavigate?.("property", result.entity_id);
     navigate(`/properties/${result.entity_id}`);
   };
 

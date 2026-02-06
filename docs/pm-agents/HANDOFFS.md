@@ -254,6 +254,7 @@ Tighten RLS policies to enforce tenant isolation
 - **To:** PM-Intelligence
 - **Priority:** Critical
 - **Created:** 2026-02-05
+- **Resolved:** 2026-02-07
 
 **Issue:**
 Missing tenant isolation checks in action executors (`agentActions.ts`).
@@ -264,9 +265,23 @@ Agents could access data across tenant boundaries
 **Suggested Action:**
 Add explicit tenant_id validation before data access
 
-**Status:** PENDING
+**Status:** RESOLVED
 
-**Target Date:** Feb 13
+**Resolution:**
+- Added centralized `validateTenantAccess()` and `validateUserInTenant()` helper functions
+- Added `executeAction()` entry gate: validates tenant_id + user_id are valid UUIDs before any executor runs
+- Fixed `add_note` executor: added explicit UUID validation and tenant ownership checks for contact_id, deal_id, and property_id (previously silent failures returned false success)
+- Fixed `assign_tags` executor: added explicit UUID validation, `.maybeSingle()` instead of `.single()`, and security warning logs matching defense-in-depth pattern
+- Fixed `send_email` executor: validates recipient_user_id belongs to same tenant, tenant-isolated contact_agent lookup
+- Fixed `schedule_task` executor: validates contact_id belongs to tenant when provided
+- Fixed `enroll_drip` executor: validates campaign_id belongs to tenant, added tenant_id to enrollment check and reactivation update
+- Fixed `notify_user` executor: validates target_user_id belongs to same tenant
+- Fixed `processQueuedAction()`: added callerTenantId defense-in-depth parameter, UUID validation for actionQueueId, tenant_id in all queue update filters
+- Fixed `execute-actions/index.ts`: passes `callerTenantId` to `processQueuedAction()` for both single and bulk execution paths
+- Fixed action approval: added `.eq("tenant_id", tenantId)` filter when upgrading pending actions to approved status
+- Fixed MCP gateway calls: `executeMcpAction()` now forwards `tenant_id` and `user_id` to MCP Gateway for downstream tenant-scoped operations
+- All 10 CRM action executors now have consistent defense-in-depth tenant isolation
+- All changes verified: `npm run typecheck` passes, no new lint errors introduced
 
 ---
 

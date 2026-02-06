@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, Briefcase, Home, DollarSign, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { OnboardingData } from "@/hooks/useOnboarding";
 
 interface RoleSelectionStepProps {
@@ -37,14 +40,37 @@ const roles = [
 ];
 
 export function RoleSelectionStep({ data, updateData, onNext, onBack }: RoleSelectionStepProps) {
+  const { profile } = useAuth();
   const [selectedRole, setSelectedRole] = useState<"agent" | "buyer" | "seller" | undefined>(
     data.role
   );
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleContinue = () => {
-    if (selectedRole) {
+  const handleContinue = async () => {
+    if (!selectedRole) return;
+
+    setIsLoading(true);
+    try {
+      // Persist the role selection to the profile in the database
+      if (profile?.id) {
+        const { error } = await supabase
+          .from("profiles")
+          .update({
+            primary_role: selectedRole,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", profile.id);
+
+        if (error) throw error;
+      }
+
       updateData({ role: selectedRole });
       onNext();
+    } catch (error) {
+      console.error("Failed to save role:", error);
+      toast.error("Error", { description: "Failed to save your role. Please try again." });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -114,9 +140,9 @@ export function RoleSelectionStep({ data, updateData, onNext, onBack }: RoleSele
           <Button
             onClick={handleContinue}
             className="flex-1"
-            disabled={!selectedRole}
+            disabled={!selectedRole || isLoading}
           >
-            Continue
+            {isLoading ? "Saving..." : "Continue"}
             <ArrowRight className="h-4 w-4 ml-2" />
           </Button>
         </div>

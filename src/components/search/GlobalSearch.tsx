@@ -6,6 +6,7 @@ import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { SearchResultsDropdown } from "./SearchResultsDropdown";
 import { useSearchSuggestions, saveRecentSearch, type SearchSuggestion } from "@/hooks/useSearchSuggestions";
 import { SearchSuggestionsDropdown } from "./SearchSuggestionsDropdown";
+import { useSearchClickTracking, type SearchResultType } from "@/hooks/useSearchClickTracking";
 
 /**
  * Global Search Component
@@ -29,6 +30,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const { trackSearchClick } = useSearchClickTracking();
 
   const { data: results = [], isLoading: isSearching } = useGlobalSearch({
     query,
@@ -54,9 +56,26 @@ export const GlobalSearch = memo(function GlobalSearch() {
     inputRef.current?.blur();
   }, []); // Empty deps → stable reference
 
+  // Keep a ref to results for stable click tracking (avoids re-creating callback)
+  const resultsRef = useRef(results);
+  resultsRef.current = results;
+
   // rerender-move-effect-to-event: Interaction logic in event handlers, not effects
   const handleResultClick = useCallback(
     (entityType: string, entityId: string) => {
+      // Track the click (fire-and-forget, non-blocking)
+      const currentResults = resultsRef.current;
+      const position = currentResults.findIndex(
+        (r) => r.entity_type === entityType && r.entity_id === entityId
+      );
+      trackSearchClick({
+        query,
+        resultType: entityType as SearchResultType,
+        resultId: entityId,
+        position: position >= 0 ? position + 1 : 1, // 1-indexed
+        totalResults: currentResults.length,
+      });
+
       setIsOpen(false);
       // Save the search query before navigating
       if (query.trim().length >= 2) {
@@ -81,7 +100,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
           break;
       }
     },
-    [navigate, query]
+    [navigate, query, trackSearchClick]
   );
 
   // Navigate to full search results page

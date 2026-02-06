@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveToDocuments, useGetAttachmentUrl, type MessageAttachment } from "@/hooks/useMessageAttachments";
+import { useMessageReactions } from "@/hooks/useMessageReactions";
+import { MessageReactions } from "./MessageReactions";
 import { FileText, Download, FolderPlus, Loader2, Check, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { TypingIndicator } from "./TypingIndicator";
@@ -37,6 +39,24 @@ interface MessageThreadProps {
 export function MessageThread({ messages, isLoading, conversationId }: MessageThreadProps) {
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Message reactions
+  const { reactionsMap, toggleReaction } = useMessageReactions(conversationId ?? null);
+
+  // Build a user name map from message sender profiles for reaction tooltips
+  const userNames = useMemo(() => {
+    const names: Record<string, string> = {};
+    for (const msg of messages) {
+      if (msg.sender_id && msg.senderProfile) {
+        names[msg.sender_id] =
+          msg.senderProfile.full_name || msg.senderProfile.email?.split("@")[0] || "Unknown";
+      }
+    }
+    if (user?.id) {
+      names[user.id] = "You";
+    }
+    return names;
+  }, [messages, user?.id]);
 
   // Fetch read receipts for other participants
   const { data: readReceipts } = useQuery({
@@ -138,7 +158,7 @@ export function MessageThread({ messages, isLoading, conversationId }: MessageTh
             <div
               key={message.id}
               className={cn(
-                "flex gap-3",
+                "flex gap-3 group/message",
                 isOwnMessage ? "flex-row-reverse" : ""
               )}
             >
@@ -220,6 +240,14 @@ export function MessageThread({ messages, isLoading, conversationId }: MessageTh
                     )}
                   </div>
                 )}
+
+                {/* Message Reactions */}
+                <MessageReactions
+                  reactions={reactionsMap[message.id] || []}
+                  onToggleReaction={(emoji) => toggleReaction(message.id, emoji)}
+                  isOwnMessage={isOwnMessage}
+                  userNames={userNames}
+                />
               </div>
             </div>
           );

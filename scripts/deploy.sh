@@ -83,7 +83,20 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}✅ Deployment Complete!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "Next steps:"
-echo "  • Check deployment: vercel ls"
-echo "  • View logs: vercel logs"
-echo "  • Open dashboard: https://vercel.com/dashboard"
+
+# Offer post-deployment verification
+echo ""
+read -p "Run deployment verification checks? (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+  echo ""
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  "$SCRIPT_DIR/verify-deployment.sh"
+else
+  echo ""
+  echo "Next steps:"
+  echo "  • Verify deployment: npm run deploy:verify"
+  echo "  • Check deployment: vercel ls"
+  echo "  • View logs: vercel logs"
+  echo "  • Open dashboard: https://vercel.com/dashboard"
+fi

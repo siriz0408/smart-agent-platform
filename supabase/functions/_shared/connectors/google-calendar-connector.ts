@@ -2,7 +2,14 @@
  * Google Calendar Connector Implementation
  * 
  * Implements the BaseConnector interface for Google Calendar integration.
- * Supports: create events, list events, update events, delete events.
+ * Uses Google Calendar API v3.
+ * 
+ * Supported actions:
+ * - create_event: Create a new calendar event with title, times, attendees, etc.
+ * - list_events: List upcoming events with date range and result limit filters
+ * - update_event: Modify an existing event's properties
+ * - delete_event: Cancel/delete a calendar event
+ * - get_availability: Check free/busy status via the FreeBusy API
  */
 
 import { BaseConnector } from '../base-connector.ts';
@@ -30,6 +37,7 @@ interface GoogleCalendarEvent {
   attendees?: Array<{
     email: string;
     displayName?: string;
+    responseStatus?: string;
   }>;
   recurrence?: string[];
   reminders?: {
@@ -39,12 +47,42 @@ interface GoogleCalendarEvent {
       minutes: number;
     }>;
   };
+  status?: string;
+  htmlLink?: string;
+  creator?: {
+    email?: string;
+    displayName?: string;
+    self?: boolean;
+  };
+  organizer?: {
+    email?: string;
+    displayName?: string;
+    self?: boolean;
+  };
 }
 
 interface GoogleCalendarEventsResponse {
   items: GoogleCalendarEvent[];
   nextPageToken?: string;
   nextSyncToken?: string;
+}
+
+interface FreeBusyCalendar {
+  busy: Array<{
+    start: string;
+    end: string;
+  }>;
+  errors?: Array<{
+    domain: string;
+    reason: string;
+  }>;
+}
+
+interface FreeBusyResponse {
+  kind: string;
+  timeMin: string;
+  timeMax: string;
+  calendars: Record<string, FreeBusyCalendar>;
 }
 
 export class GoogleCalendarConnector extends BaseConnector {
@@ -58,6 +96,7 @@ export class GoogleCalendarConnector extends BaseConnector {
       'list_events',
       'update_event',
       'delete_event',
+      'get_availability',
     ];
   }
 
@@ -158,6 +197,34 @@ export class GoogleCalendarConnector extends BaseConnector {
         }
         break;
 
+      case 'get_availability':
+        {
+          const required = ['time_min', 'time_max'];
+          const requiredCheck = this.validateRequiredParams(params, required);
+          errors.push(...requiredCheck.errors);
+
+          if (params.time_min && typeof params.time_min !== 'string') {
+            errors.push('time_min must be a string (ISO 8601)');
+          }
+          if (params.time_max && typeof params.time_max !== 'string') {
+            errors.push('time_max must be a string (ISO 8601)');
+          }
+          // Validate calendars list if provided
+          if (params.calendars !== undefined) {
+            if (!Array.isArray(params.calendars)) {
+              errors.push('calendars must be an array of email strings');
+            } else {
+              for (const cal of params.calendars as unknown[]) {
+                if (typeof cal !== 'string') {
+                  errors.push('Each calendar entry must be a string (email/calendar ID)');
+                  break;
+                }
+              }
+            }
+          }
+        }
+        break;
+
       default:
         errors.push(`Unsupported action type: ${actionType}`);
     }
@@ -193,6 +260,8 @@ export class GoogleCalendarConnector extends BaseConnector {
           return await this.updateEvent(params, credentials);
         case 'delete_event':
           return await this.deleteEvent(params, credentials);
+        case 'get_availability':
+          return await this.getAvailability(params, credentials);
         default:
           return {
             success: false,
@@ -406,6 +475,77 @@ export class GoogleCalendarConnector extends BaseConnector {
     return this.createSuccessResult({
       event_id: eventId,
       deleted: true,
+    });
+  }
+
+  /**
+   * Get free/busy availability for one or more calendars.
+   * Uses the Google Calendar Freebusy API endpoint.
+   * 
+   * @param params.time_min - Start of the time range (ISO 8601)
+   * @param params.time_max - End of the time range (ISO 8601)
+   * @param params.calendars - Optional array of calendar IDs (defaults to ['primary'])
+   * @param params.time_zone - Optional timezone (e.g. 'America/New_York')
+   */
+  private async getAvailability(
+    params: Record<string, unknown>,
+    credentials: ConnectorCredentials
+  ): Promise<ConnectorActionResult> {
+    const timeMin = params.time_min as string;
+    const timeMax = params.time_max as string;
+    const calendars = (params.calendars as string[]) || ['primary'];
+    const timeZone = params.time_zone as string | undefined;
+
+    // Build FreeBusy request body per Google Calendar API v3
+    const requestBody: Record<string, unknown> = {
+      timeMin,
+      timeMax,
+      items: calendars.map((calendarId) => ({ id: calendarId })),
+    };
+
+    if (timeZone) {
+      requestBody.timeZone = timeZone;
+    }
+
+    const response = await this.makeRequest(
+      `${this.CALENDAR_API_BASE}/freeBusy`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      },
+      credentials
+    );
+
+    const result = await this.parseJsonResponse<FreeBusyResponse>(response);
+
+    // Transform the response into a user-friendly format
+    const availability: Record<string, unknown>[] = [];
+
+    for (const [calendarId, calendarData] of Object.entries(result.calendars || {})) {
+      const busySlots = (calendarData.busy || []).map((slot) => ({
+        start: slot.start,
+        end: slot.end,
+      }));
+
+      availability.push({
+        calendar_id: calendarId,
+        busy_slots: busySlots,
+        busy_count: busySlots.length,
+        errors: calendarData.errors || [],
+      });
+    }
+
+    return this.createSuccessResult({
+      time_min: result.timeMin || timeMin,
+      time_max: result.timeMax || timeMax,
+      calendars: availability,
+      total_busy_slots: availability.reduce(
+        (sum, cal) => sum + (cal.busy_count as number),
+        0
+      ),
     });
   }
 }

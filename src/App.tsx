@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { WorkspaceProvider } from "@/contexts/WorkspaceContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { KeyboardShortcutsProvider } from "@/components/keyboard/KeyboardShortcutsProvider";
 import { ErrorBoundary } from "@/lib/errorTracking";
@@ -100,6 +101,7 @@ function RoutePerformanceTracker() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
+    <ThemeProvider defaultTheme="system">
     <AuthProvider>
       <WorkspaceProvider>
         <RoleProvider>
@@ -362,6 +364,7 @@ const App = () => (
         </RoleProvider>
       </WorkspaceProvider>
     </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

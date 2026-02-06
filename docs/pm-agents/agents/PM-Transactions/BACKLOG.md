@@ -1,6 +1,6 @@
 # PM-Transactions Backlog
 
-> **Last Updated:** 2026-02-06 (TRX-005 completed)
+> **Last Updated:** 2026-02-07 (Cycle 8 - TRX-006 completed, TRX-007 through TRX-010 added)
 
 ## In Progress
 
@@ -8,7 +8,12 @@ _No items in progress_
 
 ## Ready
 
-_No items ready_
+| ID | Item | Priority | Description | Acceptance Criteria |
+|----|------|----------|-------------|---------------------|
+| TRX-007 | Create useDeals & usePipeline hooks | P1 | Abstract deal fetching logic from Pipeline.tsx and PipelineAnalytics.tsx into reusable hooks. Eliminates duplicate stalled-deal fetching code. Identified as P0 in domain audit. | - `useDeals` hook encapsulates deal fetching + stalled status - `usePipeline` hook provides stage mutation + milestone creation - Pipeline.tsx and PipelineAnalytics.tsx refactored to use hooks - No functionality regression |
+| TRX-008 | Deal Activity Timeline | P2 | Create a unified activity timeline for the deal detail view that aggregates notes, stage changes, milestone completions, and document uploads in chronological order. Currently activities are scattered across separate sections. | - New `DealActivityTimeline` component in deal detail sheet - Shows notes with timestamps - Shows milestone events (created, completed, overdue) - Chronological ordering with visual timeline |
+| TRX-009 | Deal Document Association View | P2 | Show documents linked to a specific deal in the deal detail sheet. Currently there's no way to see which documents are associated with a deal from the deal view. | - Documents section in DealDetailSheet - Shows documents where `documents.deal_id` matches - Link to document view - Count badge on section header |
+| TRX-010 | Align Pipeline Stages with PRD | P3 | Current stages (6 per type) don't match PRD which defines 8 buyer stages and 7 seller stages. Missing: Active Buyer, Property Search, Making Offers, Closing, Closed Lost (buyer); Pre-Listing, Offer Review, Closing Prep (seller). | - Buyer stages match PRD Section 8.1 - Seller stages match PRD Section 8.2 - Migration path for existing deals - Stage color assignments for new stages |
 
 ## Completed
 
@@ -20,3 +25,4 @@ _No items ready_
 | TRX-003 | Check pipeline health | 2026-02-06 | Created comprehensive pipeline E2E tests (`tests/e2e/pipeline.spec.ts`) covering seller deals, stage transitions, milestones, navigation, and layout. Enhanced `deals.spec.ts` with seller deal verification tests. |
 | TRX-004 | Audit milestone system | 2026-02-06 | Completed comprehensive milestone system audit (`MILESTONE_AUDIT.md`). Added database indexes for performance (due_date, composite indexes). Added check constraints for data integrity (completed_after_due, completed_not_future, reasonable dates). Added length constraints on title (100) and notes (500). Added unique constraint preventing duplicate incomplete milestones. Fixed reminder function to check 3 days instead of 24 hours (matches UI indicator logic). Health score: 78/100 → improvements implemented. |
 | TRX-005 | Add AI deal suggestions | 2026-02-06 | Implemented AI-powered deal suggestions feature. Created edge function `deal-suggestions` that analyzes deal data (milestones, activities, dates, stage) using Claude AI to generate actionable suggestions. Added `useDealSuggestions` hook and `DealSuggestions` component with priority-based UI (high/medium/low). Integrated into `DealDetailSheet` component. Suggestions include actions like moving stages, adding milestones, contacting clients, and updating dates. Includes fallback suggestions if AI parsing fails. |
+| TRX-006 | Pipeline Revenue Forecast | 2026-02-07 | Created `RevenueForecast` component (`src/components/pipeline/RevenueForecast.tsx`) with: YTD earnings from closed deals, total pipeline commission, weighted forecast by stage probability (Lead 10% → Closed 100%), 6-month monthly commission forecast chart with stacked bars (total vs weighted), unscheduled deals section, and tooltips explaining methodology. Integrated into Pipeline.tsx. Also fixed missing imports in Pipeline.tsx (`useQuery`, `useMutation`, `addDays`, `format`, `DealHealthAudit`). |

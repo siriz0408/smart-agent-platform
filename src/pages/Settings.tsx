@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download } from "lucide-react";
+import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
+import { useTheme, type Theme } from "@/contexts/ThemeContext";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { DataExportDialog } from "@/components/settings/DataExportDialog";
@@ -29,6 +30,7 @@ export default function Settings() {
   const { user, profile } = useAuth();
   const { preferences, updatePreference } = useUserPreferences();
   const { data: profileCompletion } = useProfileCompletion();
+  const { theme, setTheme } = useTheme();
   const [isEditProfileOpen, setIsEditProfileOpen] = useState(false);
   const [isExportDialogOpen, setIsExportDialogOpen] = useState(false);
   const [isDeletionDialogOpen, setIsDeletionDialogOpen] = useState(false);
@@ -315,26 +317,49 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Palette className="h-5 w-5" />
-                  Appearance
+                  Theme
                 </CardTitle>
                 <CardDescription>
-                  Customize the look and feel of the app
+                  Choose your preferred color theme
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="dark-mode">Dark Mode</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Switch between light and dark themes
-                    </p>
-                  </div>
-                  <Switch
-                    id="dark-mode"
-                    checked={preferences.darkMode}
-                    onCheckedChange={(checked) => updatePreference("darkMode", checked)}
-                  />
+              <CardContent>
+                <div className="grid grid-cols-3 gap-3">
+                  {([
+                    { value: "light" as Theme, label: "Light", icon: Sun, preview: "bg-white border-border" },
+                    { value: "dark" as Theme, label: "Dark", icon: Moon, preview: "bg-zinc-900 border-zinc-700" },
+                    { value: "system" as Theme, label: "System", icon: Monitor, preview: "bg-gradient-to-r from-white to-zinc-900 border-border" },
+                  ]).map(({ value, label, icon: Icon, preview }) => (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => setTheme(value)}
+                      className={`relative flex flex-col items-center gap-2 rounded-lg border-2 p-4 transition-all hover:border-primary/50 ${
+                        theme === value
+                          ? "border-primary bg-accent/50 ring-1 ring-primary/20"
+                          : "border-border"
+                      }`}
+                      aria-label={`Set theme to ${label}`}
+                      aria-pressed={theme === value}
+                    >
+                      {theme === value && (
+                        <div className="absolute top-2 right-2">
+                          <Check className="h-4 w-4 text-primary" />
+                        </div>
+                      )}
+                      <div className={`h-12 w-full rounded-md border ${preview}`} />
+                      <div className="flex items-center gap-1.5">
+                        <Icon className="h-4 w-4" />
+                        <span className="text-sm font-medium">{label}</span>
+                      </div>
+                    </button>
+                  ))}
                 </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {theme === "system"
+                    ? "Automatically matches your operating system's theme preference"
+                    : `Using ${theme} mode`}
+                </p>
               </CardContent>
             </Card>
 

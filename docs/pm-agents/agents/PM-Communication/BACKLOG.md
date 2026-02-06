@@ -1,6 +1,6 @@
 # PM-Communication Backlog
 
-> **Last Updated:** 2026-02-06 (Cycle 7)
+> **Last Updated:** 2026-02-07 (Cycle 8)
 
 ## In Progress
 
@@ -12,12 +12,11 @@
 
 | ID | Item | Priority | Effort | Notes |
 |----|------|----------|--------|-------|
-| COM-003 | Build file attachments UI | P1 | M | Schema ready, needs UI |
-| COM-004 | Add notification preferences | P1 | S | Settings page integration |
-| COM-005 | Implement message reactions | P2 | M | Feature gap from PRD |
 | COM-006 | Add message search/archive | P2 | L | User request |
 | COM-007 | Message threading | P2 | L | Feature gap from PRD |
 | COM-008 | Push notifications (mobile) | P3 | XL | Future feature |
+| COM-011 | Reaction analytics/metrics | P3 | S | Track most-used reactions per conversation |
+| COM-012 | Custom emoji reactions | P3 | M | Allow workspace-defined custom emojis beyond predefined set |
 
 ## Completed
 
@@ -27,5 +26,6 @@
 | COM-001 | Initial domain audit | 2026-02-06 |
 | COM-002 | Implement metrics tracking | 2026-02-06 |
 | COM-003 | Build file attachments UI | 2026-02-06 |
+| COM-005 | Implement message reactions | 2026-02-07 |
 | COM-009 | Test message flow end-to-end | 2026-02-06 |
 | COM-010 | Audit notification delivery | 2026-02-06 |

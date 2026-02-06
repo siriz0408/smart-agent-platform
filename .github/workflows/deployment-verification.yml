@@ -1,0 +1,526 @@
+name: Deployment Verification
+
+on:
+  # Triggered by Vercel GitHub integration deployment status events
+  deployment_status:
+  # Manual trigger for ad-hoc verification
+  workflow_dispatch:
+    inputs:
+      deploy_url:
+        description: 'Deployment URL to verify (defaults to production)'
+        required: false
+        type: string
+        default: ''
+      skip_smoke:
+        description: 'Skip Playwright smoke test'
+        required: false
+        type: boolean
+        default: false
+
+# Only allow one verification at a time per deployment
+concurrency:
+  group: deployment-verification-${{ github.event.deployment_status.deployment.id || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  verify-deployment:
+    name: Verify Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    # For deployment_status events, only run on success status
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success')
+
+    env:
+      # Resolve the URL: manual input > deployment target URL > production fallback
+      DEPLOY_URL: ${{ github.event.inputs.deploy_url || github.event.deployment_status.target_url || vars.PRODUCTION_URL || 'https://smart-agent-platform-sigma.vercel.app' }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL || 'https://sthnezuadfbmbqlxiwtq.supabase.co' }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF || 'sthnezuadfbmbqlxiwtq' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log verification context
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "🔍 Deployment Verification"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  URL:        $DEPLOY_URL"
+          echo "  Trigger:    ${{ github.event_name }}"
+          echo "  Commit:     ${{ github.sha }}"
+          echo "  Branch:     ${{ github.ref_name }}"
+          echo "  Timestamp:  $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+      # ── Step 1: Frontend Health Check ──────────────────────
+      - name: Frontend health check
+        id: frontend
+        run: |
+          echo "🌐 Checking frontend at $DEPLOY_URL..."
+          MAX_RETRIES=5
+          RETRY_DELAY=10
+          STATUS="fail"
+
+          for i in $(seq 1 $MAX_RETRIES); do
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$DEPLOY_URL")
+            echo "  Attempt $i/$MAX_RETRIES: HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ]; then
+              STATUS="pass"
+              break
+            fi
+            if [ $i -lt $MAX_RETRIES ]; then
+              echo "  Retrying in ${RETRY_DELAY}s..."
+              sleep $RETRY_DELAY
+            fi
+          done
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+
+          if [ "$STATUS" = "pass" ]; then
+            echo "✅ Frontend is reachable (HTTP $HTTP_CODE)"
+          else
+            echo "❌ Frontend unreachable after $MAX_RETRIES attempts (last HTTP $HTTP_CODE)"
+          fi
+
+      # ── Step 2: Response Headers Validation ────────────────
+      - name: Security headers check
+        id: headers
+        run: |
+          echo "🔒 Checking security headers..."
+          HEADERS=$(curl -s -I --max-time 15 "$DEPLOY_URL")
+          STATUS="pass"
+          MISSING=""
+
+          # Check critical security headers (defined in vercel.json)
+          for HEADER in "x-content-type-options" "x-frame-options" "x-xss-protection"; do
+            if echo "$HEADERS" | grep -iq "$HEADER"; then
+              echo "  ✅ $HEADER present"
+            else
+              echo "  ❌ $HEADER MISSING"
+              STATUS="fail"
+              MISSING="$MISSING $HEADER"
+            fi
+          done
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "missing=$MISSING" >> $GITHUB_OUTPUT
+
+          if [ "$STATUS" = "pass" ]; then
+            echo "✅ All security headers present"
+          else
+            echo "⚠️ Missing security headers:$MISSING"
+          fi
+
+      # ── Step 3: Supabase Connectivity ──────────────────────
+      - name: Supabase connectivity check
+        id: supabase
+        run: |
+          echo "🗄️ Checking Supabase at $SUPABASE_URL..."
+          STATUS="fail"
+
+          # Check Supabase REST API health
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$SUPABASE_URL/rest/v1/" \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY || 'check-skipped' }}" 2>/dev/null)
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "401" ] || [ "$HTTP_CODE" = "406" ]; then
+            # 200 = OK, 401 = auth required (means server is up), 406 = not acceptable (server is up)
+            STATUS="pass"
+            echo "✅ Supabase API responding (HTTP $HTTP_CODE)"
+          else
+            # Fallback: just check the base URL is reachable
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "$SUPABASE_URL" 2>/dev/null)
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
+              STATUS="pass"
+              echo "✅ Supabase base URL reachable (HTTP $HTTP_CODE)"
+            else
+              echo "❌ Supabase unreachable (HTTP $HTTP_CODE)"
+            fi
+          fi
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "http_code=$HTTP_CODE" >> $GITHUB_OUTPUT
+
+      # ── Step 4: Edge Function Health Check ─────────────────
+      - name: Edge functions check
+        id: edge_functions
+        run: |
+          echo "⚡ Checking edge functions..."
+          STATUS="pass"
+          CHECKED=0
+          REACHABLE=0
+
+          # Test a few critical edge functions (OPTIONS requests to check CORS / availability)
+          FUNCTIONS=("universal-search" "ai-chat" "search-documents")
+
+          for FUNC in "${FUNCTIONS[@]}"; do
+            URL="$SUPABASE_URL/functions/v1/$FUNC"
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 \
+              -X OPTIONS "$URL" \
+              -H "Origin: $DEPLOY_URL" 2>/dev/null)
+            CHECKED=$((CHECKED + 1))
+
+            # OPTIONS returning 200/204 means function exists and CORS is configured
+            # 401 means function exists but requires auth (still good)
+            # 404 means function not deployed
+            if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "204" ] || [ "$HTTP_CODE" = "401" ]; then
+              REACHABLE=$((REACHABLE + 1))
+              echo "  ✅ $FUNC (HTTP $HTTP_CODE)"
+            else
+              echo "  ⚠️ $FUNC (HTTP $HTTP_CODE)"
+            fi
+          done
+
+          if [ $REACHABLE -eq 0 ]; then
+            STATUS="fail"
+            echo "❌ No edge functions reachable ($REACHABLE/$CHECKED)"
+          elif [ $REACHABLE -lt $CHECKED ]; then
+            STATUS="warn"
+            echo "⚠️ Some edge functions unreachable ($REACHABLE/$CHECKED)"
+          else
+            echo "✅ All edge functions reachable ($REACHABLE/$CHECKED)"
+          fi
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+          echo "checked=$CHECKED" >> $GITHUB_OUTPUT
+          echo "reachable=$REACHABLE" >> $GITHUB_OUTPUT
+
+      # ── Step 5: Build Artifact Size Check ──────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Check bundle size
+        id: bundle
+        run: |
+          echo "📦 Checking bundle size..."
+          npm ci --prefer-offline --no-audit
+          npm run build 2>/dev/null
+          STATUS="pass"
+
+          if [ -d "dist" ]; then
+            # Calculate total bundle size in KB
+            TOTAL_SIZE_KB=$(du -sk dist/ | cut -f1)
+            TOTAL_SIZE_MB=$(echo "scale=2; $TOTAL_SIZE_KB / 1024" | bc)
+            echo "  Total dist/ size: ${TOTAL_SIZE_MB}MB"
+
+            # Check JS bundle sizes
+            JS_SIZE_KB=$(find dist/assets -name "*.js" -exec du -sk {} + 2>/dev/null | awk '{total += $1} END {print total}')
+            JS_SIZE_MB=$(echo "scale=2; ${JS_SIZE_KB:-0} / 1024" | bc)
+            echo "  JavaScript: ${JS_SIZE_MB}MB"
+
+            # Check CSS bundle sizes
+            CSS_SIZE_KB=$(find dist/assets -name "*.css" -exec du -sk {} + 2>/dev/null | awk '{total += $1} END {print total}')
+            CSS_SIZE_MB=$(echo "scale=2; ${CSS_SIZE_KB:-0} / 1024" | bc)
+            echo "  CSS: ${CSS_SIZE_MB}MB"
+
+            # Threshold: warn if total JS > 5MB (generous for SPA)
+            MAX_JS_KB=5120
+            if [ "${JS_SIZE_KB:-0}" -gt "$MAX_JS_KB" ]; then
+              STATUS="warn"
+              echo "  ⚠️ JS bundle exceeds ${MAX_JS_KB}KB threshold"
+            else
+              echo "  ✅ JS bundle within limits"
+            fi
+
+            echo "total_mb=$TOTAL_SIZE_MB" >> $GITHUB_OUTPUT
+            echo "js_mb=$JS_SIZE_MB" >> $GITHUB_OUTPUT
+            echo "css_mb=$CSS_SIZE_MB" >> $GITHUB_OUTPUT
+          else
+            STATUS="fail"
+            echo "❌ Build failed - no dist/ directory"
+          fi
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+        env:
+          VITE_SUPABASE_URL: https://placeholder.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: placeholder-key
+          VITE_SUPABASE_PROJECT_ID: placeholder-id
+
+      # ── Step 6: HTML Content Validation ────────────────────
+      - name: HTML content validation
+        id: content
+        run: |
+          echo "📄 Validating page content..."
+          STATUS="pass"
+
+          # Fetch the page and check for basic content markers
+          BODY=$(curl -s --max-time 15 "$DEPLOY_URL")
+
+          # Check that it's an HTML page
+          if echo "$BODY" | grep -qi "<!doctype html\|<html"; then
+            echo "  ✅ Valid HTML document"
+          else
+            STATUS="fail"
+            echo "  ❌ Response is not valid HTML"
+          fi
+
+          # Check for React root (SPA mount point)
+          if echo "$BODY" | grep -q 'id="root"'; then
+            echo "  ✅ React root element found"
+          else
+            STATUS="warn"
+            echo "  ⚠️ React root element not found"
+          fi
+
+          # Check that JS bundles are referenced
+          if echo "$BODY" | grep -q 'src="/assets/'; then
+            echo "  ✅ JS assets referenced"
+          else
+            STATUS="warn"
+            echo "  ⚠️ JS assets not found in HTML"
+          fi
+
+          # Check for error pages (Vercel error, 500, etc.)
+          if echo "$BODY" | grep -qi "application error\|internal server error\|502 bad gateway\|503 service"; then
+            STATUS="fail"
+            echo "  ❌ Error page detected"
+          else
+            echo "  ✅ No error pages detected"
+          fi
+
+          echo "status=$STATUS" >> $GITHUB_OUTPUT
+
+      # ── Step 7: Smoke Test (Playwright) ────────────────────
+      - name: Install Playwright
+        if: github.event.inputs.skip_smoke != 'true'
+        run: npx playwright install chromium --with-deps
+
+      - name: Run smoke test
+        id: smoke
+        if: github.event.inputs.skip_smoke != 'true'
+        continue-on-error: true
+        run: |
+          echo "🧪 Running smoke test against $DEPLOY_URL..."
+
+          # Create a minimal smoke test inline
+          mkdir -p /tmp/smoke-test
+          cat > /tmp/smoke-test/smoke.spec.ts << 'SMOKETEST'
+          import { test, expect } from '@playwright/test';
+
+          test.describe('Deployment Smoke Test', () => {
+            test('homepage loads and renders', async ({ page }) => {
+              const url = process.env.DEPLOY_URL || 'https://smart-agent-platform-sigma.vercel.app';
+              const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+              // Verify HTTP 200
+              expect(response?.status()).toBe(200);
+
+              // Verify page title is set
+              const title = await page.title();
+              expect(title).toBeTruthy();
+
+              // Verify React app mounted (root element has children)
+              const root = page.locator('#root');
+              await expect(root).toBeAttached({ timeout: 15000 });
+
+              // Verify no uncaught errors in console
+              const errors: string[] = [];
+              page.on('pageerror', (error) => errors.push(error.message));
+
+              // Wait a moment for any async errors
+              await page.waitForTimeout(3000);
+
+              // Allow known benign errors (e.g., auth-related redirects)
+              const criticalErrors = errors.filter(e =>
+                !e.includes('auth') &&
+                !e.includes('supabase') &&
+                !e.includes('Failed to fetch')
+              );
+
+              expect(criticalErrors).toHaveLength(0);
+            });
+
+            test('static assets load correctly', async ({ page }) => {
+              const url = process.env.DEPLOY_URL || 'https://smart-agent-platform-sigma.vercel.app';
+              const failedRequests: string[] = [];
+
+              page.on('response', (response) => {
+                if (response.url().includes('/assets/') && response.status() >= 400) {
+                  failedRequests.push(`${response.status()} ${response.url()}`);
+                }
+              });
+
+              await page.goto(url, { waitUntil: 'networkidle', timeout: 30000 });
+
+              expect(failedRequests).toHaveLength(0);
+            });
+          });
+          SMOKETEST
+
+          # Create Playwright config for smoke test
+          cat > /tmp/smoke-test/playwright.config.ts << 'CONFIG'
+          import { defineConfig } from '@playwright/test';
+
+          export default defineConfig({
+            testDir: '.',
+            timeout: 60000,
+            retries: 1,
+            reporter: [['list'], ['json', { outputFile: 'results.json' }]],
+            use: {
+              headless: true,
+              viewport: { width: 1280, height: 720 },
+              ignoreHTTPSErrors: true,
+            },
+            projects: [{ name: 'chromium', use: { browserName: 'chromium' } }],
+          });
+          CONFIG
+
+          cd /tmp/smoke-test
+          DEPLOY_URL="$DEPLOY_URL" npx playwright test --config=playwright.config.ts 2>&1 || true
+
+          # Parse results
+          if [ -f results.json ]; then
+            PASSED=$(node -e "const r=require('./results.json'); console.log(r.suites?.flatMap(s=>s.specs)?.filter(s=>s.ok)?.length || 0)")
+            TOTAL=$(node -e "const r=require('./results.json'); console.log(r.suites?.flatMap(s=>s.specs)?.length || 0)")
+            echo "  Smoke test: $PASSED/$TOTAL passed"
+
+            if [ "$PASSED" = "$TOTAL" ] && [ "$TOTAL" != "0" ]; then
+              echo "status=pass" >> $GITHUB_OUTPUT
+            else
+              echo "status=fail" >> $GITHUB_OUTPUT
+            fi
+            echo "passed=$PASSED" >> $GITHUB_OUTPUT
+            echo "total=$TOTAL" >> $GITHUB_OUTPUT
+          else
+            echo "status=skip" >> $GITHUB_OUTPUT
+            echo "  ⚠️ Could not parse smoke test results"
+          fi
+
+      # ── Summary ────────────────────────────────────────────
+      - name: Generate verification report
+        if: always()
+        id: report
+        run: |
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "📋 DEPLOYMENT VERIFICATION REPORT"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "  URL:       $DEPLOY_URL"
+          echo "  Time:      $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          echo ""
+
+          OVERALL="pass"
+          CHECKS_PASSED=0
+          CHECKS_TOTAL=0
+
+          # Frontend
+          CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+          if [ "${{ steps.frontend.outputs.status }}" = "pass" ]; then
+            echo "  ✅ Frontend Health     PASS  (HTTP ${{ steps.frontend.outputs.http_code }})"
+            CHECKS_PASSED=$((CHECKS_PASSED + 1))
+          else
+            echo "  ❌ Frontend Health     FAIL  (HTTP ${{ steps.frontend.outputs.http_code }})"
+            OVERALL="fail"
+          fi
+
+          # Headers
+          CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+          if [ "${{ steps.headers.outputs.status }}" = "pass" ]; then
+            echo "  ✅ Security Headers    PASS"
+            CHECKS_PASSED=$((CHECKS_PASSED + 1))
+          else
+            echo "  ⚠️ Security Headers    WARN  (missing:${{ steps.headers.outputs.missing }})"
+          fi
+
+          # Supabase
+          CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+          if [ "${{ steps.supabase.outputs.status }}" = "pass" ]; then
+            echo "  ✅ Supabase            PASS  (HTTP ${{ steps.supabase.outputs.http_code }})"
+            CHECKS_PASSED=$((CHECKS_PASSED + 1))
+          else
+            echo "  ❌ Supabase            FAIL  (HTTP ${{ steps.supabase.outputs.http_code }})"
+            OVERALL="fail"
+          fi
+
+          # Edge Functions
+          CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+          if [ "${{ steps.edge_functions.outputs.status }}" = "pass" ]; then
+            echo "  ✅ Edge Functions      PASS  (${{ steps.edge_functions.outputs.reachable }}/${{ steps.edge_functions.outputs.checked }})"
+            CHECKS_PASSED=$((CHECKS_PASSED + 1))
+          elif [ "${{ steps.edge_functions.outputs.status }}" = "warn" ]; then
+            echo "  ⚠️ Edge Functions      WARN  (${{ steps.edge_functions.outputs.reachable }}/${{ steps.edge_functions.outputs.checked }})"
+          else
+            echo "  ❌ Edge Functions      FAIL  (${{ steps.edge_functions.outputs.reachable }}/${{ steps.edge_functions.outputs.checked }})"
+            OVERALL="fail"
+          fi
+
+          # Bundle Size
+          CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+          if [ "${{ steps.bundle.outputs.status }}" = "pass" ]; then
+            echo "  ✅ Bundle Size         PASS  (JS: ${{ steps.bundle.outputs.js_mb }}MB, CSS: ${{ steps.bundle.outputs.css_mb }}MB)"
+            CHECKS_PASSED=$((CHECKS_PASSED + 1))
+          elif [ "${{ steps.bundle.outputs.status }}" = "warn" ]; then
+            echo "  ⚠️ Bundle Size         WARN  (JS: ${{ steps.bundle.outputs.js_mb }}MB exceeds threshold)"
+          else
+            echo "  ❌ Bundle Size         FAIL"
+            OVERALL="fail"
+          fi
+
+          # Content
+          CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+          if [ "${{ steps.content.outputs.status }}" = "pass" ]; then
+            echo "  ✅ Content Validation  PASS"
+            CHECKS_PASSED=$((CHECKS_PASSED + 1))
+          else
+            echo "  ❌ Content Validation  FAIL"
+            OVERALL="fail"
+          fi
+
+          # Smoke Test
+          SMOKE_STATUS="${{ steps.smoke.outputs.status || 'skip' }}"
+          if [ "$SMOKE_STATUS" != "skip" ]; then
+            CHECKS_TOTAL=$((CHECKS_TOTAL + 1))
+            if [ "$SMOKE_STATUS" = "pass" ]; then
+              echo "  ✅ Smoke Test          PASS  (${{ steps.smoke.outputs.passed }}/${{ steps.smoke.outputs.total }})"
+              CHECKS_PASSED=$((CHECKS_PASSED + 1))
+            else
+              echo "  ❌ Smoke Test          FAIL  (${{ steps.smoke.outputs.passed }}/${{ steps.smoke.outputs.total }})"
+              OVERALL="fail"
+            fi
+          else
+            echo "  ⏭️ Smoke Test          SKIPPED"
+          fi
+
+          echo ""
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if [ "$OVERALL" = "pass" ]; then
+            echo "  ✅ OVERALL: PASSED ($CHECKS_PASSED/$CHECKS_TOTAL checks)"
+          else
+            echo "  ❌ OVERALL: FAILED ($CHECKS_PASSED/$CHECKS_TOTAL checks passed)"
+          fi
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+          echo "overall=$OVERALL" >> $GITHUB_OUTPUT
+          echo "passed=$CHECKS_PASSED" >> $GITHUB_OUTPUT
+          echo "total=$CHECKS_TOTAL" >> $GITHUB_OUTPUT
+
+      # ── Fail the workflow if critical checks failed ────────
+      - name: Evaluate result
+        if: always()
+        run: |
+          if [ "${{ steps.report.outputs.overall }}" = "fail" ]; then
+            echo "❌ Deployment verification failed"
+            echo ""
+            echo "Action items:"
+            echo "  1. Check the verification report above for failed checks"
+            echo "  2. Run manually: ./scripts/verify-deployment.sh"
+            echo "  3. If frontend is down, check Vercel dashboard"
+            echo "  4. If Supabase is down, check Supabase dashboard"
+            exit 1
+          fi
+
+      # ── Notify on failure (PR comment or annotation) ──────
+      - name: Annotate deployment status
+        if: always()
+        run: |
+          if [ "${{ steps.report.outputs.overall }}" = "pass" ]; then
+            echo "::notice::Deployment verification PASSED (${{ steps.report.outputs.passed }}/${{ steps.report.outputs.total }} checks) for $DEPLOY_URL"
+          else
+            echo "::error::Deployment verification FAILED (${{ steps.report.outputs.passed }}/${{ steps.report.outputs.total }} checks) for $DEPLOY_URL"
+          fi

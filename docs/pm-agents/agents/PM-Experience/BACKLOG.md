@@ -1,6 +1,6 @@
 # PM-Experience Backlog
 
-> **Last Updated:** 2026-02-06 (Cycle 7)
+> **Last Updated:** 2026-02-06 (Cycle 8)
 
 ---
 
@@ -14,6 +14,7 @@
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| EXP-007 | Dark mode toggle | 2026-02-06 | Full dark mode with light/dark/system support. ThemeProvider context, ThemeToggle in header, Settings appearance tab with visual selector, FOUC prevention, Sonner toast integration. Tailwind `class` strategy + CSS variable system. |
 | EXP-002 | Document UI Component Inventory | 2026-02-06 | Created comprehensive inventory with 50+ UI components and 7 layout components, including props, interfaces, and usage examples |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 | Already implemented in Contacts.tsx and Properties.tsx |
 | EXP-006 | Full accessibility audit | 2026-02-06 | Added aria-live regions for dynamic content (chat messages), aria-busy for loading states, aria-hidden for decorative skeletons. Enhanced WCAG 2.1 AA compliance across Home, Contacts, Properties, and Documents pages |
@@ -86,8 +87,9 @@ These tasks are ready for autonomous execution:
 
 | ID | Item | Priority | Notes |
 |----|------|----------|-------|
-| EXP-007 | Dark mode toggle | P3 | User request |
 | EXP-008 | Animation polish | P3 | Delight |
+| EXP-009 | Dark mode contrast audit | P2 | Verify WCAG AA contrast ratios in dark mode across all pages |
+| EXP-010 | Remove unused next-themes dependency | P3 | Package.json still lists next-themes but it's no longer imported |
 
 ---
 
@@ -100,4 +102,5 @@ These tasks are ready for autonomous execution:
 | EXP-003 | Check and fix mobile padding issues | 2026-02-06 |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 |
 | EXP-006 | Full accessibility audit | 2026-02-06 |
+| EXP-007 | Dark mode toggle | 2026-02-06 |
 | HO-005 | Trial Signup UI | 2026-02-06 |

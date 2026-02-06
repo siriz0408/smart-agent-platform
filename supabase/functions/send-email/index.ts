@@ -3,12 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { getEmailTemplate } from "../_shared/email-templates.ts";
 import { logger } from "../_shared/logger.ts";
 import { checkRateLimit, rateLimitResponse, EMAIL_LIMITS } from "../_shared/rateLimit.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface SendEmailRequest {
   recipientUserId: string;
@@ -19,6 +14,7 @@ interface SendEmailRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

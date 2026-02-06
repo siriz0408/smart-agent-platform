@@ -1,6 +1,6 @@
 # PM-Security Backlog
 
-> **Last Updated:** 2026-02-06 (Cycle 7)
+> **Last Updated:** 2026-02-06 (Cycle 8)
 
 ## In Progress
 
@@ -14,7 +14,6 @@
 | ID | Item | Priority | Effort | Owner |
 |----|------|----------|--------|-------|
 | SEC-014 | Fix overly permissive RLS policies | P1 | S | PM-Context |
-| SEC-015 | Restrict CORS to specific origins | P1 | S | PM-Infrastructure |
 | SEC-016 | Sanitize error messages | P1 | M | PM-Infrastructure |
 | SEC-005 | Review GDPR compliance | P1 | L | PM-Security |
 | SEC-017 | Create missing RLS policies | P2 | M | PM-Context |
@@ -34,3 +33,4 @@
 | SEC-004 | Scan for exposed secrets | 2026-02-06 |
 | SEC-012 | Migrate session storage to sessionStorage | 2026-02-06 |
 | SEC-005 | Review GDPR compliance | 2026-02-06 |
+| SEC-015 | Restrict CORS to specific origins (38 edge functions migrated) | 2026-02-06 |

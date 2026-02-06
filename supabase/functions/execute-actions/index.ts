@@ -2,11 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { processQueuedAction, ActionResult } from "../_shared/agentActions.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface ExecuteActionsRequest {
   // Execute a specific action by ID
@@ -18,6 +14,7 @@ interface ExecuteActionsRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -112,6 +109,7 @@ serve(async (req) => {
       }
 
       // If pending, approve it first
+      // SECURITY: Include tenant_id filter to prevent cross-tenant approval
       if (action.status === "pending") {
         await serviceClient
           .from("action_queue")
@@ -120,10 +118,12 @@ serve(async (req) => {
             approved_by: userId, 
             approved_at: new Date().toISOString() 
           })
-          .eq("id", action_id);
+          .eq("id", action_id)
+          .eq("tenant_id", tenantId);
       }
 
-      const result = await processQueuedAction(serviceClient, action_id);
+      // SECURITY: Pass callerTenantId for defense-in-depth tenant isolation
+      const result = await processQueuedAction(serviceClient, action_id, tenantId);
       results.push({ action_id, result });
 
     } else if (process_approved) {
@@ -146,7 +146,8 @@ serve(async (req) => {
 
       for (const action of approvedActions || []) {
         try {
-          const result = await processQueuedAction(serviceClient, action.id);
+          // SECURITY: Pass callerTenantId for defense-in-depth tenant isolation
+          const result = await processQueuedAction(serviceClient, action.id, tenantId);
           results.push({ action_id: action.id, result });
         } catch (error) {
           logger.error("Error processing action", { 

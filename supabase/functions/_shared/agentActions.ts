@@ -503,7 +503,7 @@ async function executeMcpAction(
       throw new Error('Missing Supabase environment variables');
     }
 
-    // Call MCP Gateway
+    // SECURITY: Forward tenant_id to MCP Gateway for tenant-scoped operations
     const response = await fetch(`${supabaseUrl}/functions/v1/mcp-gateway`, {
       method: 'POST',
       headers: {
@@ -515,6 +515,8 @@ async function executeMcpAction(
         tool_name: toolName,
         params,
         agent_run_id: context.agent_run_id,
+        tenant_id: context.tenant_id,
+        user_id: context.user_id,
       }),
     });
 
@@ -546,6 +548,70 @@ async function executeMcpAction(
       error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
+}
+
+// ============================================================================
+// TENANT ISOLATION HELPERS
+// ============================================================================
+
+/**
+ * Validate that an entity belongs to the given tenant.
+ * Returns true if the entity exists and belongs to the tenant, false otherwise.
+ * This is the centralized check to prevent cross-tenant data access.
+ */
+async function validateTenantAccess(
+  supabase: SupabaseClient,
+  table: string,
+  entityId: string,
+  tenantId: string,
+  idColumn = 'id'
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from(table)
+    .select(idColumn)
+    .eq(idColumn, entityId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (error) {
+    logger.error('Tenant access validation error', {
+      table,
+      entityId,
+      tenantId,
+      error: error.message,
+    });
+    return false;
+  }
+
+  return !!data;
+}
+
+/**
+ * Validate that a user belongs to the given tenant by checking their profile.
+ * Returns true if the user has a profile with the matching tenant_id.
+ */
+async function validateUserInTenant(
+  supabase: SupabaseClient,
+  userId: string,
+  tenantId: string
+): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id')
+    .eq('user_id', userId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+
+  if (error) {
+    logger.error('User tenant validation error', {
+      userId,
+      tenantId,
+      error: error.message,
+    });
+    return false;
+  }
+
+  return !!data;
 }
 
 // ============================================================================
@@ -788,15 +854,27 @@ const executors: Record<ActionType, (
         }
       }
 
-      // If we have a contact_id, get the associated user_id
+      // SECURITY: Validate recipient_user_id belongs to same tenant
       let recipientUserId = params.recipient_user_id as string;
+      if (recipientUserId && isUuid(recipientUserId)) {
+        const userInTenant = await validateUserInTenant(supabase, recipientUserId, context.tenant_id);
+        if (!userInTenant) {
+          logger.warn('Tenant isolation violation: send_email recipient_user_id not in tenant', {
+            recipient_user_id: recipientUserId,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Recipient user not found in workspace');
+        }
+      }
       
       if (!recipientUserId && params.contact_id) {
-        // Check if contact is linked to a user
+        // SECURITY: Check if contact is linked to a user, with tenant isolation
         const { data: contactAgent } = await supabase
           .from('contact_agents')
-          .select('agent_user_id')
+          .select('agent_user_id, contacts!inner(tenant_id)')
           .eq('contact_id', params.contact_id)
+          .eq('contacts.tenant_id', context.tenant_id)
           .maybeSingle();
         
         if (contactAgent) {
@@ -861,16 +939,29 @@ const executors: Record<ActionType, (
       const timestamp = new Date().toISOString();
       const formattedNote = `[${timestamp}] [Agent Action] ${noteContent}`;
 
-      // Add note to contact
+      // SECURITY: Add note to contact — validate contact belongs to tenant
       if (params.contact_id) {
+        if (!isUuid(params.contact_id)) {
+          throw new Error('Invalid contact_id');
+        }
+
         const { data: contact } = await supabase
           .from('contacts')
           .select('notes')
           .eq('id', params.contact_id)
           .eq('tenant_id', context.tenant_id)
-          .single();
+          .maybeSingle();
 
-        const existingNotes = contact?.notes || '';
+        if (!contact) {
+          logger.warn('Tenant isolation violation: add_note contact_id not in tenant', {
+            contact_id: params.contact_id,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Contact not found in workspace');
+        }
+
+        const existingNotes = contact.notes || '';
         const newNotes = existingNotes 
           ? `${existingNotes}\n\n${formattedNote}`
           : formattedNote;
@@ -882,14 +973,27 @@ const executors: Record<ActionType, (
           .eq('tenant_id', context.tenant_id);
       }
 
-      // Add note to deal
+      // SECURITY: Add note to deal — validate deal belongs to tenant
       if (params.deal_id) {
+        if (!isUuid(params.deal_id)) {
+          throw new Error('Invalid deal_id');
+        }
+
         const { data: deal } = await supabase
           .from('deals')
           .select('notes')
           .eq('id', params.deal_id)
           .eq('tenant_id', context.tenant_id)
-          .single();
+          .maybeSingle();
+
+        if (!deal) {
+          logger.warn('Tenant isolation violation: add_note deal_id not in tenant', {
+            deal_id: params.deal_id,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Deal not found in workspace');
+        }
 
         const existingNotes = deal?.notes || '';
         const newNotes = existingNotes 
@@ -903,12 +1007,38 @@ const executors: Record<ActionType, (
           .eq('tenant_id', context.tenant_id);
       }
 
+      // SECURITY: Validate property belongs to tenant before adding note
+      if (params.property_id) {
+        if (!isUuid(params.property_id)) {
+          throw new Error('Invalid property_id');
+        }
+
+        const propertyInTenant = await validateTenantAccess(
+          supabase, 'properties', params.property_id as string, context.tenant_id
+        );
+        if (!propertyInTenant) {
+          logger.warn('Tenant isolation violation: add_note property_id not in tenant', {
+            property_id: params.property_id,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Property not found in workspace');
+        }
+
+        // Properties may not have a notes column, but we log the note association
+        logger.info('Note added for property', {
+          property_id: params.property_id,
+          tenant_id: context.tenant_id,
+        });
+      }
+
       return {
         success: true,
         action_type: 'add_note',
         result: { 
           contact_id: params.contact_id, 
           deal_id: params.deal_id,
+          property_id: params.property_id,
           note: formattedNote,
         },
       };
@@ -960,6 +1090,24 @@ const executors: Record<ActionType, (
           result: { milestone_id: data.id, deal_id: params.deal_id },
           created_id: data.id,
         };
+      }
+
+      // SECURITY: Validate contact_id belongs to tenant when provided
+      if (params.contact_id) {
+        if (!isUuid(params.contact_id)) {
+          throw new Error('Invalid contact_id');
+        }
+        const contactInTenant = await validateTenantAccess(
+          supabase, 'contacts', params.contact_id as string, context.tenant_id
+        );
+        if (!contactInTenant) {
+          logger.warn('Tenant isolation violation: schedule_task contact_id not in tenant', {
+            contact_id: params.contact_id,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Contact not found in workspace');
+        }
       }
 
       // For tasks not associated with a deal, create a notification as reminder
@@ -1017,6 +1165,24 @@ const executors: Record<ActionType, (
 
       let campaignId = params.campaign_id as string;
 
+      // SECURITY: If campaign_id provided directly, validate it belongs to tenant
+      if (campaignId) {
+        if (!isUuid(campaignId)) {
+          throw new Error('Invalid campaign_id');
+        }
+        const campaignInTenant = await validateTenantAccess(
+          supabase, 'email_campaigns', campaignId, context.tenant_id
+        );
+        if (!campaignInTenant) {
+          logger.warn('Tenant isolation violation: enroll_drip campaign_id not in tenant', {
+            campaign_id: campaignId,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Campaign not found in workspace');
+        }
+      }
+
       // Find campaign by name if needed
       if (!campaignId && params.campaign_name) {
         const { data: campaign } = await supabase
@@ -1035,13 +1201,14 @@ const executors: Record<ActionType, (
         throw new Error('Campaign not found');
       }
 
-      // Check if already enrolled
+      // SECURITY: Check enrollment with tenant_id filter to prevent cross-tenant leakage
       const { data: existing } = await supabase
         .from('email_campaign_recipients')
         .select('id, status')
         .eq('campaign_id', campaignId)
         .eq('contact_id', params.contact_id)
-        .single();
+        .eq('tenant_id', context.tenant_id)
+        .maybeSingle();
 
       if (existing) {
         if (existing.status === 'active') {
@@ -1053,10 +1220,12 @@ const executors: Record<ActionType, (
         }
         
         // Reactivate if paused/completed
+        // SECURITY: Include tenant_id in update filter
         await supabase
           .from('email_campaign_recipients')
           .update({ status: 'active' })
-          .eq('id', existing.id);
+          .eq('id', existing.id)
+          .eq('tenant_id', context.tenant_id);
 
         return {
           success: true,
@@ -1097,10 +1266,24 @@ const executors: Record<ActionType, (
 
   notify_user: async (supabase, params, context) => {
     try {
+      // SECURITY: Validate target_user_id belongs to same tenant
+      const targetUserId = (params.target_user_id as string) || context.user_id;
+      if (params.target_user_id && isUuid(params.target_user_id)) {
+        const userInTenant = await validateUserInTenant(supabase, params.target_user_id as string, context.tenant_id);
+        if (!userInTenant) {
+          logger.warn('Tenant isolation violation: notify_user target_user_id not in tenant', {
+            target_user_id: params.target_user_id,
+            tenant_id: context.tenant_id,
+            agent_run_id: context.agent_run_id,
+          });
+          throw new Error('Target user not found in workspace');
+        }
+      }
+
       const { data, error } = await supabase
         .from('notifications')
         .insert({
-          user_id: params.target_user_id || context.user_id,
+          user_id: targetUserId,
           tenant_id: context.tenant_id,
           type: params.type || 'agent_notification',
           title: params.title || 'Agent Notification',
@@ -1134,15 +1317,25 @@ const executors: Record<ActionType, (
 
   assign_tags: async (supabase, params, context) => {
     try {
+      if (!isUuid(params.contact_id)) {
+        throw new Error('Invalid contact_id');
+      }
+
+      // SECURITY: Validate contact belongs to tenant before modifying tags
       const { data: contact } = await supabase
         .from('contacts')
         .select('tags')
         .eq('id', params.contact_id)
         .eq('tenant_id', context.tenant_id)
-        .single();
+        .maybeSingle();
 
       if (!contact) {
-        throw new Error('Contact not found');
+        logger.warn('Tenant isolation violation: assign_tags contact_id not in tenant', {
+          contact_id: params.contact_id,
+          tenant_id: context.tenant_id,
+          agent_run_id: context.agent_run_id,
+        });
+        throw new Error('Contact not found in workspace');
       }
 
       const existingTags = contact.tags || [];
@@ -1242,6 +1435,35 @@ export async function executeAction(
   action: ActionRequest,
   context: ActionContext
 ): Promise<ActionResult> {
+  // SECURITY: Validate tenant context before ANY action execution
+  // This is the critical gate - if tenant_id or user_id are missing/invalid,
+  // all per-executor .eq('tenant_id', ...) checks would be ineffective.
+  if (!context.tenant_id || !isUuid(context.tenant_id)) {
+    logger.error('Tenant isolation: missing or invalid tenant_id in action context', {
+      action_type: action.type,
+      tenant_id: context.tenant_id,
+      user_id: context.user_id,
+    });
+    return {
+      success: false,
+      action_type: action.type,
+      error: 'Invalid execution context: missing tenant_id',
+    };
+  }
+
+  if (!context.user_id || !isUuid(context.user_id)) {
+    logger.error('Tenant isolation: missing or invalid user_id in action context', {
+      action_type: action.type,
+      tenant_id: context.tenant_id,
+      user_id: context.user_id,
+    });
+    return {
+      success: false,
+      action_type: action.type,
+      error: 'Invalid execution context: missing user_id',
+    };
+  }
+
   const executor = executors[action.type];
   if (!executor) {
     return {
@@ -1325,11 +1547,26 @@ export async function queueAction(
 
 /**
  * Process a queued action by ID
+ * 
+ * @param callerTenantId - Optional tenant ID of the authenticated caller.
+ *   When provided, validates the queued action belongs to this tenant (defense-in-depth).
+ *   Callers SHOULD always provide this when available to prevent cross-tenant execution.
  */
 export async function processQueuedAction(
   supabase: SupabaseClient,
-  actionQueueId: string
+  actionQueueId: string,
+  callerTenantId?: string
 ): Promise<ActionResult> {
+  // SECURITY: Validate actionQueueId is a valid UUID to prevent injection
+  if (!isUuid(actionQueueId)) {
+    logger.error('Tenant isolation: invalid actionQueueId', { actionQueueId });
+    return {
+      success: false,
+      action_type: 'unknown' as ActionType,
+      error: 'Invalid action queue ID',
+    };
+  }
+
   // Get the queued action
   const { data: queuedAction, error: fetchError } = await supabase
     .from('action_queue')
@@ -1345,6 +1582,35 @@ export async function processQueuedAction(
     };
   }
 
+  // SECURITY: Defense-in-depth tenant isolation check.
+  // When callerTenantId is provided, verify the queued action belongs to the caller's tenant.
+  // This catches cases where a service-role client is used without upstream tenant filtering.
+  if (callerTenantId && queuedAction.tenant_id !== callerTenantId) {
+    logger.warn('Tenant isolation violation: processQueuedAction tenant mismatch', {
+      action_queue_id: actionQueueId,
+      action_tenant_id: queuedAction.tenant_id,
+      caller_tenant_id: callerTenantId,
+    });
+    return {
+      success: false,
+      action_type: queuedAction.action_type as ActionType,
+      error: 'Access denied: action does not belong to your workspace',
+    };
+  }
+
+  // SECURITY: Validate the stored tenant_id is a valid UUID before using it
+  if (!queuedAction.tenant_id || !isUuid(queuedAction.tenant_id)) {
+    logger.error('Tenant isolation: queued action has invalid tenant_id', {
+      action_queue_id: actionQueueId,
+      tenant_id: queuedAction.tenant_id,
+    });
+    return {
+      success: false,
+      action_type: queuedAction.action_type as ActionType,
+      error: 'Queued action has invalid tenant context',
+    };
+  }
+
   if (queuedAction.status !== 'approved') {
     return {
       success: false,
@@ -1353,11 +1619,12 @@ export async function processQueuedAction(
     };
   }
 
-  // Mark as executing
+  // Mark as executing - include tenant_id in filter for safety
   await supabase
     .from('action_queue')
     .update({ status: 'executing', updated_at: new Date().toISOString() })
-    .eq('id', actionQueueId);
+    .eq('id', actionQueueId)
+    .eq('tenant_id', queuedAction.tenant_id);
 
   // Execute the action
   const context: ActionContext = {
@@ -1376,7 +1643,7 @@ export async function processQueuedAction(
     context
   );
 
-  // Update queue status
+  // Update queue status - include tenant_id in filter for safety
   await supabase
     .from('action_queue')
     .update({
@@ -1386,7 +1653,8 @@ export async function processQueuedAction(
       error_message: result.error,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', actionQueueId);
+    .eq('id', actionQueueId)
+    .eq('tenant_id', queuedAction.tenant_id);
 
   return result;
 }

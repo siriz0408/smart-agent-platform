@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { MentionInput, ChatMarkdown, UserMessageContent, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, fetchMentionData, type Mention } from "@/hooks/useMentionSearch";
 import { supabase } from "@/integrations/supabase/client";
-import { QuickActionCard, RecentActivityFeed, StatsOverview } from "@/components/dashboard";
+import { QuickActionCard, RecentActivityFeed, StatsOverview, OnboardingChecklist } from "@/components/dashboard";
 
 const suggestedPrompts = [
   "What can I afford on a $100k salary?",
@@ -219,8 +219,9 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Right Column - Recent Activity */}
-                <div className="lg:col-span-1">
+                {/* Right Column - Onboarding Checklist + Recent Activity */}
+                <div className="lg:col-span-1 space-y-6">
+                  <OnboardingChecklist />
                   <RecentActivityFeed limit={5} />
                 </div>
               </div>

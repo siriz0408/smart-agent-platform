@@ -4,6 +4,7 @@ import { HelpCircle, ChevronDown, LogOut, User, Settings, Shield, FlaskConical, 
 import { NotificationBell } from "./NotificationBell";
 import { RoleBadge } from "./RoleBadge";
 import { GlobalSearch } from "@/components/search/GlobalSearch";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -82,6 +83,8 @@ export function AppHeader() {
           </div>
         )}
         
+        <ThemeToggle />
+
         <Button
           variant="ghost"
           size="icon"

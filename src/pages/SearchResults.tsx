@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Loader2, Search as SearchIcon, FileText, User, Home as HomeIcon, Briefcase } from "lucide-react";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
@@ -9,10 +9,12 @@ import { PropertyResultCard } from "@/components/search/PropertyResultCard";
 import { DealResultCard } from "@/components/search/DealResultCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useSearchClickTracking, type SearchResultType } from "@/hooks/useSearchClickTracking";
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { trackSearchClick } = useSearchClickTracking();
 
   const query = searchParams.get("q") || "";
   const selectedFilters = searchParams.get("filters")?.split(",") || [
@@ -44,6 +46,31 @@ export default function SearchResults() {
     groupedResults.contacts.length +
     groupedResults.properties.length +
     groupedResults.deals.length;
+
+  /**
+   * Creates a click-tracking callback for a specific result group.
+   * Uses groupOffset so position reflects the overall order on the page
+   * (documents first, then contacts, properties, deals).
+   */
+  const makeTrackingCallback = useCallback(
+    (groupOffset: number) =>
+      (entityType: string, entityId: string, indexInGroup: number) => {
+        trackSearchClick({
+          query,
+          resultType: entityType as SearchResultType,
+          resultId: entityId,
+          position: groupOffset + indexInGroup + 1, // 1-indexed
+          totalResults,
+        });
+      },
+    [query, totalResults, trackSearchClick]
+  );
+
+  // Pre-calculate group offsets for position tracking (documents → contacts → properties → deals)
+  const docOffset = 0;
+  const contactOffset = groupedResults.documents.length;
+  const propertyOffset = contactOffset + groupedResults.contacts.length;
+  const dealOffset = propertyOffset + groupedResults.properties.length;
 
   const handleSearch = (newQuery: string) => {
     setSearchParams({ q: newQuery });
@@ -136,7 +163,16 @@ export default function SearchResults() {
               icon={FileText}
               count={groupedResults.documents.length}
               results={groupedResults.documents}
-              renderCard={(result) => <DocumentResultCard key={result.entity_id} result={result} />}
+              renderCard={(result, index) => {
+                const trackClick = makeTrackingCallback(docOffset);
+                return (
+                  <DocumentResultCard
+                    key={result.entity_id}
+                    result={result}
+                    onBeforeNavigate={(type, id) => trackClick(type, id, index)}
+                  />
+                );
+              }}
             />
           )}
 
@@ -147,7 +183,16 @@ export default function SearchResults() {
               icon={User}
               count={groupedResults.contacts.length}
               results={groupedResults.contacts}
-              renderCard={(result) => <ContactResultCard key={result.entity_id} result={result} />}
+              renderCard={(result, index) => {
+                const trackClick = makeTrackingCallback(contactOffset);
+                return (
+                  <ContactResultCard
+                    key={result.entity_id}
+                    result={result}
+                    onBeforeNavigate={(type, id) => trackClick(type, id, index)}
+                  />
+                );
+              }}
             />
           )}
 
@@ -158,7 +203,16 @@ export default function SearchResults() {
               icon={HomeIcon}
               count={groupedResults.properties.length}
               results={groupedResults.properties}
-              renderCard={(result) => <PropertyResultCard key={result.entity_id} result={result} />}
+              renderCard={(result, index) => {
+                const trackClick = makeTrackingCallback(propertyOffset);
+                return (
+                  <PropertyResultCard
+                    key={result.entity_id}
+                    result={result}
+                    onBeforeNavigate={(type, id) => trackClick(type, id, index)}
+                  />
+                );
+              }}
             />
           )}
 
@@ -169,7 +223,16 @@ export default function SearchResults() {
               icon={Briefcase}
               count={groupedResults.deals.length}
               results={groupedResults.deals}
-              renderCard={(result) => <DealResultCard key={result.entity_id} result={result} />}
+              renderCard={(result, index) => {
+                const trackClick = makeTrackingCallback(dealOffset);
+                return (
+                  <DealResultCard
+                    key={result.entity_id}
+                    result={result}
+                    onBeforeNavigate={(type, id) => trackClick(type, id, index)}
+                  />
+                );
+              }}
             />
           )}
         </div>

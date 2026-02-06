@@ -1,7 +1,7 @@
 # PM System State
 
-> **Last Updated:** 2026-02-06 14:45:00
-> **Last Run:** 2026-02-06 02:00 EST (Development Cycle #7) ✅ COMPLETE
+> **Last Updated:** 2026-02-07 14:00:00
+> **Last Run:** 2026-02-07 (Development Cycle #8) ✅ COMPLETE
 
 ## System Status
 
@@ -9,67 +9,76 @@
 |-----------|--------|
 | **Overall Health** | 🟢 Healthy |
 | **Agents Active** | 12/12 |
-| **Development Velocity** | 🟢 Excellent (115+ commits since Feb 5) |
+| **Development Velocity** | 🟢 Excellent (130+ commits since Feb 5) |
 | **Phase 1 MVP** | 100% Complete |
-| **Phase 2 Features** | 97% Complete |
-| **Critical Security Issues** | 0 ✅ (HO-006 resolved in Cycle 7) |
-| **Active Handoffs** | 1 (HO-002 partial) |
+| **Phase 2 Features** | 98% Complete |
+| **Critical Security Issues** | 0 ✅ |
+| **Active Handoffs** | 2 (HO-002 partial, HO-009 resolved) |
 | **Backlog Sync** | 12/12 (100%) |
-| **QA Gate Status** | ✅ PASS (42/42 tests) |
+| **QA Gate Status** | ✅ PASS (typecheck 0 errors, lint 0 new errors) |
 
-## Agent Status (Cycle 7 Results)
+## Agent Status (Cycle 8 Results)
 
-| Agent | Status | Cycle 7 Work | Cumulative Commits |
+| Agent | Status | Cycle 8 Work | Cumulative Commits |
 |-------|--------|-------------|-------------------|
-| PM-Intelligence | 🟢 | INT-011: AgentDetail.tsx page — view, run, edit agents | 10 |
-| PM-Context | 🟢 | CTX-007: Production metrics monitoring + manual trigger | 8 |
-| PM-Experience | 🟢 | EXP-004: Aria-labels for accessibility on 4 components | 11 |
-| PM-Transactions | 🟢 | TRX-004: Milestone audit + DB indexes + constraints + reminder fix | 9 |
-| PM-Growth | 🟢 | GRW-009: Growth metrics dashboard at /admin/growth-metrics | Multiple |
-| PM-Integration | 🟢 | INT-012: Bridge Interactive MLS connector (RESO Web API) | 8 |
-| PM-Discovery | 🟢 | DIS-005: Search ranking — field weighting, exact match boost, position scoring | 11 |
-| PM-Communication | 🟢 | COM-004: Granular notification preferences (channels, types, quiet hours) | 9 |
-| PM-Infrastructure | 🟢 | INF-002: Performance test runner (Lighthouse + API latency) | 9 |
-| PM-Security | 🟢 | HO-006: JWT verification enabled for ALL user-facing edge functions | 8 |
-| PM-Research | 🟢 | RES-003: MLS/IDX research — Bridge Interactive recommended for Phase 3 | 4 |
-| PM-QA | 🟢 | QA-011/QA-012: E2E tests for Settings + Billing (35+ test cases) | 3 |
+| PM-Intelligence | 🟢 | HO-009: Tenant isolation across all 10 CRM action executors | 11+ |
+| PM-Context | 🟢 | CTX-004: Multi-column PDF parsing, table preservation, section-aware chunking | 9+ |
+| PM-Experience | 🟢 | EXP-007: Dark mode (light/dark/system) with FOUC prevention, Settings UI | 12+ |
+| PM-Transactions | 🟢 | TRX-006: Pipeline revenue forecast with weighted probabilities, 6-month chart | 10+ |
+| PM-Growth | 🟢 | GRW-005: Onboarding activation checklist with 5 real-data milestones | Multiple |
+| PM-Integration | 🟢 | INT-010: Google Calendar connector get_availability action | 9+ |
+| PM-Discovery | 🟢 | DIS-009: Search click-through tracking with CTR analytics RPC | 12+ |
+| PM-Communication | 🟢 | COM-005: Message reactions (6 emojis, real-time, toggle, tooltips) | 10+ |
+| PM-Infrastructure | 🟢 | INF-011: Deployment verification workflow (7 checks) + manual script | 10+ |
+| PM-Security | 🟢 | SEC-015: CORS restriction across all 38 edge functions | 9+ |
+| PM-Research | 🟢 | RES-005: Agent pain points research (955-line report, 10 new recommendations) | 5+ |
+| PM-QA | 🟢 | QA-005: E2E test data helpers (29 functions across 4 modules) | 4+ |
 
-## Development Cycle 7 Summary
+## Development Cycle 8 Summary
 
-**Focus: Last Security Item, MLS Integration, Growth Dashboard & Feature Completion**
+**Focus: Security Hardening, UX Polish, Analytics, and Revenue Features**
 
-All 12 PMs delivered. 19 commits, 40 files changed, 4,834+ lines added. Key outcomes:
+All 12 PMs delivered. 75 files changed, 1,788 lines added, 630 lines removed. Key outcomes:
 
-- **HO-006 resolved:** JWT verification enabled for ALL user-facing edge functions — ZERO critical security items remaining
-- **AgentDetail page built** — View, run, edit agents from detail view
-- **Bridge Interactive MLS connector** — RESO Web API integration for Phase 3 IDX
-- **Growth metrics dashboard** — MRR, conversion rates, churn at /admin/growth-metrics
-- **Search ranking overhaul** — Field weighting, exact match boost, position scoring
-- **Notification preferences** — Granular control: channels, types, email frequency, quiet hours
-- **Milestone system hardened** — DB indexes, constraints, 3-day reminder window
-- **Accessibility improvements** — Aria-labels across interactive elements
-- **Performance test runner** — Lighthouse CI + API latency testing
-- **MLS/IDX research** — Bridge Interactive recommended, compliance framework needed
-- **E2E coverage expanded** — Settings + Billing pages (35+ new test cases)
+- **HO-009 resolved:** Tenant isolation added to all 10 CRM action executors — defense-in-depth pattern
+- **CORS hardened:** All 38 edge functions restricted to specific origins (was wildcard *)
+- **Dark mode shipped:** Light/dark/system with FOUC prevention and Settings UI
+- **Message reactions:** Full emoji reactions system with real-time updates
+- **Onboarding optimized:** 5-milestone activation checklist using real data queries
+- **Revenue forecasting:** Pipeline commission forecast with weighted probabilities
+- **PDF parsing enhanced:** Multi-column, tables, page metadata, 100+ section headers
+- **Click-through tracking:** Search result CTR analytics with position tracking
+- **Deployment verification:** Automated 7-check workflow + manual script
+- **Google Calendar:** Complete connector with availability checking
+- **E2E test helpers:** 29 reusable functions for consistent test authoring
+- **Agent pain points:** 955-line research report with 10 actionable recommendations
 
-## Completed in Cycle 7 ✅
+## Completed in Cycle 8 ✅
 
-1. ✅ **AgentDetail Page** (PM-Intelligence) — INT-011: view/run/edit agents
-2. ✅ **Production Metrics Monitoring** (PM-Context) — CTX-007: verification + manual trigger
-3. ✅ **Accessibility Labels** (PM-Experience) — EXP-004: aria-labels on 4 components
-4. ✅ **Milestone System** (PM-Transactions) — TRX-004: audit, indexes, constraints, reminder fix
-5. ✅ **Growth Dashboard** (PM-Growth) — GRW-009: admin dashboard with KPIs
-6. ✅ **MLS Connector** (PM-Integration) — INT-012: Bridge Interactive RESO Web API
-7. ✅ **Search Ranking** (PM-Discovery) — DIS-005: field weighting + exact match + position scoring
-8. ✅ **Notification Preferences** (PM-Communication) — COM-004: channels, types, quiet hours
-9. ✅ **Performance Tests** (PM-Infrastructure) — INF-002: Lighthouse + API latency runner
-10. ✅ **JWT Verification** (PM-Security) — HO-006: all 33 user-facing functions secured
-11. ✅ **MLS/IDX Research** (PM-Research) — RES-003: Bridge Interactive recommended
-12. ✅ **Settings/Billing E2E** (PM-QA) — QA-011/QA-012: 35+ new test cases
+1. ✅ **Tenant Isolation** (PM-Intelligence) — HO-009: all 10 CRM action executors hardened
+2. ✅ **CORS Restriction** (PM-Security) — SEC-015: 38 edge functions locked down
+3. ✅ **PDF Parsing** (PM-Context) — CTX-004: multi-column, tables, sections, page metadata
+4. ✅ **Click-Through Tracking** (PM-Discovery) — DIS-009: CTR analytics + RPC
+5. ✅ **Message Reactions** (PM-Communication) — COM-005: 6 emojis, real-time, tooltips
+6. ✅ **Onboarding Checklist** (PM-Growth) — GRW-005: 5 activation milestones
+7. ✅ **Deployment Verification** (PM-Infrastructure) — INF-011: 7-check workflow
+8. ✅ **Agent Pain Points** (PM-Research) — RES-005: 955-line report, 10 recommendations
+9. ✅ **Dark Mode** (PM-Experience) — EXP-007: light/dark/system with FOUC prevention
+10. ✅ **Google Calendar** (PM-Integration) — INT-010: get_availability action
+11. ✅ **Revenue Forecast** (PM-Transactions) — TRX-006: weighted pipeline forecast
+12. ✅ **Test Data Helpers** (PM-QA) — QA-005: 29 reusable E2E functions
 
 ## Remaining P0 Items
 
-**None.** All critical security and P0 items resolved.
+**None.** All critical items resolved.
+
+## Pending Migrations
+
+| Migration | Description | Status |
+|-----------|-------------|--------|
+| `20260207020000_create_search_click_events.sql` | Search click tracking table + analytics RPC | Ready to deploy |
+| `20260207030000_create_message_reactions.sql` | Message reactions table with RLS | Ready to deploy |
+| `20260207040000_update_google_calendar_connector.sql` | Google Calendar connector updates | Ready to deploy |
 
 ## PM-Research Recommendations (Pending Orchestrator Review)
 
@@ -86,25 +95,37 @@ All 12 PMs delivered. 19 commits, 40 files changed, 4,834+ lines added. Key outc
 | REC-009 | Prioritize Bridge Interactive for Phase 3 IDX | P1 | Pending Review |
 | REC-010 | Implement MLS Compliance Framework | P1 | Pending Review |
 | REC-011 | Evaluate Direct RESO Web API for High-Value Markets | P2 | Pending Review |
+| REC-017 | AI-Powered Content Generation | P1 | NEW - Cycle 8 |
+| REC-018 | Deal Milestone Auto-Reminders | P0 | NEW - Cycle 8 |
+| REC-019 | Communication Templates Library | P1 | NEW - Cycle 8 |
+| REC-020 | Smart Daily Action Plan | P1 | NEW - Cycle 8 |
+| REC-021 | Automated Follow-Up Sequences | P0 | NEW - Cycle 8 |
+| REC-022 | Unified Communication Hub | P1 | NEW - Cycle 8 |
+| REC-023 | Transaction Coordination Engine | P0 | NEW - Cycle 8 |
+| REC-024 | AI Lead Scoring & Routing | P1 | NEW - Cycle 8 |
+| REC-025 | Automated CMA Generation | P2 | NEW - Cycle 8 |
+| REC-026 | Integrated Marketing Suite | P2 | NEW - Cycle 8 |
 
 ## Notes
 
-**Development Cycle #7 COMPLETE** ✅ — Full detailed report generated at `docs/pm-agents/reports/2026-02-06/02-00-development-cycle-7-complete.md`.
+**Development Cycle #8 COMPLETE** ✅ — Full detailed report at `docs/pm-agents/reports/2026-02-07/cycle-8-development-report.md`.
 
-Seven full development cycles completed. System health: 🟢 All Green. 115+ total commits, 370+ files created/modified, 45,000+ lines of code. Phase 1 MVP 100%, Phase 2 97%. 
+Eight full development cycles completed. System health: 🟢 All Green. 130+ total commits, 445+ files created/modified, 47,000+ lines of code. Phase 1 MVP 100%, Phase 2 98%.
 
-**HISTORIC MILESTONE:** ZERO critical security items remaining — HO-006 (last critical handoff) resolved with all 33 user-facing edge functions now secured with JWT verification.
+Major milestones in Cycle #8:
+- Tenant isolation hardened (HO-009 — last critical handoff resolved)
+- CORS locked down across all 38 edge functions
+- Dark mode shipped with full system preference support
+- Message reactions with real-time emoji system
+- Onboarding activation checklist with 5 data-driven milestones
+- Revenue forecasting added to pipeline view
+- PDF parsing significantly enhanced for real estate documents
+- Search click-through analytics for measuring result relevance
+- Deployment verification automated (7 checks + manual script)
+- 29 reusable E2E test helpers created
+- 10 new research recommendations submitted (REC-017 through REC-026)
+- 19 new backlog items discovered across all PMs
 
-Major deliverables in Cycle #7:
-- AgentDetail page (INT-011)
-- Bridge Interactive MLS connector (INT-012) — Phase 3 ready
-- Growth metrics dashboard at /admin/growth-metrics (GRW-009)
-- Search ranking overhaul with field weighting and exact match boost (DIS-005)
-- Granular notification preferences (COM-004)
-- Performance test runner with Lighthouse CI (INF-002)
-- Milestone system improvements with DB constraints (TRX-004)
-- Settings + Billing E2E tests: 35+ new test cases (QA-011, QA-012)
+PM-Research total: 26 recommendations across 5 research reports. E2E test helper library: 29 functions across 4 modules. All 12 PMs updated their backlogs (100% compliance). QA Gate: PASS.
 
-PM-Research has submitted 11 total recommendations across 3 reports (REC-001 through REC-011) awaiting Orchestrator review and human decision. E2E test coverage now includes: auth, onboarding, AI chat, contacts, deals, messaging, settings, billing (8 critical flows, 120+ test cases). All 12 PMs updated their backlogs (100% compliance). QA Gate: PASS (42/42 tests).
-
-Ready for Cycle #8: Phase 2 completion (3% remaining), production deployment of new migrations, PM-Research recommendation review, Phase 3 planning.
+Ready for Cycle #9: Phase 2 final completion, metadata column migration, dark mode contrast audit, deal hooks refactor, pending migrations deployment.

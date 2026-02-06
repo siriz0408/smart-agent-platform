@@ -7,7 +7,8 @@ interface SearchResultsGroupProps {
   icon: LucideIcon;
   count: number;
   results: SearchResult[];
-  renderCard: (result: SearchResult) => React.ReactNode;
+  /** Render function receives the result and its 0-based index within this group */
+  renderCard: (result: SearchResult, index: number) => React.ReactNode;
 }
 
 export function SearchResultsGroup({
@@ -32,7 +33,7 @@ export function SearchResultsGroup({
 
       {/* Results Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {results.map((result) => renderCard(result))}
+        {results.map((result, index) => renderCard(result, index))}
       </div>
     </div>
   );

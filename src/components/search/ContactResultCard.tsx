@@ -16,9 +16,11 @@ const contactTypeColors: Record<string, string> = {
 
 interface ContactResultCardProps {
   result: SearchResult;
+  /** Optional callback invoked before navigation (for click tracking) */
+  onBeforeNavigate?: (entityType: string, entityId: string) => void;
 }
 
-export function ContactResultCard({ result }: ContactResultCardProps) {
+export function ContactResultCard({ result, onBeforeNavigate }: ContactResultCardProps) {
   const navigate = useNavigate();
 
   const email = result.metadata?.email as string | undefined;
@@ -36,6 +38,7 @@ export function ContactResultCard({ result }: ContactResultCardProps) {
   };
 
   const handleClick = () => {
+    onBeforeNavigate?.("contact", result.entity_id);
     navigate(`/contacts/${result.entity_id}`);
   };
 

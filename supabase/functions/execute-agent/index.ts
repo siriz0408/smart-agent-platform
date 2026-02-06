@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 import { checkRateLimit, rateLimitResponse, AGENT_EXECUTION_LIMITS } from "../_shared/rateLimit.ts";
@@ -19,11 +20,7 @@ const ACTION_EXECUTION_LIMITS = {
   windowSeconds: 3600,
   prefix: "agent-actions",
 };
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 interface AgentExecutionRequest {
   agent_id: string;
@@ -41,6 +38,7 @@ interface AgentExecutionRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -751,13 +749,6 @@ If no actions are needed, you can respond normally without JSON.
       },
     });
   } catch (error) {
-    logger.error("Execute agent error", { error: error instanceof Error ? error.message : String(error) });
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, { functionName: "execute-agent" });
   }
 });

@@ -24,9 +24,11 @@ const dealTypeColors: Record<string, string> = {
 
 interface DealResultCardProps {
   result: SearchResult;
+  /** Optional callback invoked before navigation (for click tracking) */
+  onBeforeNavigate?: (entityType: string, entityId: string) => void;
 }
 
-export function DealResultCard({ result }: DealResultCardProps) {
+export function DealResultCard({ result, onBeforeNavigate }: DealResultCardProps) {
   const navigate = useNavigate();
 
   const estimatedValue = result.metadata?.estimated_value as number | undefined;
@@ -35,6 +37,7 @@ export function DealResultCard({ result }: DealResultCardProps) {
   const expectedCloseDate = result.metadata?.expected_close_date as string | undefined;
 
   const handleClick = () => {
+    onBeforeNavigate?.("deal", result.entity_id);
     // Navigate to pipeline with deal ID in query params (keeps modal behavior for now)
     navigate(`/pipeline/all?id=${result.entity_id}`);
   };

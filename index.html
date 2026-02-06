@@ -81,6 +81,14 @@
   </head>
 
   <body>
+    <!-- Prevent flash of wrong theme by applying dark class before React loads -->
+    <script>
+      (function() {
+        var theme = localStorage.getItem('smart-agent-theme');
+        var isDark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

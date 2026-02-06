@@ -16,9 +16,11 @@ const categoryColors: Record<string, string> = {
 
 interface DocumentResultCardProps {
   result: SearchResult;
+  /** Optional callback invoked before navigation (for click tracking) */
+  onBeforeNavigate?: (entityType: string, entityId: string) => void;
 }
 
-export function DocumentResultCard({ result }: DocumentResultCardProps) {
+export function DocumentResultCard({ result, onBeforeNavigate }: DocumentResultCardProps) {
   const navigate = useNavigate();
 
   const category = (result.metadata?.category as string) || "other";
@@ -34,6 +36,7 @@ export function DocumentResultCard({ result }: DocumentResultCardProps) {
   };
 
   const handleClick = () => {
+    onBeforeNavigate?.("document", result.entity_id);
     navigate(`/documents/${result.entity_id}`);
   };
 

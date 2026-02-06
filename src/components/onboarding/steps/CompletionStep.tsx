@@ -1,6 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CheckCircle, Sparkles, ArrowRight, Users, FileText, TrendingUp } from "lucide-react";
+import {
+  CheckCircle2,
+  Circle,
+  Sparkles,
+  ArrowRight,
+  Users,
+  FileText,
+  TrendingUp,
+  MessageSquare,
+  Rocket,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import type { OnboardingData } from "@/hooks/useOnboarding";
 
 interface CompletionStepProps {
@@ -9,48 +20,55 @@ interface CompletionStepProps {
   isCompleting: boolean;
 }
 
+interface ActivationItem {
+  icon: typeof FileText;
+  title: string;
+  description: string;
+  completed: boolean;
+}
+
 export function CompletionStep({ data, onComplete, isCompleting }: CompletionStepProps) {
-  const completedItems = [
+  // What the user completed during onboarding
+  const setupItems: ActivationItem[] = [
     {
-      icon: CheckCircle,
-      label: "Profile created",
+      icon: CheckCircle2,
+      title: "Profile created",
+      description: data.fullName || "Name set",
       completed: !!data.fullName,
     },
     {
       icon: Users,
-      label: "Role selected",
+      title: "Role selected",
+      description: data.role
+        ? data.role.charAt(0).toUpperCase() + data.role.slice(1)
+        : "Not selected",
       completed: !!data.role,
-      detail: data.role ? data.role.charAt(0).toUpperCase() + data.role.slice(1) : undefined,
-    },
-    {
-      icon: Users,
-      label: "First contact added",
-      completed: !!data.contactAdded,
-    },
-    {
-      icon: FileText,
-      label: "First document uploaded",
-      completed: !!data.documentUploaded,
     },
   ];
 
-  const suggestedNextSteps = data.role === "agent"
-    ? [
-        { icon: Users, label: "Import your contacts", href: "/contacts" },
-        { icon: FileText, label: "Upload more documents", href: "/documents" },
-        { icon: TrendingUp, label: "Create your first deal", href: "/pipeline/buyers" },
-      ]
-    : data.role === "buyer"
-    ? [
-        { icon: Sparkles, label: "Search for properties", href: "/properties/search" },
-        { icon: FileText, label: "Upload documents to review", href: "/documents" },
-        { icon: TrendingUp, label: "Track your journey", href: "/my-journey" },
-      ]
-    : [
-        { icon: FileText, label: "Upload your disclosure", href: "/documents" },
-        { icon: TrendingUp, label: "View your journey", href: "/my-journey" },
-        { icon: Sparkles, label: "Ask AI about your listing", href: "/" },
-      ];
+  // What they should do next (activation milestones shown on dashboard)
+  const nextSteps = [
+    {
+      icon: FileText,
+      title: "Upload your first document",
+      description: "AI will analyze contracts, disclosures, and more",
+    },
+    {
+      icon: Users,
+      title: "Add your first contact",
+      description: "Start building your CRM",
+    },
+    {
+      icon: MessageSquare,
+      title: "Try the AI assistant",
+      description: "Ask a question about real estate",
+    },
+    {
+      icon: TrendingUp,
+      title: "Create your first deal",
+      description: "Track transactions in your pipeline",
+    },
+  ];
 
   return (
     <div className="text-center space-y-6">
@@ -64,78 +82,71 @@ export function CompletionStep({ data, onComplete, isCompleting }: CompletionSte
 
       {/* Congrats Text */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">
-          You're all set!
-        </h1>
+        <h1 className="text-3xl font-bold tracking-tight">You're all set!</h1>
         <p className="text-muted-foreground text-lg max-w-md mx-auto">
-          {data.fullName ? `Welcome, ${data.fullName.split(" ")[0]}!` : "Welcome!"} Your Smart Agent workspace is ready to go.
-        </p>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto pt-1">
-          Here's what you can do next to get the most out of Smart Agent:
+          {data.fullName
+            ? `Welcome, ${data.fullName.split(" ")[0]}!`
+            : "Welcome!"}{" "}
+          Your Smart Agent workspace is ready.
         </p>
       </div>
 
-      {/* Completed Items */}
+      {/* Setup Summary */}
       <Card className="text-left">
-        <CardContent className="p-4 space-y-3">
-          <p className="text-sm font-medium text-muted-foreground">Setup completed</p>
-          {completedItems.map((item) => (
-            <div key={item.label} className="flex items-center gap-3">
-              <div
-                className={`h-8 w-8 rounded-full flex items-center justify-center ${
-                  item.completed ? "bg-green-100 text-green-600" : "bg-muted text-muted-foreground"
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
-              </div>
-              <span className={item.completed ? "" : "text-muted-foreground"}>
-                {item.label}
-                {item.detail && (
-                  <span className="text-muted-foreground"> ({item.detail})</span>
-                )}
-              </span>
-              {item.completed && (
-                <CheckCircle className="h-4 w-4 text-green-500 ml-auto" />
+        <CardContent className="p-4 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Setup complete
+          </p>
+          {setupItems.map((item) => (
+            <div key={item.title} className="flex items-center gap-3 py-1">
+              {item.completed ? (
+                <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+              ) : (
+                <Circle className="h-5 w-5 text-muted-foreground shrink-0" />
               )}
+              <div className="flex-1 min-w-0">
+                <span className="text-sm font-medium">{item.title}</span>
+                {item.description && (
+                  <span className="text-xs text-muted-foreground ml-2">
+                    ({item.description})
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </CardContent>
       </Card>
 
-      {/* Suggested Next Steps */}
-      <div className="space-y-3">
-        <p className="text-sm font-medium text-foreground">Quick start guide</p>
-        <div className="grid gap-2">
-          {suggestedNextSteps.map((step, index) => (
-            <Button
-              key={step.label}
-              variant="outline"
-              className="justify-start h-auto py-3 hover:bg-accent/50 transition-colors"
-              asChild
-            >
-              <a href={step.href}>
-                <div className="flex items-center gap-3 w-full">
-                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <step.icon className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium">{step.label}</div>
-                    {index === 0 && (
-                      <div className="text-xs text-muted-foreground mt-0.5">
-                        Recommended first step
-                      </div>
-                    )}
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                </div>
-              </a>
-            </Button>
-          ))}
-        </div>
-        <div className="pt-2 border-t">
-          <p className="text-xs text-muted-foreground text-center">
-            💡 Tip: You can access these anytime from your dashboard
+      {/* Activation Checklist Preview */}
+      <div className="text-left space-y-3">
+        <div className="flex items-center gap-2">
+          <Rocket className="h-4 w-4 text-primary" />
+          <p className="text-sm font-semibold">
+            Your quick-start checklist
           </p>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Complete these to get the most out of Smart Agent. You'll find this
+          checklist on your dashboard.
+        </p>
+        <div className="space-y-1">
+          {nextSteps.map((step) => (
+            <div
+              key={step.title}
+              className={cn(
+                "flex items-center gap-3 p-2.5 rounded-lg",
+                "bg-accent/30 border border-border/50"
+              )}
+            >
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <step.icon className="h-4 w-4 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium">{step.title}</p>
+                <p className="text-xs text-muted-foreground">{step.description}</p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -149,6 +160,9 @@ export function CompletionStep({ data, onComplete, isCompleting }: CompletionSte
         {isCompleting ? "Setting up..." : "Go to Dashboard"}
         <ArrowRight className="h-4 w-4 ml-2" />
       </Button>
+      <p className="text-xs text-muted-foreground">
+        You can always access the checklist from your dashboard
+      </p>
     </div>
   );
 }

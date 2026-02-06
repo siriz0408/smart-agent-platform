@@ -1,6 +1,6 @@
 # PM-Infrastructure Backlog
 
-> **Last Updated:** 2026-02-06
+> **Last Updated:** 2026-02-07
 
 ## In Progress
 
@@ -12,9 +12,9 @@
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
 | INF-005 | Optimize costs | P2 | L |
-| INF-009 | Verify Sentry configuration | P1 | S |
-| INF-011 | Add deployment verification | P2 | S |
 | INF-012 | Track build times | P2 | S |
+| INF-013 | Add deployment rollback automation | P2 | M |
+| INF-014 | Configure GitHub repository variables for verification (PRODUCTION_URL, SUPABASE_PROJECT_REF) | P3 | S |
 
 ## Completed
 
@@ -30,3 +30,4 @@
 | INF-010 | Set up performance monitoring | 2026-02-06 |
 | INF-004 | Audit deployment pipeline | 2026-02-06 |
 | INF-009 | Verify Sentry configuration | 2026-02-06 |
+| INF-011 | Add deployment verification | 2026-02-07 |

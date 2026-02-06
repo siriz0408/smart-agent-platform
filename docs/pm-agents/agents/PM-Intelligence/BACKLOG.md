@@ -1,6 +1,6 @@
 # PM-Intelligence Backlog
 
-> **Last Updated:** 2026-02-06 20:00:00
+> **Last Updated:** 2026-02-07 01:00:00
 
 ---
 
@@ -55,6 +55,7 @@ These tasks are ready for autonomous execution:
 | INT-005 | Research Anthropic vs OpenAI | 2026-02-06 | ANTHROPIC_VS_OPENAI.md created with comprehensive comparison, 3 recommendations submitted |
 | INT-006 | Improve citation formatting in responses | 2026-02-06 | Standardized to [Source: filename, page X], RAG_IMPROVEMENT_PROPOSAL.md created |
 | INT-011 | Create AgentDetail.tsx page | 2026-02-06 | Created missing AgentDetail.tsx page with full agent details view, added route, linked from Agents.tsx |
+| HO-009 | Fix tenant isolation in action executors | 2026-02-07 | Critical security fix: hardened add_note contact/deal/property validation, hardened assign_tags with UUID validation + tenant warning logs, added callerTenantId defense-in-depth to execute-actions, forwarded tenant_id to MCP gateway, added tenant_id filter to action approval, added validateTenantAccess/validateUserInTenant helpers, added executeAction UUID gate |
 
 ---
 

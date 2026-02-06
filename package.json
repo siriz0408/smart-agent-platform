@@ -17,6 +17,7 @@
     "deploy": "./scripts/deploy.sh",
     "deploy:prod": "vercel --prod",
     "deploy:preview": "vercel",
+    "deploy:verify": "./scripts/verify-deployment.sh",
     "sync:env": "./scripts/sync-env.sh",
     "sync:env:pull": "vercel env pull .env.local",
     "sync:env:push": "vercel env add",

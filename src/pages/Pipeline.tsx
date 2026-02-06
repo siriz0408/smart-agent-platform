@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Plus, LayoutGrid, List, Filter, X } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -9,8 +10,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { CreateDealDialog } from "@/components/deals/CreateDealDialog";
 import { EditDealDialog } from "@/components/deals/EditDealDialog";
 import { DealDetailSheet } from "@/components/deals/DealDetailSheet";
+import { DealHealthAudit } from "@/components/deals/DealHealthAudit";
 import { StageColumn } from "@/components/pipeline/StageColumn";
 import { PipelineAnalytics } from "@/components/pipeline/PipelineAnalytics";
+import { RevenueForecast } from "@/components/pipeline/RevenueForecast";
 import { useMilestoneIndicators } from "@/hooks/useMilestoneIndicators";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -344,6 +347,9 @@ export default function Pipeline() {
 
         {/* Pipeline Analytics */}
         <PipelineAnalytics dealType={dealType} stages={stages} />
+
+        {/* Revenue Forecast */}
+        <RevenueForecast dealType={dealType} />
 
         {/* Deal Health Audit */}
         <DealHealthAudit dealType={dealType} />

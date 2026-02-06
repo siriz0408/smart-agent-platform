@@ -4,6 +4,12 @@ import { logger } from "../_shared/logger.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders, callAnthropicAPI, extractTextFromResponse } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 import { checkRateLimit, rateLimitResponse, DOCUMENT_INDEX_LIMITS } from "../_shared/rateLimit.ts";
+import {
+  cleanExtractedText,
+  detectColumns,
+  reorderMultiColumnItems,
+  buildSectionPattern,
+} from "../_shared/text-processing.ts";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type GetDocumentFn = (options: { data: Uint8Array }) => { promise: Promise<any> };
@@ -14,11 +20,7 @@ async function initPdfJs(): Promise<GetDocumentFn> {
   const module = await pdfjs.resolvePDFJS();
   return module.getDocument as GetDocumentFn;
 }
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Size limits
 const SIZE_LIMIT_MAX = 20 * 1024 * 1024; // 20MB max file size
@@ -35,60 +37,177 @@ type DocumentType = "settlement" | "inspection" | "contract" | "appraisal" | "di
 // PDF TEXT EXTRACTION (Using pdfjs-serverless)
 // ============================================================================
 
-async function extractTextFromPDF(fileData: Blob): Promise<string> {
-  try {
-    const getDocument = await initPdfJs();
-    const arrayBuffer = await fileData.arrayBuffer();
-    const pdfDocument = await getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
-    
-    const pages: string[] = [];
-    const numPages = pdfDocument.numPages;
-    
-    logger.debug("PDF page count", { numPages });
-    
-    for (let i = 1; i <= numPages; i++) {
-      try {
-        const page = await pdfDocument.getPage(i);
-        const textContent = await page.getTextContent();
-        
-        // Extract text items and preserve some structure
-        const items = textContent.items as Array<{ str: string; transform?: number[] }>;
-        
-        // Group items by their y-position to preserve line structure
-        const lines: Map<number, string[]> = new Map();
-        
-        for (const item of items) {
-          if (item.str && item.str.trim()) {
-            // Use transform[5] (y-position) to group items into lines
-            const yPos = item.transform ? Math.round(item.transform[5]) : 0;
-            if (!lines.has(yPos)) {
-              lines.set(yPos, []);
-            }
-            lines.get(yPos)!.push(item.str);
-          }
-        }
-        
-        // Sort by y-position (descending for top-to-bottom reading)
-        const sortedLines = Array.from(lines.entries())
-          .sort((a, b) => b[0] - a[0])
-          .map(([_, texts]) => texts.join(" "))
-          .filter(line => line.trim().length > 0);
-        
-        const pageText = sortedLines.join("\n");
-        
-        if (pageText.trim()) {
-          pages.push(`[Page ${i}]\n${pageText}`);
-        }
-      } catch (pageError) {
-        logger.error("Error extracting page", { page: i, error: pageError instanceof Error ? pageError.message : String(pageError) });
-      }
+/** Type for text items returned by pdfjs getTextContent() */
+type PdfTextItem = { str: string; transform?: number[]; width?: number; height?: number };
+
+/**
+ * Extract text from a single PDF page, preserving structure.
+ * Handles multi-column layouts by detecting column boundaries and reading
+ * left-to-right, top-to-bottom within each column.
+ */
+function extractPageText(
+  items: PdfTextItem[],
+): string {
+  if (items.length === 0) return "";
+
+  // Check for multi-column layout
+  const columns = detectColumns(items);
+
+  // Reorder items if multi-column detected
+  const orderedItems = columns
+    ? reorderMultiColumnItems(items, columns)
+    : items;
+
+  // Group items by y-position to reconstruct lines
+  // Use a tolerance bucket to group items on the same visual line
+  const Y_TOLERANCE = 3;
+  const lineMap: Map<number, { x: number; text: string }[]> = new Map();
+
+  for (const item of orderedItems) {
+    if (!item.str || !item.str.trim()) continue;
+    const yRaw = item.transform ? item.transform[5] : 0;
+    const xPos = item.transform ? item.transform[4] : 0;
+    // Bucket y-positions so items within tolerance land on the same line
+    const yBucket = Math.round(yRaw / Y_TOLERANCE) * Y_TOLERANCE;
+
+    if (!lineMap.has(yBucket)) {
+      lineMap.set(yBucket, []);
     }
-    
-    return pages.join("\n\n--- Page Break ---\n\n");
-  } catch (error) {
-    logger.error("PDF extraction error", { error: error instanceof Error ? error.message : String(error) });
-    throw new Error(`Failed to extract PDF text: ${error instanceof Error ? error.message : "Unknown error"}`);
+    lineMap.get(yBucket)!.push({ x: xPos, text: item.str });
   }
+
+  // Sort lines top-to-bottom (descending y in PDF coordinates)
+  const sortedLines = Array.from(lineMap.entries())
+    .sort((a, b) => b[0] - a[0]);
+
+  const resultLines: string[] = [];
+
+  for (const [_, lineItems] of sortedLines) {
+    // Sort items within each line left-to-right
+    lineItems.sort((a, b) => a.x - b.x);
+
+    // Reconstruct line text, inserting tab separators for large gaps
+    // (preserves table-like structures where columns are spaced apart)
+    let lineText = "";
+    let prevRight = -1;
+
+    for (const item of lineItems) {
+      if (prevRight >= 0) {
+        const gap = item.x - prevRight;
+        if (gap > 30) {
+          // Large gap suggests a table column separator
+          lineText += "\t";
+        } else if (gap > 3) {
+          lineText += " ";
+        }
+      }
+      lineText += item.text;
+      // Estimate right edge (rough: x + text-length-based width)
+      prevRight = item.x + (item.text.length * 5);
+    }
+
+    const trimmed = lineText.trim();
+    if (trimmed.length > 0) {
+      resultLines.push(trimmed);
+    }
+  }
+
+  return resultLines.join("\n");
+}
+
+/**
+ * Extract text from a PDF file with improved handling:
+ * - Multi-column layout detection and reordering
+ * - Table structure preservation via tab separators
+ * - Page-level error resilience (skips corrupted pages)
+ * - Consistent page markers for downstream processing
+ */
+async function extractTextFromPDF(fileData: Blob): Promise<string> {
+  let getDocument: GetDocumentFn;
+  try {
+    getDocument = await initPdfJs();
+  } catch (initError) {
+    logger.error("Failed to initialize pdfjs", {
+      error: initError instanceof Error ? initError.message : String(initError),
+    });
+    throw new Error("PDF processing library failed to initialize");
+  }
+
+  let arrayBuffer: ArrayBuffer;
+  try {
+    arrayBuffer = await fileData.arrayBuffer();
+  } catch (bufferError) {
+    logger.error("Failed to read PDF file data", {
+      error: bufferError instanceof Error ? bufferError.message : String(bufferError),
+    });
+    throw new Error("Failed to read PDF file data");
+  }
+
+  // Validate that we have actual PDF data
+  const header = new Uint8Array(arrayBuffer.slice(0, 5));
+  const headerStr = String.fromCharCode(...header);
+  if (headerStr !== "%PDF-" && arrayBuffer.byteLength > 0) {
+    logger.warn("File does not appear to be a valid PDF", { header: headerStr });
+    // Continue anyway - pdfjs may still handle it
+  }
+
+  let pdfDocument;
+  try {
+    pdfDocument = await getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
+  } catch (parseError) {
+    logger.error("Failed to parse PDF structure", {
+      error: parseError instanceof Error ? parseError.message : String(parseError),
+    });
+    throw new Error(
+      `Failed to parse PDF: ${parseError instanceof Error ? parseError.message : "File may be corrupted or password-protected"}`
+    );
+  }
+
+  const pages: string[] = [];
+  const numPages = pdfDocument.numPages;
+  let pagesWithErrors = 0;
+
+  logger.debug("PDF page count", { numPages });
+
+  for (let i = 1; i <= numPages; i++) {
+    try {
+      const page = await pdfDocument.getPage(i);
+      const textContent = await page.getTextContent();
+      const items = textContent.items as PdfTextItem[];
+
+      const pageText = extractPageText(items);
+
+      if (pageText.trim()) {
+        pages.push(`[Page ${i}]\n${pageText}`);
+      }
+    } catch (pageError) {
+      pagesWithErrors++;
+      logger.error("Error extracting page", {
+        page: i,
+        totalPages: numPages,
+        error: pageError instanceof Error ? pageError.message : String(pageError),
+      });
+      // Add a placeholder so page numbering stays consistent
+      pages.push(`[Page ${i}]\n[Error: Could not extract text from this page]`);
+    }
+  }
+
+  // If all pages failed, throw
+  if (pagesWithErrors === numPages && numPages > 0) {
+    throw new Error(
+      `Failed to extract text from all ${numPages} pages. The PDF may be scanned images or encrypted.`
+    );
+  }
+
+  if (pagesWithErrors > 0) {
+    logger.warn("Some pages had extraction errors", {
+      pagesWithErrors,
+      totalPages: numPages,
+      successRate: `${(((numPages - pagesWithErrors) / numPages) * 100).toFixed(1)}%`,
+    });
+  }
+
+  return pages.join("\n\n--- Page Break ---\n\n");
 }
 
 // ============================================================================
@@ -192,83 +311,158 @@ function detectDocumentType(text: string, filename: string): DocumentType {
 }
 
 // ============================================================================
-// SMART CHUNKING (Semantic boundaries)
+// PAGE NUMBER EXTRACTION FOR CHUNK METADATA
 // ============================================================================
 
-function smartChunkText(text: string, documentType: DocumentType): string[] {
-  const chunks: string[] = [];
-  
+/**
+ * Determine which page(s) a chunk of text comes from based on [Page N] markers.
+ * Returns { startPage, endPage } or null if no page markers found.
+ */
+function getChunkPageRange(chunkText: string): { startPage: number; endPage: number } | null {
+  const pageMatches = Array.from(chunkText.matchAll(/\[Page\s+(\d+)\]/g));
+  if (pageMatches.length === 0) return null;
+
+  const pages = pageMatches.map((m) => parseInt(m[1], 10));
+  return {
+    startPage: Math.min(...pages),
+    endPage: Math.max(...pages),
+  };
+}
+
+// ============================================================================
+// SMART CHUNKING (Semantic boundaries with page metadata)
+// ============================================================================
+
+/** Chunk with associated metadata */
+interface ChunkWithMeta {
+  content: string;
+  pageStart: number | null;
+  pageEnd: number | null;
+  sectionHeader: string | null;
+}
+
+/**
+ * Smart chunk text based on document type.
+ * Uses domain-specific section headers from REAL_ESTATE_SECTIONS when available.
+ * Preserves page number metadata for each chunk.
+ */
+function smartChunkText(text: string, documentType: DocumentType): ChunkWithMeta[] {
   if (!text || text.length === 0) {
     return [];
   }
-  
-  // For financial documents, try to preserve sections
-  if (documentType === "settlement" || documentType === "contract") {
-    return chunkBySection(text);
+
+  // Use the domain-specific section pattern from text-processing if available
+  const sectionPattern = buildSectionPattern(documentType);
+
+  // For document types with known section patterns, use section-aware chunking
+  if (sectionPattern && (documentType === "settlement" || documentType === "contract" || documentType === "appraisal" || documentType === "disclosure")) {
+    return chunkBySectionHeaders(text, sectionPattern);
   }
-  
-  // For inspection reports, chunk by findings/sections
+
+  // For inspection reports, use dedicated inspection chunker (more patterns)
   if (documentType === "inspection") {
-    return chunkByInspectionSections(text);
+    const inspectionPattern = buildSectionPattern("inspection");
+    return chunkByInspectionSections(text, inspectionPattern);
   }
-  
+
   // Default: paragraph-aware chunking
   return chunkByParagraphs(text);
 }
 
-function chunkBySection(text: string): string[] {
-  const chunks: string[] = [];
-  
-  // Split by page breaks first
+/**
+ * Chunk by known real estate section headers.
+ * Falls back to page-break boundaries, then paragraph chunking.
+ */
+function chunkBySectionHeaders(text: string, sectionPattern: RegExp): ChunkWithMeta[] {
+  const chunks: ChunkWithMeta[] = [];
+
+  // First split by page breaks
   const pages = text.split(/\n*---\s*Page\s*Break\s*---\n*/i);
-  
+
   for (const page of pages) {
     if (page.trim().length < 50) continue;
-    
+
     // If page is small enough, keep as one chunk
     if (page.length <= CHUNK_SIZE) {
-      chunks.push(page.trim());
+      const pageRange = getChunkPageRange(page);
+      chunks.push({
+        content: page.trim(),
+        pageStart: pageRange?.startPage ?? null,
+        pageEnd: pageRange?.endPage ?? null,
+        sectionHeader: null,
+      });
       continue;
     }
-    
-    // Split by section headers (all caps lines, numbered sections)
-    const sections = page.split(/\n(?=[A-Z][A-Z\s]{3,}\n)|(?=\d+\.\s+[A-Z])/);
-    
+
+    // Split by domain-specific section headers
+    const sections = page.split(sectionPattern);
+
     let currentChunk = "";
+    let currentHeader: string | null = null;
+
     for (const section of sections) {
+      // Detect if section starts with a header
+      const headerMatch = section.trim().match(/^([A-Z][A-Z\s']{3,})/);
+      const header = headerMatch ? headerMatch[1].trim() : null;
+
       if ((currentChunk.length + section.length) <= CHUNK_SIZE) {
+        if (!currentHeader && header) currentHeader = header;
         currentChunk += (currentChunk ? "\n\n" : "") + section;
       } else {
-        if (currentChunk.trim()) chunks.push(currentChunk.trim());
-        
-        // Handle sections larger than chunk size
+        if (currentChunk.trim()) {
+          const pageRange = getChunkPageRange(currentChunk);
+          chunks.push({
+            content: currentChunk.trim(),
+            pageStart: pageRange?.startPage ?? null,
+            pageEnd: pageRange?.endPage ?? null,
+            sectionHeader: currentHeader,
+          });
+        }
+
         if (section.length > CHUNK_SIZE) {
           const subChunks = chunkByParagraphs(section);
+          // Inherit section header for sub-chunks
+          for (const sub of subChunks) {
+            sub.sectionHeader = sub.sectionHeader || header;
+          }
           chunks.push(...subChunks);
           currentChunk = "";
+          currentHeader = null;
         } else {
           currentChunk = section;
+          currentHeader = header;
         }
       }
     }
-    if (currentChunk.trim()) chunks.push(currentChunk.trim());
+    if (currentChunk.trim()) {
+      const pageRange = getChunkPageRange(currentChunk);
+      chunks.push({
+        content: currentChunk.trim(),
+        pageStart: pageRange?.startPage ?? null,
+        pageEnd: pageRange?.endPage ?? null,
+        sectionHeader: currentHeader,
+      });
+    }
   }
-  
-  return chunks.filter(c => c.length > 50).slice(0, MAX_CHUNKS);
+
+  return chunks.filter((c) => c.content.length > 50).slice(0, MAX_CHUNKS);
 }
 
-function chunkByInspectionSections(text: string): string[] {
-  const chunks: string[] = [];
-  
-  // Common inspection section headers
-  const sectionPatterns = [
-    /\n(?=(?:ROOF|EXTERIOR|INTERIOR|PLUMBING|ELECTRICAL|HVAC|FOUNDATION|ATTIC|BASEMENT|KITCHEN|BATHROOM|GARAGE|STRUCTURAL)\b)/gi,
-    /\n(?=\d+\.\d*\s+[A-Z])/g, // Numbered sections like "1.1 ROOF"
-  ];
-  
+/**
+ * Chunk inspection reports by system/area sections.
+ * Uses both pattern-based and keyword-based section detection.
+ */
+function chunkByInspectionSections(text: string, sectionPattern: RegExp | null): ChunkWithMeta[] {
+  const chunks: ChunkWithMeta[] = [];
+
+  // Use the section pattern from text-processing, plus numbered sections
+  const patterns: RegExp[] = [];
+  if (sectionPattern) patterns.push(sectionPattern);
+  patterns.push(/\n(?=\d+\.\d*\s+[A-Z])/g);
+
   let sections = [text];
-  
-  for (const pattern of sectionPatterns) {
+
+  for (const pattern of patterns) {
     const newSections: string[] = [];
     for (const section of sections) {
       const splits = section.split(pattern);
@@ -276,58 +470,87 @@ function chunkByInspectionSections(text: string): string[] {
     }
     sections = newSections;
   }
-  
-  // Now chunk each section
+
   for (const section of sections) {
     if (section.trim().length < 50) continue;
-    
+
     if (section.length <= CHUNK_SIZE) {
-      chunks.push(section.trim());
+      const pageRange = getChunkPageRange(section);
+      const headerMatch = section.trim().match(/^([A-Z][A-Z\s]{3,})/);
+      chunks.push({
+        content: section.trim(),
+        pageStart: pageRange?.startPage ?? null,
+        pageEnd: pageRange?.endPage ?? null,
+        sectionHeader: headerMatch ? headerMatch[1].trim() : null,
+      });
     } else {
       const subChunks = chunkByParagraphs(section);
       chunks.push(...subChunks);
     }
   }
-  
-  return chunks.filter(c => c.length > 50).slice(0, MAX_CHUNKS);
+
+  return chunks.filter((c) => c.content.length > 50).slice(0, MAX_CHUNKS);
 }
 
-function chunkByParagraphs(text: string): string[] {
-  const chunks: string[] = [];
-  
-  // Split by double newlines (paragraphs)
+/**
+ * Default paragraph-aware chunking.
+ * Splits by paragraphs, then sentences, preserving page metadata.
+ */
+function chunkByParagraphs(text: string): ChunkWithMeta[] {
+  const chunks: ChunkWithMeta[] = [];
+
   const paragraphs = text.split(/\n\n+/);
-  
   let currentChunk = "";
-  
+
   for (const para of paragraphs) {
     const trimmedPara = para.trim();
     if (!trimmedPara) continue;
-    
+
     if ((currentChunk.length + trimmedPara.length + 2) <= CHUNK_SIZE) {
       currentChunk += (currentChunk ? "\n\n" : "") + trimmedPara;
     } else {
       if (currentChunk.trim()) {
-        chunks.push(currentChunk.trim());
+        const pageRange = getChunkPageRange(currentChunk);
+        chunks.push({
+          content: currentChunk.trim(),
+          pageStart: pageRange?.startPage ?? null,
+          pageEnd: pageRange?.endPage ?? null,
+          sectionHeader: null,
+        });
       }
-      
-      // Handle paragraphs larger than chunk size
+
       if (trimmedPara.length > CHUNK_SIZE) {
         // Split by sentences
         const sentences = trimmedPara.split(/(?<=[.!?])\s+/);
         let sentenceChunk = "";
-        
+
         for (const sentence of sentences) {
           if ((sentenceChunk.length + sentence.length + 1) <= CHUNK_SIZE) {
             sentenceChunk += (sentenceChunk ? " " : "") + sentence;
           } else {
-            if (sentenceChunk.trim()) chunks.push(sentenceChunk.trim());
-            
+            if (sentenceChunk.trim()) {
+              const pr = getChunkPageRange(sentenceChunk);
+              chunks.push({
+                content: sentenceChunk.trim(),
+                pageStart: pr?.startPage ?? null,
+                pageEnd: pr?.endPage ?? null,
+                sectionHeader: null,
+              });
+            }
+
             // If single sentence is too long, force split
             if (sentence.length > CHUNK_SIZE) {
               const step = CHUNK_SIZE - CHUNK_OVERLAP;
               for (let i = 0; i < sentence.length; i += step) {
-                chunks.push(sentence.slice(i, i + CHUNK_SIZE).trim());
+                const slice = sentence.slice(i, i + CHUNK_SIZE).trim();
+                if (slice.length > 50) {
+                  chunks.push({
+                    content: slice,
+                    pageStart: null,
+                    pageEnd: null,
+                    sectionHeader: null,
+                  });
+                }
               }
               sentenceChunk = "";
             } else {
@@ -342,12 +565,18 @@ function chunkByParagraphs(text: string): string[] {
       }
     }
   }
-  
+
   if (currentChunk.trim()) {
-    chunks.push(currentChunk.trim());
+    const pageRange = getChunkPageRange(currentChunk);
+    chunks.push({
+      content: currentChunk.trim(),
+      pageStart: pageRange?.startPage ?? null,
+      pageEnd: pageRange?.endPage ?? null,
+      sectionHeader: null,
+    });
   }
-  
-  return chunks.filter(c => c.length > 50).slice(0, MAX_CHUNKS);
+
+  return chunks.filter((c) => c.content.length > 50).slice(0, MAX_CHUNKS);
 }
 
 // ============================================================================
@@ -582,6 +811,7 @@ async function generateDocumentSummary(
 // ============================================================================
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -789,6 +1019,27 @@ serve(async (req) => {
     }
 
     // ========================================================================
+    // STEP 1b: Clean and normalize extracted text
+    // ========================================================================
+    const rawTextLength = extractedText.length;
+    extractedText = cleanExtractedText(extractedText, {
+      removeHeaders: true,
+      removeFooters: true,
+      removePageNumbers: false, // Keep page markers for chunk page tracking
+      normalizeTables: true,
+      normalizeWhitespace: true,
+      normalizeLists: true,
+      fixHyphenation: true,
+    });
+    logger.debug("Text cleaned", {
+      rawLength: rawTextLength,
+      cleanedLength: extractedText.length,
+      reductionPct: rawTextLength > 0
+        ? `${(((rawTextLength - extractedText.length) / rawTextLength) * 100).toFixed(1)}%`
+        : "0%",
+    });
+
+    // ========================================================================
     // STEP 2: Detect document type
     // ========================================================================
     const documentType = detectDocumentType(extractedText, document.name);
@@ -812,35 +1063,53 @@ serve(async (req) => {
     // ========================================================================
     // STEP 3: Smart chunking based on document type
     // ========================================================================
-    const chunks = smartChunkText(extractedText, documentType);
-    logger.debug("Created chunks using smart chunking", { chunkCount: chunks.length });
-    
+    const chunksWithMeta = smartChunkText(extractedText, documentType);
+    logger.debug("Created chunks using smart chunking", {
+      chunkCount: chunksWithMeta.length,
+      documentType,
+      chunksWithPages: chunksWithMeta.filter((c) => c.pageStart !== null).length,
+      chunksWithSections: chunksWithMeta.filter((c) => c.sectionHeader !== null).length,
+    });
+
     // Update job with total chunks
     await supabase
       .from("document_indexing_jobs")
-      .update({ total_chunks: chunks.length, progress: 20 })
+      .update({ total_chunks: chunksWithMeta.length, progress: 20 })
       .eq("document_id", documentId);
 
     // ========================================================================
-    // STEP 4: Generate embeddings and store chunks
+    // STEP 4: Generate embeddings and store chunks (with page metadata)
     // ========================================================================
     let successCount = 0;
-    
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i];
-      
+
+    for (let i = 0; i < chunksWithMeta.length; i++) {
+      const chunkMeta = chunksWithMeta[i];
+
       try {
-        const embedding = generateEmbedding(chunk);
-        
+        const embedding = generateEmbedding(chunkMeta.content);
+
+        // Build metadata object for the chunk
+        const chunkMetadata: Record<string, unknown> = {};
+        if (chunkMeta.pageStart !== null) chunkMetadata.page_start = chunkMeta.pageStart;
+        if (chunkMeta.pageEnd !== null) chunkMetadata.page_end = chunkMeta.pageEnd;
+        if (chunkMeta.sectionHeader) chunkMetadata.section = chunkMeta.sectionHeader;
+
+        const insertData: Record<string, unknown> = {
+          document_id: documentId,
+          tenant_id: document.tenant_id,
+          chunk_index: i,
+          content: chunkMeta.content,
+          embedding: JSON.stringify(embedding),
+        };
+
+        // Only add metadata if we have any (avoid overwriting with empty object)
+        if (Object.keys(chunkMetadata).length > 0) {
+          insertData.metadata = chunkMetadata;
+        }
+
         const { error: insertError } = await supabase
           .from("document_chunks")
-          .insert({
-            document_id: documentId,
-            tenant_id: document.tenant_id, // Required after denormalization migration
-            chunk_index: i,
-            content: chunk,
-            embedding: JSON.stringify(embedding),
-          });
+          .insert(insertData);
 
         if (!insertError) {
           successCount++;
@@ -848,20 +1117,23 @@ serve(async (req) => {
           logger.error("Error inserting chunk", { chunkIndex: i, error: insertError.message });
         }
       } catch (embeddingError) {
-        logger.error("Error processing chunk", { chunkIndex: i, error: embeddingError instanceof Error ? embeddingError.message : String(embeddingError) });
+        logger.error("Error processing chunk", {
+          chunkIndex: i,
+          error: embeddingError instanceof Error ? embeddingError.message : String(embeddingError),
+        });
       }
-      
+
       // Update progress periodically
-      if (i % 10 === 0 || i === chunks.length - 1) {
-        const chunkProgress = 20 + Math.round((i / chunks.length) * 40);
+      if (i % 10 === 0 || i === chunksWithMeta.length - 1) {
+        const chunkProgress = 20 + Math.round((i / chunksWithMeta.length) * 40);
         await supabase
           .from("document_indexing_jobs")
           .update({ indexed_chunks: successCount, progress: chunkProgress })
           .eq("document_id", documentId);
       }
     }
-    
-    logger.info("Indexed chunks", { successCount, totalChunks: chunks.length });
+
+    logger.info("Indexed chunks", { successCount, totalChunks: chunksWithMeta.length });
 
     // ========================================================================
     // STEP 5: Extract structured data for supported document types
@@ -969,7 +1241,7 @@ serve(async (req) => {
         batchNumber: 0,
         totalBatches: 1,
         chunksIndexed: successCount,
-        totalChunks: chunks.length,
+        totalChunks: chunksWithMeta.length,
         documentType,
         hasStructuredData: !!structuredData,
         progress: 100,

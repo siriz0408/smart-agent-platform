@@ -24,11 +24,7 @@ import {
 import { GmailConnector } from "../_shared/connectors/gmail-connector.ts";
 import { BridgeMLSConnector } from "../_shared/connectors/bridge-mls-connector.ts";
 import { GoogleCalendarConnector } from "../_shared/connectors/google-calendar-connector.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { getCorsHeaders } from "../_shared/cors.ts";
 
 // Initialize connector registry
 const registry = new ConnectorRegistry();
@@ -222,6 +218,7 @@ async function logConnectorAction(
 }
 
 serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }

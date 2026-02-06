@@ -1,7 +1,7 @@
 # PM-Research Recommendations Tracker
 
-> **Last Updated:** 2026-02-06  
-> **Status:** 16 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003, 5 from RES-004)
+> **Last Updated:** 2026-02-07  
+> **Status:** 26 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003, 5 from RES-004, 10 from RES-005)
 
 ---
 
@@ -557,6 +557,381 @@ Evaluate IDX website builder as potential feature to match Chime's competitive a
 
 ---
 
+### REC-017: AI-Powered Content Generation
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Extend AI chat to generate listing descriptions, social media posts, email newsletters, client follow-up messages, and marketing copy. Leverage existing Claude integration — no new AI infrastructure needed.
+
+**Rationale:**
+- Addresses PP-08 (Marketing & Lead Gen), a pain point with **zero** current coverage
+- Quick win: reuses existing AI chat infrastructure with new prompt templates
+- Saves agents 2-3 hours/week on content creation
+- No competitor offers AI-first content generation integrated into CRM
+- 81% of agents concerned income model unsustainable — content marketing helps differentiate
+
+**Impact:**
+- **User Impact:** 4/5 (significant time savings)
+- **Vision Alignment:** 5/5 (AI-first principle, extends core capability)
+- **Effort:** Small (S)
+- **Owner:** PM-Intelligence
+- **Timeline:** Q1 2026
+
+**Implementation:**
+1. Content type selector in AI chat (listing, social, email, follow-up)
+2. Pre-built prompt templates for each content type
+3. Property data auto-injection (pull from deals/properties)
+4. Copy-to-clipboard and direct-send capabilities
+5. Template customization (tone, length, audience)
+
+**Competitive Context:**
+- Chime: Has marketing automation but not AI-generated content
+- DwellCRM: AI Email Writer exists but limited scope
+- Smart Agent: Opportunity to lead in AI content generation
+
+---
+
+### REC-018: Deal Milestone Auto-Reminders
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P0 - Critical  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Add automated email/SMS/in-app reminders for upcoming deal milestones (inspection deadline, financing contingency, closing date). Leverage existing deal milestone data.
+
+**Rationale:**
+- Addresses PP-01 (Transaction Coordination), the **#1 severity pain point** (9.5/10)
+- 68% of brokerages face compliance challenges from insufficient data tracking
+- Missed deadlines cause 5-10% of deals to fall through
+- Quick win: existing milestone data + notification system
+- Prevents agent liability from missed contractual deadlines
+
+**Impact:**
+- **User Impact:** 4/5 (prevents deal fallthrough)
+- **Vision Alignment:** 4/5 (enhances existing pipeline)
+- **Effort:** Small (S)
+- **Owner:** PM-Transactions
+- **Timeline:** Q1 2026
+
+**Implementation:**
+1. Configurable reminder schedule (3 day, 1 day, same-day notifications)
+2. Multi-channel delivery (email, SMS, in-app push)
+3. Escalation rules (overdue → urgent notification)
+4. Per-deal notification preferences
+5. Calendar integration for deadline events
+
+**Competitive Context:**
+- Most competitors have basic reminders but not AI-escalation
+- Transaction coordination platforms (ListedKit, SkySlope) offer this
+- Smart Agent can integrate with AI for contextual reminders
+
+---
+
+### REC-019: Communication Templates Library
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Pre-built and customizable message templates for common agent scenarios: initial lead response, showing confirmation, offer submission, under-contract updates, closing checklist, post-close thank you.
+
+**Rationale:**
+- Addresses PP-04 (Client Communication Overhead, 8.5/10 severity)
+- Speed-to-lead: responding within 5 minutes yields 21x higher qualification
+- Templates reduce response time from minutes to seconds
+- Ensures consistent, professional communication
+- 73% of buyers prioritize agent responsiveness
+
+**Impact:**
+- **User Impact:** 3/5 (moderate, improves response quality and speed)
+- **Vision Alignment:** 3/5 (supports communication features)
+- **Effort:** Small (S)
+- **Owner:** PM-Communication
+- **Timeline:** Q1 2026
+
+**Implementation:**
+1. Template CRUD with categories (lead response, transaction, marketing)
+2. Variable insertion ({{client_name}}, {{property_address}}, {{deadline}})
+3. Quick-insert from messaging and email interfaces
+4. AI template suggestions based on conversation context
+5. Team-shared vs. personal template libraries
+
+**Competitive Context:**
+- Follow Up Boss: Has email templates and sequences
+- Cloze: Has templates
+- Smart Agent: Can differentiate with AI-suggested templates
+
+---
+
+### REC-020: Smart Daily Action Plan
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+AI-generated daily priority list surfacing: overdue tasks, today's deadlines, follow-ups due, new leads requiring response, deals needing attention. Displayed as a dashboard widget or morning briefing.
+
+**Rationale:**
+- Addresses PP-07 (Time Management, 7.5/10 severity)
+- Agents work ~35 hrs/week but feel chronically behind
+- Only 29-34% of agent time is on revenue-generating activities
+- AI prioritization reduces cognitive overload across multiple deals
+- Showcases AI-first value proposition from first login each day
+
+**Impact:**
+- **User Impact:** 3/5 (moderate, addresses cognitive overload)
+- **Vision Alignment:** 5/5 (AI-first intelligent assistant)
+- **Effort:** Small (S)
+- **Owner:** PM-Experience
+- **Timeline:** Q1 2026
+
+**Implementation:**
+1. Morning briefing dashboard widget
+2. Aggregation of overdue items, upcoming deadlines, stale leads
+3. AI prioritization ranking (urgency × revenue impact)
+4. One-click actions (call, email, view deal)
+5. Optional daily email digest
+
+**Competitive Context:**
+- Property Swarm: Smart prioritization (similar concept)
+- Cloze: AI-powered task suggestions
+- Smart Agent: Can be superior with deal + document + contact intelligence
+
+---
+
+### REC-021: Automated Follow-Up Sequences
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P0 - Critical  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Build drip campaign engine with multi-channel support (email, SMS, in-app). Include time-based sequences, behavior-triggered sequences, and templates for common lead journeys.
+
+**Rationale:**
+- Addresses PP-02 (Lead Management, **9.2/10 severity** — #2 pain point)
+- 80% of sales require 5+ follow-ups, but 44% of agents stop after 1
+- Top agents achieve 5-10x better conversion through systematic follow-up
+- Follow Up Boss's core strength — needed for competitive parity
+- Estimated $30K-$100K/year in revenue lost per agent from dropped leads
+
+**Impact:**
+- **User Impact:** 5/5 (transformative conversion improvement)
+- **Vision Alignment:** 5/5 (AI-powered automation)
+- **Effort:** Medium (M)
+- **Owner:** PM-Communication
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Visual sequence builder (drag-and-drop steps)
+2. Multi-channel steps (email, SMS, wait, condition)
+3. Behavior triggers (email open → call, property view → send listing)
+4. Pre-built sequence templates (new buyer, listing inquiry, past client)
+5. Performance analytics (open rates, response rates, conversion)
+6. AI-optimized send times
+
+**Competitive Context:**
+- Follow Up Boss: Core strength, comprehensive sequences
+- Chime: Smart Action Plans with dynamic workflows
+- Smart Agent: Must achieve parity; AI optimization is differentiator
+
+---
+
+### REC-022: Unified Communication Hub
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Single inbox aggregating email, SMS, in-app messages, and future social DMs. AI-powered auto-categorization, priority sorting, suggested responses, and after-hours AI responder.
+
+**Rationale:**
+- Addresses PP-04 (Client Communication, 8.5/10) and PP-05 (CRM Fragmentation, 8.3/10)
+- Agents manage communication across 3-5 platforms
+- 81% of agents feel stressed and overworked (Opendoor 2025)
+- Unified inbox saves 2-3 hrs/week on context-switching
+- After-hours AI responder addresses 24/7 availability expectation
+
+**Impact:**
+- **User Impact:** 5/5 (transformative workflow improvement)
+- **Vision Alignment:** 5/5 (horizontal tool integration + AI)
+- **Effort:** Medium (M)
+- **Owner:** PM-Communication + PM-Integration
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Unified inbox UI with channel indicators
+2. Gmail integration (read, compose, reply)
+3. SMS integration (Twilio or similar)
+4. AI message categorization (urgent, follow-up, info, spam)
+5. AI suggested responses
+6. After-hours auto-responder with AI (configurable)
+
+**Competitive Context:**
+- Follow Up Boss: Strong call/text/email from CRM
+- Cloze: Unified contact view with communication history
+- Smart Agent: AI-powered classification and suggestions differentiate
+
+---
+
+### REC-023: Transaction Coordination Engine
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P0 - Critical  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Automated transaction management with stage-specific checklists, automatic document requests, deadline tracking with escalation, stakeholder communication automation, and compliance verification.
+
+**Rationale:**
+- Addresses PP-01 (Transaction Coordination, **9.5/10 severity** — #1 pain point)
+- A single transaction has 30-50+ documents and 15-20 stakeholders
+- Agents managing 5-10 concurrent deals track hundreds of milestones
+- No competitor uses AI for end-to-end transaction management
+- **Blue ocean opportunity** — first-in-market AI transaction coordinator
+
+**Impact:**
+- **User Impact:** 5/5 (saves 5-8 hrs/week, prevents deal fallthrough)
+- **Vision Alignment:** 5/5 (AI-first transaction management)
+- **Effort:** Large (L)
+- **Owner:** PM-Transactions
+- **Timeline:** Q3 2026
+
+**Implementation:**
+1. State-specific transaction checklists (configurable)
+2. Document request automation (email reminders to stakeholders)
+3. Deadline tracking with escalation (agent → broker → emergency)
+4. Integration with document intelligence (auto-detect document types, extract dates)
+5. Stakeholder portal (lender, title, inspector status views)
+6. Compliance verification at each stage transition
+
+**Competitive Context:**
+- SkySlope: Transaction management (not AI-powered)
+- DotLoop: Document workflow (limited intelligence)
+- Smart Agent: AI + document intelligence = unique compound advantage
+
+---
+
+### REC-024: AI Lead Scoring & Routing
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+ML-based lead scoring using engagement signals to rank leads by conversion likelihood. Automatic routing based on agent expertise, availability, and geographic specialization.
+
+**Rationale:**
+- Addresses PP-02 (Lead Management, 9.2/10) and PP-09 (Team Coordination, 6.8/10)
+- Average agent converts only 1-2% of leads
+- Teams with good systems grow 405.4% faster
+- AI scoring ensures highest-value leads get fastest response
+- Fair routing reduces team conflict over lead distribution
+
+**Impact:**
+- **User Impact:** 4/5 (higher conversion, better team dynamics)
+- **Vision Alignment:** 5/5 (AI-powered intelligence)
+- **Effort:** Medium (M)
+- **Owner:** PM-Intelligence
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Lead scoring model (engagement, recency, property match, budget)
+2. Score-based lead prioritization in contact list
+3. Team routing rules (round-robin, weighted, geographic, expertise)
+4. Lead assignment notifications with context
+5. Conversion tracking to improve scoring model
+
+**Competitive Context:**
+- Follow Up Boss: Smart Lists and lead distribution
+- Chime: Automated lead routing
+- DwellCRM: AI Lead Scoring
+- Smart Agent: AI-powered scoring with deal+document context is superior
+
+---
+
+### REC-025: Automated CMA Generation
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P2 - Medium  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+AI-generated Comparative Market Analyses using property data, market trends, and intelligent comp selection with presentation-ready output.
+
+**Rationale:**
+- Addresses PP-06 (Market Data Access, 7.8/10 severity)
+- CMA preparation takes 1-2 hours per property manually
+- Clients arrive with Zillow/Redfin data — agents must provide deeper analysis
+- Requires MLS integration (Phase 4 dependency)
+- Competitive differentiation through AI-powered analysis
+
+**Impact:**
+- **User Impact:** 4/5 (saves 1-2 hrs per CMA)
+- **Vision Alignment:** 5/5 (AI intelligence applied to core workflow)
+- **Effort:** Large (L)
+- **Owner:** PM-Intelligence + PM-Integration
+- **Timeline:** Q4 2026
+
+**Implementation:**
+1. MLS data integration (via Bridge Interactive — see REC-009)
+2. AI comp selection algorithm
+3. Price adjustment calculations
+4. Presentation-ready PDF/HTML output
+5. Market trend narratives (AI-generated)
+
+**Competitive Context:**
+- DwellCRM: AI Home Valuation (basic)
+- Cloud CMA: Standalone CMA tool (not AI-powered)
+- Smart Agent: AI + MLS data = superior automated CMAs
+
+---
+
+### REC-026: Integrated Marketing Suite
+**Source:** RES-005 Agent Pain Points Research  
+**Priority:** P2 - Medium  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Built-in marketing tools including listing flyer templates, social media post generator with scheduling, email newsletter builder, open house promotions, and digital advertising integration.
+
+**Rationale:**
+- Addresses PP-08 (Marketing & Lead Gen, 7.2/10 severity)
+- Agents spend 3-5 hrs/week on marketing with minimal training
+- Chime includes marketing automation as competitive advantage
+- Reduces need for separate marketing tool subscriptions
+- AI content generation (REC-017) provides foundation
+
+**Impact:**
+- **User Impact:** 4/5 (comprehensive marketing solution)
+- **Vision Alignment:** 4/5 (extends platform value)
+- **Effort:** Large (L)
+- **Owner:** PM-Experience + PM-Intelligence
+- **Timeline:** Q3-Q4 2026
+
+**Implementation:**
+1. Template library (flyers, postcards, social posts)
+2. AI-powered content generation (extends REC-017)
+3. Social media scheduling (Facebook, Instagram, LinkedIn)
+4. Email newsletter builder with templates
+5. Open house promotion tools
+6. Performance analytics (engagement, leads generated)
+
+**Competitive Context:**
+- Chime: Built-in marketing automation (lead gen, branding ads, direct mail)
+- Follow Up Boss: Marketing via integrations (not built-in)
+- Smart Agent: AI-first marketing with built-in content generation
+
+---
+
 ## Recommendation Status Legend
 
 - **Pending Review:** Awaiting PM-Orchestrator evaluation
@@ -571,9 +946,11 @@ Evaluate IDX website builder as potential feature to match Chime's competitive a
 | Metric | Target | Current |
 |--------|--------|---------|
 | **Recommendation Adoption Rate** | >40% | TBD (pending review) |
-| **Research Cycle Time** | <1 week | ✅ 1 day (RES-001, RES-002) |
+| **Research Cycle Time** | <1 week | ✅ 1 day avg (RES-001 through RES-005) |
 | **Roadmap Influence** | >30% | TBD (pending review) |
+| **Total Recommendations** | — | 26 (16 prior + 10 from RES-005) |
+| **Pain Points Mapped** | — | 10 identified, 7 partially+ addressed by SA |
 
 ---
 
-*Last Updated: 2026-02-06 by PM-Research*
+*Last Updated: 2026-02-07 by PM-Research (Dev Cycle #8)*
