@@ -1,14 +1,27 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, AlertCircle } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft, AlertCircle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AgentForm } from "@/components/agents/AgentForm";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
@@ -16,7 +29,8 @@ type AIAgent = Tables<"ai_agents">;
 export default function AdminAgentEdit() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { user, isSuperAdmin } = useAuth();
   const { isAdmin } = useRole();
 
   const { data: agent, isLoading, error } = useQuery({
@@ -34,6 +48,26 @@ export default function AdminAgentEdit() {
       return data as AIAgent;
     },
     enabled: !!id,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!id) throw new Error("Agent ID is required");
+      const { error } = await supabase
+        .from("ai_agents")
+        .delete()
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Agent deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["ai_agents"] });
+      navigate("/admin/agents");
+    },
+    onError: (error) => {
+      console.error("Failed to delete agent:", error);
+      toast.error("Failed to delete agent");
+    },
   });
 
   const handleSuccess = () => {
@@ -136,6 +170,52 @@ export default function AdminAgentEdit() {
 
         {/* Form */}
         <AgentForm agent={agent} onSuccess={handleSuccess} onCancel={handleCancel} />
+
+        {/* Danger Zone - Super Admin Only */}
+        {isSuperAdmin && (
+          <Card className="border-destructive/50">
+            <CardHeader>
+              <h3 className="text-sm font-medium text-destructive uppercase tracking-wide">
+                Danger Zone
+              </h3>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">Delete this agent</p>
+                  <p className="text-sm text-muted-foreground">
+                    Once you delete an agent, there is no going back. Please be certain.
+                  </p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Agent</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Are you sure you want to delete "{agent.name}"? This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => deleteMutation.mutate()}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </AppLayout>
   );

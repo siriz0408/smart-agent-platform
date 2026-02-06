@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
   ArrowLeft, 
   Search, 
@@ -23,7 +23,8 @@ import {
   Home,
   Users,
   DollarSign,
-  Calendar
+  Calendar,
+  Trash2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,13 +42,25 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type AIAgent = Tables<"ai_agents">;
@@ -73,8 +86,10 @@ const iconMap: Record<string, React.ElementType> = {
 export default function AdminAgents() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [agentToDelete, setAgentToDelete] = useState<AIAgent | null>(null);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { user, isSuperAdmin } = useAuth();
   const { isAdmin } = useRole();
 
   // Detect mobile screen
@@ -95,6 +110,25 @@ export default function AdminAgents() {
       
       if (error) throw error;
       return data as AIAgent[];
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (agentId: string) => {
+      const { error } = await supabase
+        .from("ai_agents")
+        .delete()
+        .eq("id", agentId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Agent deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["admin_ai_agents"] });
+      setAgentToDelete(null);
+    },
+    onError: (error) => {
+      console.error("Failed to delete agent:", error);
+      toast.error("Failed to delete agent");
     },
   });
 
@@ -243,6 +277,18 @@ export default function AdminAgents() {
                                     Edit (not owner)
                                   </DropdownMenuItem>
                                 )}
+                                {isSuperAdmin && (
+                                  <>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                      className="text-destructive focus:text-destructive"
+                                      onClick={() => setAgentToDelete(agent)}
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" />
+                                      Delete Agent
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
@@ -385,6 +431,18 @@ export default function AdminAgents() {
                                   Edit (not owner)
                                 </DropdownMenuItem>
                               )}
+                              {isSuperAdmin && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    className="text-destructive focus:text-destructive"
+                                    onClick={() => setAgentToDelete(agent)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Agent
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
@@ -396,6 +454,27 @@ export default function AdminAgents() {
             </Table>
           </div>
         )}
+
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog open={!!agentToDelete} onOpenChange={(open) => !open && setAgentToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Agent</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete "{agentToDelete?.name}"? This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => agentToDelete && deleteMutation.mutate(agentToDelete.id)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AppLayout>
   );
