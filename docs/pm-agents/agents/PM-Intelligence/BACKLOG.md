@@ -41,28 +41,6 @@ Create `docs/pm-agents/agents/PM-Intelligence/PROMPTS.md` documenting:
 
 ---
 
-### INT-006: Improve citation formatting in responses
-**Priority:** P2 | **Effort:** S | **Vision:** 8
-
-**Objective:** Improve how AI responses cite source documents.
-
-**Files to Edit:**
-- `supabase/functions/ai-chat/index.ts`
-
-**Current State:** Citations may be inconsistent or hard to read.
-
-**Desired State:** Citations should be:
-- Formatted as `[Source: filename, page X]`
-- Clickable/linkable when possible
-- Grouped at end of relevant paragraph
-
-**Acceptance Criteria:**
-- [ ] Citation format standardized
-- [ ] Tests pass
-- [ ] Example response reviewed
-
----
-
 ## Backlog
 
 | ID | Item | Priority | Notes |
