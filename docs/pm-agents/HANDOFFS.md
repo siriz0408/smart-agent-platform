@@ -217,6 +217,7 @@ Migrate to sessionStorage in Supabase client config
 - **To:** PM-Context
 - **Priority:** High
 - **Created:** 2026-02-05
+- **Resolved:** 2026-02-06
 
 **Issue:**
 Overly permissive RLS policies on `addresses` and `external_properties` tables.
@@ -227,7 +228,17 @@ Potential data exposure across tenants
 **Suggested Action:**
 Tighten RLS policies to enforce tenant isolation
 
-**Status:** PENDING
+**Status:** RESOLVED
+
+**Resolution:**
+- ✅ Created migration `20260206200500_fix_addresses_external_properties_rls.sql`
+- ✅ Fixed addresses RLS: Now filters through properties/contacts in user's workspace
+- ✅ Fixed external_properties RLS: Now filters through saved_properties in user's workspace
+- ✅ Added super_admin bypass for both tables
+- ✅ Added service_role policies for backend operations
+- ✅ Added performance indexes for RLS filtering (idx_properties_address_tenant, idx_contacts_address_tenant, etc.)
+- ✅ Migration includes validation checks to verify policies were created correctly
+- Migration ready for deployment
 
 ---
 

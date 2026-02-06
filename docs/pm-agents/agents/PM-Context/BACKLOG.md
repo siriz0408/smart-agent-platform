@@ -25,4 +25,5 @@
 | CTX-000 | PM-Context setup | 2026-02-05 |
 | CTX-001 | Initial domain audit | 2026-02-06 |
 | CTX-002 | Audit document indexing | 2026-02-06 |
+| CTX-003 | Check CRM completeness | 2026-02-06 |
 | CTX-008 | Verify search functionality in production | 2026-02-06 |
