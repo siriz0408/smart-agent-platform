@@ -57,6 +57,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const { streamMessage, isStreaming } = useAIStreaming();
   const { preferences, updatePreference } = useUserPreferences();
+  const { measureAsync } = usePerformanceMonitoring("Chat");
 
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);

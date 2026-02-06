@@ -28,6 +28,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { messages, isLoading, sendMessage, clearMessages } = useAIChat();
   const { preferences, updatePreference } = useUserPreferences();
+  const { measureAsync } = usePerformanceMonitoring("Home");
   const [input, setInput] = useState("");
   const [activeMentions, setActiveMentions] = useState<Mention[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);

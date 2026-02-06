@@ -42,6 +42,7 @@
     "test:browser": "npx agent-browser",
     "test:log-bugs": "npx tsx scripts/log-bugs.ts",
     "qa:run": "npm run test:e2e -- --reporter=json > test-artifacts/playwright-results.json && npm run test:log-bugs",
+    "qa:gate": "npx tsx scripts/qa-gate.ts",
     "cap:init": "npx cap add ios && npx cap add android",
     "cap:sync": "npm run build && npx cap sync",
     "cap:ios": "npx cap open ios",
