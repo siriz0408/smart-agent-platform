@@ -467,6 +467,153 @@ See [`plugins/compound-engineering/README.md`](./plugins/compound-engineering/RE
 
 ---
 
+## PM Agent System
+
+**Location**: `docs/pm-agents/`
+
+An autonomous Product Manager agent system with 11 AI agents that manage product development, conduct R&D, and report 3x daily.
+
+### Quick Start
+
+```bash
+# Run morning standup (all 11 PMs)
+"Run PM morning standup"
+
+# Run midday check (5 core PMs)
+"Run PM midday check"
+
+# Run evening summary
+"Run PM evening summary"
+
+# Quick health check
+"Run PM health check"
+
+# Single PM deep dive
+"Run PM-Intelligence investigate [issue]"
+```
+
+### Agent Overview
+
+| Agent | Domain | North Star Metric |
+|-------|--------|------------------|
+| **PM-Orchestrator** | Vision, coordination | Report delivery 100% |
+| **PM-Intelligence** | AI chat, RAG, agents | AI Task Completion >90% |
+| **PM-Context** | Documents, CRM, data | Data Completeness >90% |
+| **PM-Transactions** | Deals, pipeline | Deal Velocity +20% |
+| **PM-Experience** | UI/UX, accessibility | NPS >50 |
+| **PM-Growth** | Billing, onboarding | MRR Growth >15% |
+| **PM-Integration** | External APIs, MLS | Integration Adoption >60% |
+| **PM-Discovery** | Search, findability | Search Success >95% |
+| **PM-Communication** | Messaging, notifications | Response Time <4hr |
+| **PM-Infrastructure** | DevOps, performance | Uptime 99.9% |
+| **PM-Security** | Auth, compliance | 0 Incidents |
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `docs/pm-agents/VISION.md` | Product vision (owned by PM-Orchestrator) |
+| `docs/pm-agents/OWNERSHIP.md` | Feature-to-PM mapping |
+| `docs/pm-agents/DECISIONS.md` | Human approval workflow |
+| `docs/pm-agents/STATE.md` | Current system state |
+| `docs/pm-agents/RUN-PM.md` | Full invocation guide |
+| `docs/pm-agents/agents/PM-*/AGENT.md` | Individual PM definitions |
+
+### Run Tiers
+
+| Tier | Command | PMs | When |
+|------|---------|-----|------|
+| Full | "Run PM morning standup" | All 11 | 8am, 8pm EST |
+| Core | "Run PM midday check" | 5 | 12pm EST |
+| Quick | "Run PM health check" | 1 | Quick status |
+| Single | "Run PM-[Name] deep dive" | 1 | Investigation |
+
+### Human Workflow
+
+1. PMs report → Check `docs/pm-agents/reports/YYYY-MM-DD/`
+2. Decisions needed → Review `docs/pm-agents/DECISIONS.md`
+3. Add your decision → PMs pick up in next run
+
+See [`docs/pm-agents/RUN-PM.md`](./docs/pm-agents/RUN-PM.md) for complete documentation.
+
+### Autonomous Execution
+
+The PM agents can run **fully autonomously** via the Python orchestrator, making actual code changes, running tests, and committing to git.
+
+**Location**: `pm_core/`
+
+#### Quick Start - Autonomous Mode
+
+```bash
+# 1. Install dependencies
+pip3 install -r pm_core/requirements.txt
+
+# 2. Set your API key
+export ANTHROPIC_API_KEY='your-key-here'
+
+# 3. Test run (single agent)
+python3 -m pm_core.pm_orchestrator --test --agents PM-Intelligence
+
+# 4. Full run (all agents)
+python3 -m pm_core.pm_orchestrator
+
+# 5. Schedule daily at 8am
+./scripts/install-pm-orchestrator.sh
+```
+
+#### What Autonomous Agents Can Do
+
+| Capability | How |
+|------------|-----|
+| Read files | `read_file` tool |
+| Edit files | `edit_file` / `write_file` tools |
+| Run commands | `run_command` tool (npm, git, etc.) |
+| Run tests | `run_tests` tool |
+| Git commit | `git_commit` tool |
+| Create handoffs | `create_handoff` tool |
+
+#### Safety Guardrails
+
+| Guardrail | Limit |
+|-----------|-------|
+| Commits per agent/day | 10 |
+| Total commits/day | 50 |
+| Forbidden paths | `.env`, secrets, `node_modules/` |
+| Branch isolation | All work on `pm-agents/YYYY-MM-DD` |
+| Test requirement | Changes only commit if tests pass |
+
+#### Daily Flow
+
+```
+8:00 AM - launchd triggers orchestrator
+    │
+    ├─ Create branch: pm-agents/2026-02-05
+    ├─ Run PM-Intelligence
+    │   └─ Executes task from BACKLOG.md
+    │   └─ Commits changes
+    ├─ Run PM-Experience
+    │   └─ Executes task from BACKLOG.md
+    │   └─ Commits changes
+    ├─ ... (all 10 domain PMs)
+    │
+    ├─ Generate daily report
+    ├─ Save to ~/Desktop/PM-Report-YYYY-MM-DD.md
+    └─ Update STATE.md
+```
+
+#### Key Files
+
+| File | Purpose |
+|------|---------|
+| `pm_core/pm_orchestrator.py` | Main entry point |
+| `pm_core/pm_agents.py` | Agent execution logic |
+| `pm_core/pm_tools.py` | Tool definitions for Claude API |
+| `pm_core/pm_config.py` | Configuration & safety |
+| `scripts/com.smartagent.pm-orchestrator.plist` | launchd schedule |
+| `scripts/install-pm-orchestrator.sh` | Installation script |
+
+---
+
 ## Development Guidelines
 
 ### Before Coding

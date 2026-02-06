@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.smartagent.pm-orchestrator</string>
+    
+    <key>Comment</key>
+    <string>Smart Agent PM Orchestrator - Runs autonomous PM agents daily at 8am</string>
+    
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/python3</string>
+        <string>-m</string>
+        <string>pm_core.pm_orchestrator</string>
+    </array>
+    
+    <key>WorkingDirectory</key>
+    <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1</string>
+    
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin</string>
+        <key>PYTHONPATH</key>
+        <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1</string>
+    </dict>
+    
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    
+    <key>StandardOutPath</key>
+    <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1/logs/pm-orchestrator-stdout.log</string>
+    
+    <key>StandardErrorPath</key>
+    <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1/logs/pm-orchestrator-stderr.log</string>
+    
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>

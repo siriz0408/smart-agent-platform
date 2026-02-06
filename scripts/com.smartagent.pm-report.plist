@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Label: Unique identifier for this job -->
+    <key>Label</key>
+    <string>com.smartagent.pm-report</string>
+    
+    <!-- Description: What this job does -->
+    <key>ProcessType</key>
+    <string>Background</string>
+    
+    <!-- Program: The script to run -->
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1/scripts/pm-daily-report.sh</string>
+    </array>
+    
+    <!-- Schedule: Run at 8:00 AM local time daily -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>8</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    
+    <!-- Working Directory -->
+    <key>WorkingDirectory</key>
+    <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1</string>
+    
+    <!-- Environment Variables -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    </dict>
+    
+    <!-- Logging: Output and error logs -->
+    <key>StandardOutPath</key>
+    <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1/logs/pm-report.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/sam.irizarry/Downloads/ReAgentOS_V1/logs/pm-report-error.log</string>
+    
+    <!-- Run at load (useful for testing) -->
+    <key>RunAtLoad</key>
+    <false/>
+    
+    <!-- Keep alive: Don't restart if it crashes -->
+    <key>KeepAlive</key>
+    <false/>
+    
+    <!-- Nice: Run at low priority -->
+    <key>Nice</key>
+    <integer>10</integer>
+</dict>
+</plist>
