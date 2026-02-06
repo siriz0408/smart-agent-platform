@@ -412,8 +412,9 @@ Migration is complete when:
 - Vercel: `https://smart-agent-platform.vercel.app`
 
 **Documentation:**
-- Architecture: [CLAUDE.md](../CLAUDE.md)
-- PRD: [Smart_Agent_Platform_PRD_v2.md](../Smart_Agent_Platform_PRD_v2.md)
+- Architecture: [ARCHITECTURE.md](../ARCHITECTURE.md)
+- Developer Guide: [CLAUDE.md](../CLAUDE.md)
+- PRD: [Smart_Agent_Platform_PRD_v3.md](../Smart_Agent_Platform_PRD_v3.md)
 - Task Board: [TASK_BOARD.md](../TASK_BOARD.md)
 
 **API Keys Storage:**

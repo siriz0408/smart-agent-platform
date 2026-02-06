@@ -339,7 +339,8 @@ jq '(.summary.passed / .summary.total) * 100' test-artifacts/state.json
 
 ## 📚 Related Documents
 
-- **PRD:** `/Users/sam.irizarry/Downloads/ReAgentOS_V1/Smart_Agent_Platform_PRD_v2.md`
+- **PRD:** `/Users/sam.irizarry/Downloads/ReAgentOS_V1/Smart_Agent_Platform_PRD_v3.md`
+- **Architecture:** `/Users/sam.irizarry/Downloads/ReAgentOS_V1/ARCHITECTURE.md`
 - **Task Board:** `/Users/sam.irizarry/Downloads/ReAgentOS_V1/TASK_BOARD.md`
 - **Browser QA Skill:** `/Users/sam.irizarry/Downloads/ReAgentOS_V1/.claude/skills/smart-agent-browser-qa/SKILL.md`
 

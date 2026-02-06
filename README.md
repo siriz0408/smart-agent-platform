@@ -177,8 +177,9 @@ smart-agent-platform/
 
 ## Documentation
 
-- **Architecture**: See [CLAUDE.md](./CLAUDE.md) for detailed architecture documentation
-- **PRD**: See [Smart_Agent_Platform_PRD_v2.md](./Smart_Agent_Platform_PRD_v2.md) for product requirements
+- **Architecture**: See [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed architecture documentation
+- **PRD**: See [Smart_Agent_Platform_PRD_v3.md](./Smart_Agent_Platform_PRD_v3.md) for product requirements
+- **Developer Guide**: See [CLAUDE.md](./CLAUDE.md) for developer context and quickstart
 - **Task Board**: See [TASK_BOARD.md](./TASK_BOARD.md) for development progress
 
 ## Contributing

@@ -212,6 +212,7 @@ To add new tests:
 ## References
 
 - [agent-browser documentation](https://github.com/yourusername/agent-browser)
-- [Smart Agent Platform PRD](../../Smart_Agent_Platform_PRD_v2.md)
+- [Smart Agent Platform PRD](../../Smart_Agent_Platform_PRD_v3.md)
+- [Architecture Documentation](../../ARCHITECTURE.md)
 - [Migration State](../../MIGRATION_STATE.md)
 - [Task Board](../../TASK_BOARD.md)

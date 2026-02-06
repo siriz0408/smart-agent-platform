@@ -166,7 +166,8 @@
 | Tool | Purpose |
 |------|---------|
 | All docs/pm-agents/ files | Full read/write |
-| PRD (Smart_Agent_Platform_PRD_v2.md) | Vision reference |
+| PRD (Smart_Agent_Platform_PRD_v3.md) | Vision reference |
+| ARCHITECTURE.md | Technical reference |
 | CLAUDE.md | Update with PM system info |
 | Task tool | Spawn sub-PMs |
 | All code (read) | Understand system |

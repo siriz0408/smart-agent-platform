@@ -8,7 +8,7 @@
 ### ❌ Critical Issues (4 found)
 
 - [ ] **LOVABLE_API_KEY references** → Change to ANTHROPIC_API_KEY
-  - [ ] Smart_Agent_Platform_PRD_v2.md
+  - [ ] Smart_Agent_Platform_PRD_v3.md
   - [ ] docs/CONFIG_UPDATES_NEEDED.md
   - [ ] docs/MIGRATION_GUIDE.md
   - [ ] docs/TESTING_CHECKLIST.md
@@ -19,7 +19,7 @@
   - [ ] CLAUDE.md
 
 - [ ] **lovable.dev gateway references** → Change to api.anthropic.com
-  - [ ] Smart_Agent_Platform_PRD_v2.md
+  - [ ] Smart_Agent_Platform_PRD_v3.md
   - [ ] docs/CONFIG_UPDATES_NEEDED.md
   - [ ] docs/MIGRATION_GUIDE.md
   - [ ] docs/SUPABASE_SETUP.md
@@ -86,7 +86,7 @@
   - [ ] Update secret validation tests
 
 ### Product Documentation
-- [ ] Smart_Agent_Platform_PRD_v2.md
+- [ ] Smart_Agent_Platform_PRD_v3.md
   - [ ] Update AI service references
   - [ ] Mark completed features
   - [ ] Update technical implementation notes

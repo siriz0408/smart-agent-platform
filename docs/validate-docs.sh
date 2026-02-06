@@ -135,9 +135,10 @@ echo "📚 Checking critical documentation files..."
 CRITICAL_DOCS=(
     "CLAUDE.md"
     "README.md"
+    "ARCHITECTURE.md"
     "COMMON_COMMANDS.md"
     "docs/SUPABASE_SETUP.md"
-    "Smart_Agent_Platform_PRD_v2.md"
+    "Smart_Agent_Platform_PRD_v3.md"
     ".lovable/plan.md"
 )
 

@@ -2,15 +2,46 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+---
+
+## ⚠️ Important: Product vs. Dev Tools
+
+This project contains:
+- **Product Features** (customer-facing) → Document in PRD
+- **Dev Tools** (internal only) → Document here, NOT in PRD
+
+**Dev Tools include:**
+- PM Agent System (`docs/pm-agents/`)
+- Feature Dev Plugin (`plugins/feature-dev/`)
+- Compound Engineering Plugin (`plugins/compound-engineering/`)
+- E2E tests (`tests/e2e/`)
+- Testing infrastructure (Playwright, agent-browser CLI)
+
+---
+
 ## Project Overview
 
-Smart Agent is a real estate AI assistant SaaS application. It provides AI-powered document analysis, CRM features (contacts, properties, deals), and multi-document chat capabilities for real estate professionals.
+**Smart Agent** is an AI-powered real estate platform that combines CRM, document intelligence, AI chat, and tool integrations to help real estate professionals manage their entire transaction lifecycle.
+
+**Key Product Features:**
+- Workspace multi-tenancy (brokerages, teams)
+- Contact management with user linking
+- Deal pipeline (buyer/seller transactions)
+- AI chat with document Q&A
+- Document intelligence (upload, index, semantic search)
+- Tool integration platform (connect Gmail, Calendar, CRMs, etc.)
+- Real-time messaging
+- Stripe billing with subscription tiers
+
+**Current Status:** Phase 1 MVP 95% complete, Phase 2 80% complete
 
 ## Tech Stack
 
 - **Frontend**: React 18 + TypeScript + Vite, shadcn/ui components, Tailwind CSS, React Query
 - **Backend**: Supabase (PostgreSQL with pgvector, Auth, Edge Functions in Deno)
+- **AI**: Anthropic Claude API (claude-sonnet-4-20250514)
 - **Payments**: Stripe integration
+- **Mobile**: Capacitor (iOS/Android)
 
 ## Commands
 
@@ -116,12 +147,20 @@ Edge functions running on Deno (all have `verify_jwt = false` in config.toml):
 
 ### Database
 
-Multi-tenant PostgreSQL with pgvector. All tables use `tenant_id` for RLS isolation.
+Multi-workspace PostgreSQL with pgvector. Row-Level Security (RLS) enforces workspace isolation.
 
-- **Core**: `tenants`, `profiles`, `user_roles`
-- **CRM**: `contacts`, `contact_agents`, `properties`
-- **Documents/AI**: `documents`, `document_chunks` (with vector embeddings), `document_metadata` (structured extraction), `ai_conversations`, `ai_messages`
-- **Pipeline**: Deal and milestone tracking tables
+- **Core**: `workspaces`, `workspace_memberships`, `profiles`, `user_roles`, `user_preferences`
+- **CRM**: `contacts` (with user_id linking), `contact_agents`, `properties`, `addresses`
+- **Documents/AI**: `documents`, `document_chunks` (with vector embeddings), `document_metadata`, `document_projects`, `ai_conversations`, `ai_messages`, `ai_agents`
+- **Pipeline**: `deals`, `deal_milestones`, `deal_activities`
+- **Messaging**: `conversations`, `conversation_participants`, `messages`, `message_attachments`, `user_presence`, `typing_indicators`
+- **Billing**: `subscriptions`, `invoices`, `usage_records`
+
+**Key Architecture:**
+- Users can belong to multiple workspaces
+- Each workspace has its own subscription
+- Workspace switching via `active_workspace_id`
+- Contact-user linking: `contacts.user_id` → `profiles.user_id`
 
 ### Path Aliases
 
@@ -140,15 +179,22 @@ The `index-document` edge function processes real estate documents:
 
 AI operations use Anthropic's Claude API (`api.anthropic.com`) with `claude-sonnet-4-20250514` model. The backend handles streaming format conversion to ensure compatibility with frontend expectations.
 
-See `.lovable/plan.md` for the document extraction enhancement plan.
-
 ---
 
 ## Documentation References
 
-- **PRD**: [Smart_Agent_Platform_PRD_v2.md](./Smart_Agent_Platform_PRD_v2.md)
+### Product Documentation
+- **PRD (Product Requirements)**: [Smart_Agent_Platform_PRD_v3.md](./Smart_Agent_Platform_PRD_v3.md) ← **SINGLE SOURCE OF TRUTH**
+- **Architecture (Technical Design)**: [ARCHITECTURE.md](./ARCHITECTURE.md) (deep technical details)
+- **CLAUDE.md**: This file (developer context)
+
+### Project Management
 - **Task Board**: [TASK_BOARD.md](./TASK_BOARD.md)
-- **Development Plan**: `.lovable/plan.md`
+- **Implementation Status**: See PRD v3.0 Section: "Current Implementation Status"
+
+### Feature Documentation
+- **Contact-User Linking**: [DOCUMENTATION_CONTACT_USER_LINKING.md](./DOCUMENTATION_CONTACT_USER_LINKING.md)
+- **Testing Guide**: [TESTING_GUIDE.md](./TESTING_GUIDE.md)
 
 ---
 
@@ -202,7 +248,9 @@ Project-specific skills are in `.claude/skills/smart-agent-*/SKILL.md`.
 
 ---
 
-## Feature Development Plugin
+## Feature Development Plugin ⚙️ DEV TOOL
+
+> **⚠️ INTERNAL DEV TOOL** - This is NOT a product feature. Do NOT document in PRD.
 
 **Location**: `plugins/feature-dev/`
 
@@ -302,7 +350,9 @@ See [`plugins/feature-dev/README.md`](./plugins/feature-dev/README.md) for compl
 
 ---
 
-## Compound Engineering Plugin
+## Compound Engineering Plugin ⚙️ DEV TOOL
+
+> **⚠️ INTERNAL DEV TOOL** - This is NOT a product feature. Do NOT document in PRD.
 
 **Location**: `plugins/compound-engineering/`
 
@@ -467,7 +517,9 @@ See [`plugins/compound-engineering/README.md`](./plugins/compound-engineering/RE
 
 ---
 
-## PM Agent System
+## PM Agent System ⚙️ DEV TOOL
+
+> **⚠️ INTERNAL DEV TOOL** - This is NOT a product feature. Do NOT document in PRD.
 
 **Location**: `docs/pm-agents/`
 

@@ -296,7 +296,8 @@ Consider running tests:
 
 - [Migration State](../MIGRATION_STATE.md) - Current migration status
 - [Task Board](../TASK_BOARD.md) - Development tasks
-- [PRD](../Smart_Agent_Platform_PRD_v2.md) - Product requirements
+- [PRD](../Smart_Agent_Platform_PRD_v3.md) - Product requirements
+- [Architecture](../ARCHITECTURE.md) - Technical architecture
 
 ### Tools
 
