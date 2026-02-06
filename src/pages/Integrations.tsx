@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Plug2, Loader2, AlertCircle } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -13,11 +13,15 @@ import { useWorkspace } from "@/contexts/WorkspaceContext";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { ConnectorDefinition, WorkspaceConnector } from "@/types/connector";
+import { generateOAuthUrl, handleOAuthCallback, parseOAuthCallback } from "@/lib/oauth";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function Integrations() {
   const { activeWorkspace } = useWorkspace();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState("");
   const [connectingKey, setConnectingKey] = useState<string | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
@@ -60,6 +64,55 @@ export default function Integrations() {
     workspaceConnectors.map((wc) => [wc.connector_definition_id, wc])
   );
 
+  // Handle OAuth callback on page load
+  useEffect(() => {
+    const callback = parseOAuthCallback();
+    if (callback.code && activeWorkspace?.id) {
+      // Extract connector key and workspace ID from state or URL params
+      const stateParam = callback.state;
+      let connectorKey: string | null = null;
+      let workspaceId: string = activeWorkspace.id;
+
+      if (stateParam) {
+        try {
+          const stateData = JSON.parse(atob(stateParam.replace(/-/g, '+').replace(/_/g, '/')));
+          connectorKey = stateData.connector_key;
+          workspaceId = stateData.workspace_id || workspaceId;
+        } catch {
+          // Fallback: try to get from URL params
+          connectorKey = searchParams.get('connector_key');
+        }
+      } else {
+        connectorKey = searchParams.get('connector_key');
+      }
+
+      if (connectorKey && callback.code) {
+        const redirectUri = `${window.location.origin}${window.location.pathname}`;
+        
+        handleOAuthCallback(connectorKey, workspaceId, callback.code, redirectUri, callback.state)
+          .then(() => {
+            queryClient.invalidateQueries({ queryKey: ["workspace-connectors"] });
+            toast.success("Connector connected", {
+              description: "Your integration has been connected successfully.",
+            });
+            // Clean up URL
+            navigate(window.location.pathname, { replace: true });
+          })
+          .catch((error) => {
+            toast.error("Failed to complete connection", {
+              description: error.message || "An error occurred while completing the connection.",
+            });
+            navigate(window.location.pathname, { replace: true });
+          });
+      } else if (callback.error) {
+        toast.error("OAuth authorization failed", {
+          description: callback.error || "The authorization was denied or failed.",
+        });
+        navigate(window.location.pathname, { replace: true });
+      }
+    }
+  }, [activeWorkspace?.id, queryClient, navigate, searchParams]);
+
   // Connect mutation
   const connectMutation = useMutation({
     mutationFn: async (connectorKey: string) => {
@@ -73,25 +126,28 @@ export default function Integrations() {
         throw new Error("Connector definition not found");
       }
 
-      // For now, we'll just show a toast - actual OAuth flow will be implemented later
-      // TODO: Implement OAuth flow
-      throw new Error("OAuth flow not yet implemented. This will redirect to OAuth provider.");
+      // Check if connector supports OAuth
+      if (!definition.oauth_provider || !definition.oauth_authorize_url) {
+        throw new Error(`Connector ${definition.name} does not support OAuth authentication`);
+      }
+
+      // Generate OAuth URL and redirect
+      const redirectUri = `${window.location.origin}${window.location.pathname}`;
+      const oauthUrl = await generateOAuthUrl(definition, activeWorkspace.id, redirectUri);
+      
+      // Redirect to OAuth provider
+      window.location.href = oauthUrl;
+      
+      // Return a promise that never resolves (since we're redirecting)
+      return new Promise(() => {});
     },
     onMutate: (connectorKey) => {
       setConnectingKey(connectorKey);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspace-connectors"] });
-      toast.success("Connector connected", {
-        description: "Your integration has been connected successfully.",
-      });
-    },
     onError: (error: Error) => {
-      toast.error("Failed to connect", {
-        description: error.message || "An error occurred while connecting.",
+      toast.error("Failed to initiate connection", {
+        description: error.message || "An error occurred while starting the connection.",
       });
-    },
-    onSettled: () => {
       setConnectingKey(null);
     },
   });
