@@ -3,6 +3,7 @@ import { GleanSidebar } from "./GleanSidebar";
 import { MobileBottomNav } from "./MobileBottomNav";
 import { AppHeader } from "./AppHeader";
 import { TrialBanner } from "@/components/billing/TrialBanner";
+import { UsageLimitBanner } from "@/components/billing/UsageLimitBanner";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -29,6 +30,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <TrialBanner />
+        <UsageLimitBanner />
         <AppHeader />
 
         {/* Main content area with bottom padding for mobile nav and safe area */}
