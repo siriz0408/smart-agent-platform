@@ -175,7 +175,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
             setQuery(e.target.value);
             setIsOpen(e.target.value.length >= 1);
           }}
-          onFocus={() => query.length >= 1 && setIsOpen(true)}
+          onFocus={() => setIsOpen(true)}
           className="w-full pl-10 pr-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
           aria-label="Global search"
           aria-expanded={isOpen}
