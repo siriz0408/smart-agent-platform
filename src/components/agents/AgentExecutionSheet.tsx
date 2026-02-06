@@ -166,6 +166,7 @@ export function AgentExecutionSheet({ agent, open, onOpenChange }: AgentExecutio
       <UsageLimitDialog
         open={showUsageDialog}
         onOpenChange={setShowUsageDialog}
+        limitType="ai_chats"
         usageData={result.usageLimitExceeded}
       />
     </>
