@@ -29,3 +29,4 @@
 | INT-001 | Initial domain audit | 2026-02-06 |
 | INT-002 | Inventory current integrations | 2026-02-06 |
 | INT-006 | Design connector framework | 2026-02-06 | ✅ Architecture complete, ready for implementation |
+| INT-007 | Implement Gmail connector | 2026-02-06 | ✅ Database migration + OAuth callback handler complete |

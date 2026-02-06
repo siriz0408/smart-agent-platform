@@ -208,6 +208,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/admin/search-analytics"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <SearchAnalytics />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Protected routes - Agent/Admin */}
               <Route
