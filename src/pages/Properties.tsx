@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Plus, Search, Filter, Grid, List, Bed, Bath, Square, MapPin, DollarSign, Home, Heart, Users, X } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { Plus, Search, Filter, Grid, List, Bed, Bath, Square, MapPin, DollarSign, Home, Heart, Users, X, Bookmark, BookmarkCheck, Scale, Save } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,14 +31,28 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { CreatePropertyDialog } from "@/components/properties/CreatePropertyDialog";
 import { PropertyDetailSheet } from "@/components/properties/PropertyDetailSheet";
+import { UnifiedPropertyCard } from "@/components/properties/UnifiedPropertyCard";
+import { SaveSearchDialog } from "@/components/properties/SaveSearchDialog";
+import { PropertyComparisonTable } from "@/components/properties/PropertyComparisonTable";
+import { useSavedSearches } from "@/hooks/useSavedSearches";
+import { useSavedProperties, useRemoveSavedProperty } from "@/hooks/useSavedProperties";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
+import type { PropertyCardData } from "@/types/property";
 
 type Property = Tables<"properties">;
 
@@ -64,6 +78,8 @@ const statusColors: Record<string, string> = {
 };
 
 export default function Properties() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("listings");
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -75,16 +91,146 @@ export default function Properties() {
   const pageSize = 12;
   const [filterMinBeds, setFilterMinBeds] = useState<string>("");
   const [filterMinBaths, setFilterMinBaths] = useState<string>("");
+  const [filterMinPrice, setFilterMinPrice] = useState<string>("");
+  const [filterMaxPrice, setFilterMaxPrice] = useState<string>("");
+  const [filterMinSqft, setFilterMinSqft] = useState<string>("");
+  const [filterPropertyTypes, setFilterPropertyTypes] = useState<string[]>([]);
+  const [isSaveSearchDialogOpen, setIsSaveSearchDialogOpen] = useState(false);
+  const [comparisonProperties, setComparisonProperties] = useState<string[]>([]);
+  const [isComparisonOpen, setIsComparisonOpen] = useState(false);
+  
+  const { savedSearches } = useSavedSearches();
+  const { data: savedProperties = [] } = useSavedProperties();
+  const removeSavedProperty = useRemoveSavedProperty();
 
   const activeFilterCount =
     filterStatuses.length +
     (filterMinBeds ? 1 : 0) +
-    (filterMinBaths ? 1 : 0);
+    (filterMinBaths ? 1 : 0) +
+    (filterMinPrice ? 1 : 0) +
+    (filterMaxPrice ? 1 : 0) +
+    (filterMinSqft ? 1 : 0) +
+    filterPropertyTypes.length;
 
   const clearAllFilters = () => {
     setFilterStatuses([]);
     setFilterMinBeds("");
     setFilterMinBaths("");
+    setFilterMinPrice("");
+    setFilterMaxPrice("");
+    setFilterMinSqft("");
+    setFilterPropertyTypes([]);
+  };
+
+  // Get saved property IDs for current user
+  const savedPropertyIds = new Set(
+    savedProperties
+      .filter(sp => sp.property_type === "internal" && sp.internal_property)
+      .map(sp => sp.internal_property!.id)
+  );
+
+  // Convert Property to PropertyCardData for UnifiedPropertyCard
+  const convertToPropertyCardData = (property: Property): PropertyCardData => {
+    return {
+      zpid: property.id,
+      address: {
+        streetAddress: property.address,
+        city: property.city,
+        state: property.state,
+        zipcode: property.zip_code,
+      },
+      price: property.price ?? undefined,
+      bedrooms: property.bedrooms ?? undefined,
+      bathrooms: property.bathrooms ?? undefined,
+      livingArea: property.square_feet ?? undefined,
+      lotSize: property.lot_size ?? undefined,
+      yearBuilt: property.year_built ?? undefined,
+      propertyType: property.property_type ?? undefined,
+      listingStatus: property.status?.toUpperCase() ?? undefined,
+      daysOnMarket: property.days_on_market ?? undefined,
+      photos: property.photos && property.photos.length > 0 ? property.photos : [],
+      brokerName: property.listing_agent_name ?? undefined,
+      listingAgentName: property.listing_agent_name ?? undefined,
+      listingAgentPhone: property.listing_agent_phone ?? undefined,
+      listingDate: property.listing_date ?? undefined,
+    };
+  };
+
+  // Save property mutation
+  const savePropertyMutation = useMutation({
+    mutationFn: async (propertyId: string) => {
+      if (!user) throw new Error("Not authenticated");
+      
+      const { error } = await supabase
+        .from("saved_properties")
+        .insert({
+          user_id: user.id,
+          property_type: "internal",
+          internal_property_id: propertyId,
+        });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["saved-properties"] });
+      toast.success("Property saved");
+    },
+    onError: () => {
+      toast.error("Failed to save property");
+    },
+  });
+
+  const handleSaveProperty = (propertyId: string) => {
+    if (savedPropertyIds.has(propertyId)) {
+      // Find the saved property and remove it
+      const savedProperty = savedProperties.find(
+        sp => sp.property_type === "internal" && sp.internal_property?.id === propertyId
+      );
+      if (savedProperty) {
+        removeSavedProperty.mutate(savedProperty.id);
+      }
+    } else {
+      savePropertyMutation.mutate(propertyId);
+    }
+  };
+
+  const handleLoadSavedSearch = (searchId: string) => {
+    const search = savedSearches.find(s => s.id === searchId);
+    if (!search) return;
+    
+    const criteria = search.criteria;
+    if (criteria.location) setSearchQuery(criteria.location);
+    if (criteria.beds) setFilterMinBeds(criteria.beds.toString());
+    if (criteria.baths) setFilterMinBaths(criteria.baths.toString());
+    if (criteria.priceMin) setFilterMinPrice(criteria.priceMin.toString());
+    if (criteria.priceMax) setFilterMaxPrice(criteria.priceMax.toString());
+    
+    resetPage();
+    toast.success(`Loaded search: ${search.search_name}`);
+  };
+
+  const handleSaveCurrentSearch = () => {
+    if (!searchQuery && !filterMinBeds && !filterMinBaths && !filterMinPrice && !filterMaxPrice) {
+      toast.error("Please add search criteria before saving");
+      return;
+    }
+    setIsSaveSearchDialogOpen(true);
+  };
+
+  const handleCompareProperties = () => {
+    if (comparisonProperties.length < 2) {
+      toast.error("Select at least 2 properties to compare");
+      return;
+    }
+    setIsComparisonOpen(true);
+  };
+
+  const handleToggleComparison = (propertyId: string) => {
+    setComparisonProperties(prev => 
+      prev.includes(propertyId)
+        ? prev.filter(id => id !== propertyId)
+        : [...prev, propertyId].slice(0, 5) // Max 5 properties
+    );
   };
 
   const handlePropertyClick = (property: Property) => {
@@ -205,15 +351,27 @@ export default function Properties() {
   const filteredProperties = properties.filter((property) => {
     const query = searchQuery.toLowerCase();
     const matchesSearch =
+      !query ||
       property.address.toLowerCase().includes(query) ||
-      property.city.toLowerCase().includes(query);
+      property.city.toLowerCase().includes(query) ||
+      property.state.toLowerCase().includes(query) ||
+      property.zip_code.toLowerCase().includes(query);
     const matchesStatus =
       filterStatuses.length === 0 || filterStatuses.includes(property.status || "");
     const matchesBeds =
       !filterMinBeds || (property.bedrooms ?? 0) >= parseInt(filterMinBeds);
     const matchesBaths =
       !filterMinBaths || (property.bathrooms ?? 0) >= parseInt(filterMinBaths);
-    return matchesSearch && matchesStatus && matchesBeds && matchesBaths;
+    const matchesMinPrice =
+      !filterMinPrice || (property.price ?? 0) >= parseInt(filterMinPrice);
+    const matchesMaxPrice =
+      !filterMaxPrice || (property.price ?? 0) <= parseInt(filterMaxPrice);
+    const matchesSqft =
+      !filterMinSqft || (property.square_feet ?? 0) >= parseInt(filterMinSqft);
+    const matchesPropertyType =
+      filterPropertyTypes.length === 0 || filterPropertyTypes.includes(property.property_type || "");
+    return matchesSearch && matchesStatus && matchesBeds && matchesBaths && 
+           matchesMinPrice && matchesMaxPrice && matchesSqft && matchesPropertyType;
   });
 
   const totalPages = Math.ceil(filteredProperties.length / pageSize);
@@ -228,16 +386,6 @@ export default function Properties() {
   const totalValue = properties
     .filter((p) => p.status === "active")
     .reduce((acc, p) => acc + (p.price || 0), 0);
-
-  const getPlaceholderImage = (index: number) => {
-    const images = [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=400&h=300&fit=crop",
-      "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=300&fit=crop",
-    ];
-    return images[index % images.length];
-  };
 
   return (
     <AppLayout>
@@ -313,7 +461,7 @@ export default function Properties() {
             </div>
 
             {/* Search and Filters */}
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
@@ -323,6 +471,58 @@ export default function Properties() {
                   className="pl-10"
                 />
               </div>
+              
+              {/* Saved Searches Dropdown */}
+              {savedSearches.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Bookmark className="h-4 w-4 mr-2" />
+                      Saved Searches
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    {savedSearches.map((search) => (
+                      <DropdownMenuItem
+                        key={search.id}
+                        onClick={() => handleLoadSavedSearch(search.id)}
+                      >
+                        <BookmarkCheck className="h-4 w-4 mr-2" />
+                        <div className="flex-1">
+                          <div className="font-medium">{search.search_name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {search.criteria.location || "Any location"}
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+
+              {/* Save Current Search */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveCurrentSearch}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Search
+              </Button>
+
+              {/* Comparison Button */}
+              {comparisonProperties.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCompareProperties}
+                  className="relative"
+                >
+                  <Scale className="h-4 w-4 mr-2" />
+                  Compare ({comparisonProperties.length})
+                </Button>
+              )}
+
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="icon" className="relative" aria-label="Filter properties">
@@ -334,7 +534,7 @@ export default function Properties() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent align="end" className="w-64">
+                <PopoverContent align="end" className="w-80 max-h-[80vh] overflow-y-auto">
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-sm font-medium">Filters</h4>
@@ -371,6 +571,24 @@ export default function Properties() {
                       ))}
                     </div>
                     <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Property Type</p>
+                      {["single_family", "condo", "townhouse", "multi_family", "land", "commercial"].map((type) => (
+                        <label key={type} className="flex items-center gap-2 cursor-pointer">
+                          <Checkbox
+                            checked={filterPropertyTypes.includes(type)}
+                            onCheckedChange={(checked) => {
+                              setFilterPropertyTypes((prev) =>
+                                checked
+                                  ? [...prev, type]
+                                  : prev.filter((t) => t !== type)
+                              );
+                            }}
+                          />
+                          <span className="text-sm">{type.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase())}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="space-y-2">
                       <p className="text-xs font-medium text-muted-foreground">Min Bedrooms</p>
                       <Select value={filterMinBeds} onValueChange={(v) => setFilterMinBeds(v === "any" ? "" : v)}>
                         <SelectTrigger className="h-8 text-xs">
@@ -400,6 +618,35 @@ export default function Properties() {
                           <SelectItem value="4">4+</SelectItem>
                         </SelectContent>
                       </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Price Range</p>
+                      <div className="flex gap-2">
+                        <Input
+                          type="number"
+                          placeholder="Min"
+                          value={filterMinPrice}
+                          onChange={(e) => setFilterMinPrice(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                        <Input
+                          type="number"
+                          placeholder="Max"
+                          value={filterMaxPrice}
+                          onChange={(e) => setFilterMaxPrice(e.target.value)}
+                          className="h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Min Square Feet</p>
+                      <Input
+                        type="number"
+                        placeholder="Any"
+                        value={filterMinSqft}
+                        onChange={(e) => setFilterMinSqft(e.target.value)}
+                        className="h-8 text-xs"
+                      />
                     </div>
                   </div>
                 </PopoverContent>
@@ -458,107 +705,46 @@ export default function Properties() {
                   ? "grid gap-4 md:grid-cols-2 lg:grid-cols-3"
                   : "space-y-4"
               )}>
-                {paginatedProperties.map((property, index) => {
-                  const photoUrl = property.photos?.[0] || getPlaceholderImage(index);
+                {paginatedProperties.map((property) => {
+                  const propertyCardData = convertToPropertyCardData(property);
+                  const isSaved = savedPropertyIds.has(property.id);
+                  const isInComparison = comparisonProperties.includes(property.id);
 
                   return (
-                    <Card key={property.id} className="overflow-hidden hover:border-primary/50 transition-colors cursor-pointer" onClick={() => handlePropertyClick(property)}>
-                      {viewMode === "grid" ? (
-                        <>
-                          <div className="relative aspect-[4/3]">
-                            <img
-                              src={photoUrl}
-                              alt={property.address}
-                              className="object-cover w-full h-full"
-                              loading="lazy"
-                            />
-                            <Badge
-                              className={cn(
-                                "absolute top-3 left-3",
-                                statusColors[property.status || "active"]
-                              )}
-                            >
-                              {(property.status || "active").replace("_", " ")}
-                            </Badge>
-                          </div>
-                          <CardContent className="p-4">
-                            <div className="flex items-center gap-1 text-2xl font-semibold mb-1">
-                              <DollarSign className="h-5 w-5" />
-                              {(property.price || 0).toLocaleString()}
-                            </div>
-                            <div className="font-medium mb-1">{property.address}</div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-3">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {property.city}, {property.state}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              {property.bedrooms && (
-                                <div className="flex items-center gap-1">
-                                  <Bed className="h-4 w-4" />
-                                  {property.bedrooms}
-                                </div>
-                              )}
-                              {property.bathrooms && (
-                                <div className="flex items-center gap-1">
-                                  <Bath className="h-4 w-4" />
-                                  {Number(property.bathrooms)}
-                                </div>
-                              )}
-                              {property.square_feet && (
-                                <div className="flex items-center gap-1">
-                                  <Square className="h-4 w-4" />
-                                  {property.square_feet.toLocaleString()} sqft
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </>
-                      ) : (
-                        <CardContent className="p-4 flex gap-4">
-                          <img
-                            src={photoUrl}
-                            alt={property.address}
-                            className="w-32 h-24 object-cover rounded-lg"
-                            loading="lazy"
-                          />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <div className="text-xl font-semibold">
-                                ${(property.price || 0).toLocaleString()}
-                              </div>
-                              <Badge className={statusColors[property.status || "active"]}>
-                                {(property.status || "active").replace("_", " ")}
-                              </Badge>
-                            </div>
-                            <div className="font-medium">{property.address}</div>
-                            <div className="flex items-center gap-1 text-sm text-muted-foreground mb-2">
-                              <MapPin className="h-3.5 w-3.5" />
-                              {property.city}, {property.state}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              {property.bedrooms && (
-                                <div className="flex items-center gap-1">
-                                  <Bed className="h-4 w-4" />
-                                  {property.bedrooms} beds
-                                </div>
-                              )}
-                              {property.bathrooms && (
-                                <div className="flex items-center gap-1">
-                                  <Bath className="h-4 w-4" />
-                                  {Number(property.bathrooms)} baths
-                                </div>
-                              )}
-                              {property.square_feet && (
-                                <div className="flex items-center gap-1">
-                                  <Square className="h-4 w-4" />
-                                  {property.square_feet.toLocaleString()} sqft
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
+                    <div key={property.id} className="relative">
+                      {isInComparison && (
+                        <div className="absolute top-2 left-2 z-10">
+                          <Badge className="bg-blue-600 text-white">
+                            <Scale className="h-3 w-3 mr-1" />
+                            Compare
+                          </Badge>
+                        </div>
                       )}
-                    </Card>
+                      <UnifiedPropertyCard
+                        property={propertyCardData}
+                        context="search"
+                        isSaved={isSaved}
+                        isSaving={savePropertyMutation.isPending || removeSavedProperty.isPending}
+                        onSave={() => handleSaveProperty(property.id)}
+                        onView={() => handlePropertyClick(property)}
+                      />
+                      {viewMode === "grid" && (
+                        <div className="mt-2 flex gap-2">
+                          <Button
+                            variant={isInComparison ? "default" : "outline"}
+                            size="sm"
+                            className="flex-1 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleToggleComparison(property.id);
+                            }}
+                          >
+                            <Scale className="h-3 w-3 mr-1" />
+                            {isInComparison ? "Remove" : "Compare"}
+                          </Button>
+                        </div>
+                      )}
+                    </div>
                   );
                 })}
               </div>
@@ -741,6 +927,78 @@ export default function Properties() {
           open={isDetailSheetOpen}
           onOpenChange={setIsDetailSheetOpen}
         />
+
+        {/* Save Search Dialog */}
+        <SaveSearchDialog
+          open={isSaveSearchDialogOpen}
+          onOpenChange={setIsSaveSearchDialogOpen}
+          searchParams={{
+            location: searchQuery,
+            beds: filterMinBeds ? parseInt(filterMinBeds) : undefined,
+            baths: filterMinBaths ? parseInt(filterMinBaths) : undefined,
+            priceMin: filterMinPrice ? parseInt(filterMinPrice) : undefined,
+            priceMax: filterMaxPrice ? parseInt(filterMaxPrice) : undefined,
+          }}
+        />
+
+        {/* Property Comparison Table */}
+        {comparisonProperties.length > 0 && (
+          <PropertyComparisonTable
+            open={isComparisonOpen}
+            onOpenChange={setIsComparisonOpen}
+            properties={comparisonProperties
+              .map(propertyId => {
+                // First try to find in saved properties
+                const savedProperty = savedProperties.find(sp => 
+                  sp.property_type === "internal" && 
+                  sp.internal_property?.id === propertyId
+                );
+                if (savedProperty) return savedProperty;
+                
+                // If not saved, create a temporary SavedProperty from the property
+                const property = properties.find(p => p.id === propertyId);
+                if (!property) return null;
+                
+                return {
+                  id: `temp-${property.id}`,
+                  property_type: "internal" as const,
+                  notes: null,
+                  is_favorite: false,
+                  created_at: property.created_at,
+                  updated_at: property.updated_at,
+                  internal_property: {
+                    id: property.id,
+                    address: property.address,
+                    city: property.city,
+                    state: property.state,
+                    zip_code: property.zip_code,
+                    price: property.price,
+                    bedrooms: property.bedrooms,
+                    bathrooms: property.bathrooms,
+                    square_feet: property.square_feet,
+                    lot_size: property.lot_size,
+                    year_built: property.year_built,
+                    property_type: property.property_type,
+                    status: property.status,
+                    photos: property.photos,
+                  },
+                };
+              })
+              .filter((p): p is NonNullable<typeof p> => p !== null)}
+            onRemoveProperty={(savedPropertyId) => {
+              // Extract property ID from saved property ID
+              const propertyId = savedPropertyId.startsWith("temp-")
+                ? savedPropertyId.replace("temp-", "")
+                : savedProperties.find(sp => sp.id === savedPropertyId)?.internal_property?.id;
+              
+              if (propertyId) {
+                setComparisonProperties(prev => 
+                  prev.filter(id => id !== propertyId)
+                );
+              }
+            }}
+          />
+        )}
       </div>
     </AppLayout>
   );
