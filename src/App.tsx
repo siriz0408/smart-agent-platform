@@ -11,6 +11,7 @@ import { KeyboardShortcutsProvider } from "@/components/keyboard/KeyboardShortcu
 import { ErrorBoundary } from "@/lib/errorTracking";
 import { ErrorFallback } from "@/components/ErrorFallback";
 import { Loader2 } from "lucide-react";
+import { useRoutePerformanceTracking } from "@/hooks/usePerformanceMonitoring";
 
 // Critical path - eager loaded
 import Landing from "./pages/Landing";
@@ -69,7 +70,33 @@ function LoadingSpinner() {
   );
 }
 
-const queryClient = new QueryClient();
+// Optimized QueryClient configuration for performance
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Data is fresh for 30 seconds (reduces unnecessary refetches)
+      staleTime: 30 * 1000,
+      // Cache data for 5 minutes (keeps data available for instant navigation)
+      gcTime: 5 * 60 * 1000, // Previously cacheTime
+      // Don't refetch on window focus (reduces network requests)
+      refetchOnWindowFocus: false,
+      // Retry failed requests once
+      retry: 1,
+      // Retry delay with exponential backoff
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    },
+    mutations: {
+      // Retry mutations once on failure
+      retry: 1,
+    },
+  },
+});
+
+// Component to track route performance
+function RoutePerformanceTracker() {
+  useRoutePerformanceTracking();
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -79,6 +106,7 @@ const App = () => (
           <TooltipProvider>
           <Sonner />
           <BrowserRouter>
+            <RoutePerformanceTracker />
             <KeyboardShortcutsProvider>
             <ErrorBoundary fallback={({ error, resetError }) => (
               <ErrorFallback error={error} resetError={resetError} />

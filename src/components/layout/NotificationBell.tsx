@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
-import { Bell, CheckCheck, Trash2, FileText, MessageSquare, Target, Calendar } from "lucide-react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Bell, CheckCheck, Trash2, FileText, MessageSquare, Target, Calendar, Reply, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,8 +10,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Textarea } from "@/components/ui/textarea";
 import { useNotifications, type Notification } from "@/hooks/useNotifications";
+import { useConversation } from "@/hooks/useConversation";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 function getNotificationIcon(type: string) {
   switch (type) {
