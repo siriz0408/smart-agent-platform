@@ -26,5 +26,6 @@
 | COM-000 | PM-Communication setup | 2026-02-05 |
 | COM-001 | Initial domain audit | 2026-02-06 |
 | COM-002 | Implement metrics tracking | 2026-02-06 |
+| COM-003 | Build file attachments UI | 2026-02-06 |
 | COM-009 | Test message flow end-to-end | 2026-02-06 |
 | COM-010 | Audit notification delivery | 2026-02-06 |

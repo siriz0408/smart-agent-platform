@@ -141,10 +141,11 @@ serve(async (req) => {
         due_date: m.due_date,
         completed_at: m.completed_at,
         is_overdue: m.due_date && !m.completed_at && new Date(m.due_date) < now,
-        is_due_soon: m.due_date && !m.completed_at && {
+        is_due_soon: (() => {
+          if (!m.due_date || m.completed_at) return false;
           const daysUntilDue = Math.floor((new Date(m.due_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
           return daysUntilDue >= 0 && daysUntilDue <= 3;
-        }(),
+        })(),
       })),
       recent_activities: (deal.deal_activities || []).slice(0, 5).map((a: any) => ({
         type: a.activity_type,

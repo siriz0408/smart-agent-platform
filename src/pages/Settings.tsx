@@ -453,6 +453,10 @@ export default function Settings() {
           open={isExportDialogOpen}
           onOpenChange={setIsExportDialogOpen}
         />
+        <DataDeletionDialog
+          open={isDeletionDialogOpen}
+          onOpenChange={setIsDeletionDialogOpen}
+        />
         <KeyboardShortcutsDialog
           open={isShortcutsOpen}
           onOpenChange={setIsShortcutsOpen}
