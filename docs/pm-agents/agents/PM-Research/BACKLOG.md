@@ -4,9 +4,7 @@
 
 ## In Progress
 
-| ID | Item | Priority | Status |
-|----|------|----------|--------|
-| RES-001 | Initial competitive analysis of real estate AI platforms | P0 | Ready to start |
+_None_
 
 ## Ready
 
@@ -27,3 +25,4 @@
 | ID | Item | Completed |
 |----|------|-----------|
 | RES-000 | PM-Research agent setup | 2026-02-06 |
+| RES-001 | Initial competitive analysis of real estate AI platforms | 2026-02-06 |
