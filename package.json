@@ -30,6 +30,7 @@
     "status:git": "git status -s",
     "status:vercel": "vercel ls",
     "status:supabase": "echo 'Supabase Project: sthnezuadfbmbqlxiwtq'",
+    "infra:check-uptime": "npx tsx scripts/check-uptime-history.ts",
     "test:integration": "npx tsx scripts/test-search-integration.ts",
     "test:search-debug": "npx tsx scripts/test-search-debug.ts",
     "seed:test-data": "/bin/bash /tmp/add-test-data.sh",
