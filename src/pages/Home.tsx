@@ -162,6 +162,7 @@ export default function Home() {
                   onMentionsChange={setActiveMentions}
                   placeholder="Explore a topic..."
                   disabled={isLoading}
+                  ariaLabel="Chat input - type your message or use @ to mention documents, contacts, or properties"
                   onSubmit={() => {
                     if (input.trim() && !isLoading) {
                       const message = input;

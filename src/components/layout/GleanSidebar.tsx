@@ -177,13 +177,14 @@ export function GleanSidebar() {
                         "flex flex-col items-center justify-center py-3 gap-1.5",
                         "transition-all duration-200 rounded-lg",
                         "min-h-[64px]", // Touch target compliance
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-glean-purple",
                         isActive
                           ? "bg-white/20 text-white"
                           : "text-white/70 hover:bg-white/10 hover:text-white"
                       )}
                     >
                       <div className="relative">
-                        <item.icon className="h-6 w-6" />
+                        <item.icon className="h-6 w-6" aria-hidden="true" />
                         {item.label === 'Messages' && totalUnread > 0 && (
                           <Badge
                             variant="destructive"
@@ -228,12 +229,13 @@ export function GleanSidebar() {
                         "flex flex-col items-center justify-center py-2 gap-1",
                         "transition-all duration-200 rounded-lg",
                         "min-h-[56px]",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-glean-purple",
                         isActive
                           ? "bg-white/20 text-white"
                           : "text-white/70 hover:bg-white/10 hover:text-white"
                       )}
                     >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-5 w-5" aria-hidden="true" />
                       <span className="text-[10px] font-medium text-center leading-tight px-1">
                         {item.label}
                       </span>

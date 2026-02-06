@@ -241,13 +241,20 @@ export default function Contacts() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsImportDialogOpen(true)}>
-              <Upload className="h-4 w-4 mr-2" />
+            <Button 
+              variant="outline" 
+              onClick={() => setIsImportDialogOpen(true)}
+              aria-label="Import contacts from CSV"
+            >
+              <Upload className="h-4 w-4 mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Import CSV</span>
               <span className="sm:hidden">Import</span>
             </Button>
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button 
+              onClick={() => setIsCreateDialogOpen(true)}
+              aria-label="Add new contact"
+            >
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               <span className="hidden sm:inline">Add Contact</span>
               <span className="sm:hidden">Add</span>
             </Button>
@@ -306,12 +313,17 @@ export default function Contacts() {
         {/* Search and Filters */}
         <div className="flex items-center gap-4">
           <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <label htmlFor="contact-search" className="sr-only">
+              Search contacts
+            </label>
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
+              id="contact-search"
               placeholder="Search contacts..."
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); resetPage(); }}
               className="pl-10"
+              aria-label="Search contacts by name, email, or phone"
             />
           </div>
           <Popover>
@@ -545,8 +557,21 @@ export default function Contacts() {
                 </TableRow>
               ) : (
                 paginatedContacts.map((contact) => (
-                  <TableRow key={contact.id} className="cursor-pointer hover:bg-muted/50">
-                    <TableCell onClick={() => handleViewDetails(contact)}>
+                  <TableRow 
+                    key={contact.id} 
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => handleViewDetails(contact)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleViewDetails(contact);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="row"
+                    aria-label={`Contact: ${contact.first_name} ${contact.last_name}`}
+                  >
+                    <TableCell>
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <Avatar className="h-9 w-9">
@@ -569,7 +594,7 @@ export default function Contacts() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell onClick={() => handleViewDetails(contact)}>
+                    <TableCell>
                       <div className="space-y-1">
                         {contact.email && (
                           <div className="flex items-center gap-2 text-sm">
@@ -585,7 +610,7 @@ export default function Contacts() {
                         )}
                       </div>
                     </TableCell>
-                    <TableCell onClick={() => handleViewDetails(contact)}>
+                    <TableCell>
                       <Badge 
                         className={contactTypeColors[contact.contact_type || "lead"]} 
                         variant="secondary"
@@ -593,7 +618,7 @@ export default function Contacts() {
                         {(contact.contact_type || "lead").charAt(0).toUpperCase() + (contact.contact_type || "lead").slice(1)}
                       </Badge>
                     </TableCell>
-                    <TableCell onClick={() => handleViewDetails(contact)}>
+                    <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {(contact.tags || []).map((tag) => (
                           <Badge key={tag} variant="outline" className="text-xs">

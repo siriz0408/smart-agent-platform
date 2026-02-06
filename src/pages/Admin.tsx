@@ -166,6 +166,21 @@ export default function Admin() {
             </Card>
           </Link>
 
+          <Link to="/admin/data-health">
+            <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
+                  <Database className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Data Health</div>
+                  <div className="text-sm text-muted-foreground">Monitor data layer</div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link to="/admin/ai-chat-quality">
             <Card className="cursor-pointer hover:border-primary/50 transition-colors">
               <CardContent className="p-4 flex items-center gap-3">

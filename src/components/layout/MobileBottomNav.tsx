@@ -136,11 +136,12 @@ export function MobileBottomNav() {
                     "flex flex-col items-center justify-center gap-1 px-3 flex-1",
                     "min-h-[56px] min-w-[64px]", // Touch target compliance
                     "active:scale-95 transition-all duration-200 touch-manipulation",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                     "text-muted-foreground"
                   )}
                   aria-label={tab.label}
                 >
-                  <tab.icon className="h-6 w-6" />
+                  <tab.icon className="h-6 w-6" aria-hidden="true" />
                   <span className="text-[10px] font-medium leading-tight">
                     {tab.label}
                   </span>
@@ -156,12 +157,13 @@ export function MobileBottomNav() {
                   "flex flex-col items-center justify-center gap-1 px-3 flex-1",
                   "min-h-[56px] min-w-[64px]", // Touch target compliance
                   "active:scale-95 transition-all duration-200 touch-manipulation",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                   isActive ? "text-glean-purple" : "text-muted-foreground"
                 )}
                 aria-label={tab.label}
                 aria-current={isActive ? 'page' : undefined}
               >
-                <tab.icon className="h-6 w-6" />
+                <tab.icon className="h-6 w-6" aria-hidden="true" />
                 <span className="text-[10px] font-medium leading-tight">
                   {tab.label}
                 </span>
@@ -186,7 +188,7 @@ export function MobileBottomNav() {
                 onClick={() => handleNavigate(page.href)}
                 aria-label={page.label}
               >
-                <page.icon className="h-5 w-5 mr-3" />
+                <page.icon className="h-5 w-5 mr-3" aria-hidden="true" />
                 <span className="text-base">{page.label}</span>
               </Button>
             ))}

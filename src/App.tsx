@@ -46,6 +46,7 @@ const SearchResults = lazy(() => import("./pages/SearchResults"));
 const Messages = lazy(() => import("./pages/Messages"));
 const MessageMetrics = lazy(() => import("./pages/MessageMetrics"));
 const ProductionMetrics = lazy(() => import("./pages/ProductionMetrics"));
+const DataHealth = lazy(() => import("./pages/DataHealth"));
 const AIChatQuality = lazy(() => import("./pages/AIChatQuality"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
@@ -158,6 +159,14 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                     <ProductionMetrics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/data-health"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <DataHealth />
                   </ProtectedRoute>
                 }
               />

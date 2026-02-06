@@ -12,6 +12,7 @@ interface MentionInputProps {
   className?: string;
   disabled?: boolean;
   onSubmit?: () => void;
+  ariaLabel?: string;
 }
 
 // Trigger type for autocomplete
@@ -77,6 +78,7 @@ export function MentionInput({
   className,
   disabled,
   onSubmit,
+  ariaLabel,
 }: MentionInputProps) {
   const editorRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -500,9 +502,14 @@ export function MentionInput({
         onKeyDown={handleKeyDown}
         onFocus={handleFocus}
         onBlur={handleBlur}
+        role="textbox"
+        aria-label={ariaLabel || placeholder}
+        aria-multiline="true"
+        aria-disabled={disabled}
+        tabIndex={disabled ? -1 : 0}
         className={cn(
           "min-h-[24px] w-full bg-transparent text-sm",
-          "focus:outline-none",
+          "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "overflow-y-auto max-h-32",
           disabled && "opacity-50 cursor-not-allowed"
         )}
