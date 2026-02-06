@@ -46,6 +46,8 @@ interface StageColumnProps {
   isMobileView?: boolean;
   /** Default open state for mobile accordion */
   defaultOpen?: boolean;
+  /** Deal ID that was recently moved for visual feedback */
+  recentlyMovedDealId?: string | null;
 }
 
 export function StageColumn({
@@ -61,6 +63,7 @@ export function StageColumn({
   milestoneIndicators = {},
   isMobileView = false,
   defaultOpen = false,
+  recentlyMovedDealId,
 }: StageColumnProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen || deals.length > 0);
   const stageValue = deals.reduce((acc, d) => acc + (d.estimated_value || 0), 0);

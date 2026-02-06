@@ -18,6 +18,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { formatDistanceToNow } from "date-fns";
 
 interface Stage {
   id: string;
@@ -40,6 +41,8 @@ interface DealWithRelations {
   contacts: { first_name: string; last_name: string } | null;
   properties: { address: string } | null;
   is_stalled?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 interface DealCardProps {
@@ -50,6 +53,7 @@ interface DealCardProps {
   onEdit?: (deal: DealWithRelations) => void;
   isMoving?: boolean;
   milestoneIndicator?: MilestoneIndicator;
+  isRecentlyMoved?: boolean;
 }
 
 export function DealCard({ 
@@ -59,7 +63,8 @@ export function DealCard({
   onOpenDetail,
   onEdit,
   isMoving, 
-  milestoneIndicator 
+  milestoneIndicator,
+  isRecentlyMoved = false,
 }: DealCardProps) {
   const contactName = deal.contacts
     ? `${deal.contacts.first_name} ${deal.contacts.last_name}`
@@ -70,13 +75,24 @@ export function DealCard({
   const hasUpcoming = milestoneIndicator && milestoneIndicator.upcomingCount > 0;
   const isStalled = deal.is_stalled === true;
 
+  // Calculate days in current stage (if stage exists and we have updated_at)
+  const daysInStage = deal.stage && deal.updated_at
+    ? Math.floor((new Date().getTime() - new Date(deal.updated_at).getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+  
+  // Last activity time
+  const lastActivity = deal.updated_at
+    ? formatDistanceToNow(new Date(deal.updated_at), { addSuffix: true })
+    : null;
+
   return (
     <Card 
       className={cn(
         "cursor-pointer hover:shadow-md hover:border-primary/50 transition-all duration-200",
         isMoving && "opacity-70",
         hasOverdue && "border-destructive/50",
-        isStalled && !hasOverdue && "border-orange-500/50"
+        isStalled && !hasOverdue && "border-orange-500/50",
+        isRecentlyMoved && "animate-pulse border-primary shadow-lg ring-2 ring-primary/20"
       )}
       onClick={() => onOpenDetail(deal.id)}
     >
@@ -155,6 +171,40 @@ export function DealCard({
             </div>
           )}
         </div>
+
+        {/* Days in stage and last activity */}
+        {(daysInStage !== null || lastActivity) && (
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2 pl-6">
+            {daysInStage !== null && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="flex items-center gap-1">
+                    <Clock className="h-3 w-3" />
+                    {daysInStage === 0 ? "Today" : `${daysInStage}d`} in stage
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {daysInStage === 0 
+                    ? "Moved to this stage today"
+                    : `In ${currentStage?.label || deal.stage} for ${daysInStage} day${daysInStage > 1 ? 's' : ''}`
+                  }
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {lastActivity && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="text-xs">
+                    Updated {lastActivity}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Last activity: {new Date(deal.updated_at).toLocaleString()}
+                </TooltipContent>
+              </Tooltip>
+            )}
+          </div>
+        )}
 
         {/* Milestone indicators and stalled status */}
         {(hasOverdue || hasUpcoming || isStalled) && (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Plus, LayoutGrid, List } from "lucide-react";
+import { Plus, LayoutGrid, List, Filter, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { addDays, format } from "date-fns";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ import { StageColumn } from "@/components/pipeline/StageColumn";
 import { PipelineAnalytics } from "@/components/pipeline/PipelineAnalytics";
 import { useMilestoneIndicators } from "@/hooks/useMilestoneIndicators";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface DealWithRelations {
@@ -25,6 +27,8 @@ interface DealWithRelations {
   contacts: { first_name: string; last_name: string } | null;
   properties: { address: string } | null;
   is_stalled?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 const buyerStages = [
@@ -67,6 +71,8 @@ export default function Pipeline() {
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
   const [isMobileView, setIsMobileView] = useState(false);
   const [viewMode, setViewMode] = useState<"auto" | "list" | "kanban">("auto");
+  const [activeFilters, setActiveFilters] = useState<Set<string>>(new Set());
+  const [recentlyMovedDealId, setRecentlyMovedDealId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   // Detect mobile screen size
@@ -93,6 +99,8 @@ export default function Pipeline() {
           stage,
           estimated_value,
           expected_close_date,
+          created_at,
+          updated_at,
           contacts!contact_id(first_name, last_name),
           properties!property_id(address)
         `)
@@ -178,10 +186,16 @@ export default function Pipeline() {
         }
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
+      // Set recently moved deal for visual feedback
+      setRecentlyMovedDealId(variables.dealId);
+      setTimeout(() => setRecentlyMovedDealId(null), 2000);
+      
       queryClient.invalidateQueries({ queryKey: ["deals", dealType] });
       queryClient.invalidateQueries({ queryKey: ["milestone-indicators"] });
-      toast.success("Deal moved", { description: "Stage updated successfully." });
+      
+      const newStageLabel = stages.find(s => s.id === variables.newStage)?.label || variables.newStage;
+      toast.success("Deal moved", { description: `Moved to ${newStageLabel}` });
     },
     onError: (error) => {
       toast.error("Failed to move deal", { description: error.message });
@@ -222,9 +236,41 @@ export default function Pipeline() {
     setEditDialogOpen(true);
   };
 
-  const getDealsByStage = (stageId: string) => deals.filter((d) => d.stage === stageId);
+  // Filter deals based on active filters
+  const filteredDeals = deals.filter((deal) => {
+    if (activeFilters.size === 0) return true;
+    
+    const hasOverdue = milestoneIndicators[deal.id]?.overdueCount > 0;
+    const hasUpcoming = milestoneIndicators[deal.id]?.upcomingCount > 0;
+    const isStalled = deal.is_stalled === true;
+    
+    if (activeFilters.has("stalled") && !isStalled) return false;
+    if (activeFilters.has("overdue") && !hasOverdue) return false;
+    if (activeFilters.has("upcoming") && !hasUpcoming) return false;
+    if (activeFilters.has("active") && (isStalled || hasOverdue)) return false;
+    
+    return true;
+  });
 
-  const totalValue = deals.reduce((acc, deal) => acc + (deal.estimated_value || 0), 0);
+  const getDealsByStage = (stageId: string) => filteredDeals.filter((d) => d.stage === stageId);
+
+  const totalValue = filteredDeals.reduce((acc, deal) => acc + (deal.estimated_value || 0), 0);
+
+  const toggleFilter = (filterId: string) => {
+    setActiveFilters((prev) => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(filterId)) {
+        newFilters.delete(filterId);
+      } else {
+        newFilters.add(filterId);
+      }
+      return newFilters;
+    });
+  };
+
+  const clearFilters = () => {
+    setActiveFilters(new Set());
+  };
 
   return (
     <AppLayout>
@@ -300,6 +346,51 @@ export default function Pipeline() {
         {/* Pipeline Analytics */}
         <PipelineAnalytics dealType={dealType} stages={stages} />
 
+        {/* Quick Filters */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Filter className="h-4 w-4 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">Filters:</span>
+          <Badge
+            variant={activeFilters.has("stalled") ? "default" : "outline"}
+            className="cursor-pointer hover:bg-muted transition-colors"
+            onClick={() => toggleFilter("stalled")}
+          >
+            Stalled
+          </Badge>
+          <Badge
+            variant={activeFilters.has("overdue") ? "default" : "outline"}
+            className="cursor-pointer hover:bg-muted transition-colors"
+            onClick={() => toggleFilter("overdue")}
+          >
+            Overdue Milestones
+          </Badge>
+          <Badge
+            variant={activeFilters.has("upcoming") ? "default" : "outline"}
+            className="cursor-pointer hover:bg-muted transition-colors"
+            onClick={() => toggleFilter("upcoming")}
+          >
+            Due Soon
+          </Badge>
+          <Badge
+            variant={activeFilters.has("active") ? "default" : "outline"}
+            className="cursor-pointer hover:bg-muted transition-colors"
+            onClick={() => toggleFilter("active")}
+          >
+            Active
+          </Badge>
+          {activeFilters.size > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs"
+              onClick={clearFilters}
+            >
+              <X className="h-3 w-3 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
+
         {/* Pipeline Tabs */}
         <Tabs defaultValue={type} className="flex-1 flex flex-col">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -338,6 +429,7 @@ export default function Pipeline() {
                     milestoneIndicators={milestoneIndicators}
                     isMobileView={true}
                     defaultOpen={index === 0} // First stage open by default
+                    recentlyMovedDealId={recentlyMovedDealId}
                   />
                 ))}
               </div>
@@ -357,6 +449,7 @@ export default function Pipeline() {
                     onOpenDetail={handleOpenDetail}
                     milestoneIndicators={milestoneIndicators}
                     isMobileView={false}
+                    recentlyMovedDealId={recentlyMovedDealId}
                   />
                 ))}
               </div>
