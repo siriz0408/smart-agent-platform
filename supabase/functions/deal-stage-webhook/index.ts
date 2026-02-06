@@ -136,29 +136,34 @@ serve(async (req) => {
 
     // Helper to create notification
     async function createNotification(userId: string, oldStage: string, newStage: string) {
-      const { error } = await supabase.from("notifications").insert({
-        user_id: userId,
-        tenant_id: record.tenant_id,
-        type: "deal_stage_change",
-        title: `Deal moved to ${formatStageName(newStage)}`,
-        body: dealName,
-        action_url: `/pipeline?deal=${record.id}`,
-        metadata: {
-          deal_id: record.id,
-          old_stage: oldStage,
-          new_stage: newStage,
-        },
-      });
+      const { data: notification, error } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: userId,
+          tenant_id: record.tenant_id,
+          type: "deal_stage_change",
+          title: `Deal moved to ${formatStageName(newStage)}`,
+          body: dealName,
+          action_url: `/pipeline?deal=${record.id}`,
+          metadata: {
+            deal_id: record.id,
+            old_stage: oldStage,
+            new_stage: newStage,
+          },
+        })
+        .select("id")
+        .single();
 
-      if (!error) {
+      if (!error && notification) {
         notifications.push(userId);
       } else {
-        logger.error("Failed to create notification", { error: error.message });
+        logger.error("Failed to create notification", { error: error?.message });
+        return; // Don't send email if notification creation failed
       }
 
       // Send email
       try {
-        await fetch(`${supabaseUrl}/functions/v1/send-email`, {
+        const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-email`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${supabaseServiceKey}`,
@@ -176,6 +181,21 @@ serve(async (req) => {
             createNotification: false,
           }),
         });
+
+        // Update email_sent flag if email was sent successfully
+        if (emailResponse.ok && notification) {
+          const emailResult = await emailResponse.json();
+          if (emailResult.success) {
+            await supabase
+              .from("notifications")
+              .update({ email_sent: true })
+              .eq("id", notification.id);
+            logger.info("Updated email_sent flag", { notificationId: notification.id });
+          }
+        } else {
+          const errorText = await emailResponse.text();
+          logger.error("Failed to send email", { response: errorText });
+        }
       } catch (emailError) {
         logger.error("Failed to send email", { error: emailError instanceof Error ? emailError.message : String(emailError) });
       }

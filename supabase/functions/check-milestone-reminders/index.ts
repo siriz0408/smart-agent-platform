@@ -88,7 +88,7 @@ serve(async (req) => {
         : `Deal #${deal.id.slice(0, 8)}`;
 
       // Create notification for the agent
-      const { error: notifError } = await supabase
+      const { data: notification, error: notifError } = await supabase
         .from("notifications")
         .insert({
           user_id: deal.agent_id,
@@ -102,7 +102,9 @@ serve(async (req) => {
             deal_id: deal.id,
             due_date: milestone.due_date,
           },
-        });
+        })
+        .select("id")
+        .single();
 
       if (notifError) {
         logger.error("Failed to create notification", { error: notifError.message });
@@ -140,8 +142,19 @@ serve(async (req) => {
             }),
           });
 
-          if (!emailResponse.ok) {
-            logger.error("Failed to send email", { response: await emailResponse.text() });
+          // Update email_sent flag if email was sent successfully
+          if (emailResponse.ok && notification) {
+            const emailResult = await emailResponse.json();
+            if (emailResult.success) {
+              await supabase
+                .from("notifications")
+                .update({ email_sent: true })
+                .eq("id", notification.id);
+              logger.info("Updated email_sent flag", { notificationId: notification.id });
+            }
+          } else {
+            const errorText = await emailResponse.text();
+            logger.error("Failed to send email", { response: errorText });
           }
         }
       } catch (emailError) {
