@@ -1,70 +1,100 @@
 project_id = "sthnezuadfbmbqlxiwtq"
 
 [functions.ai-chat]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-checkout-session]
-verify_jwt = false
+verify_jwt = true
 
 [functions.create-customer-portal]
-verify_jwt = false
+verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
 
 [functions.index-document]
-verify_jwt = false
+verify_jwt = true
 
 [functions.search-documents]
-verify_jwt = false
+verify_jwt = true
 
 [functions.universal-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.delete-document]
-verify_jwt = false
+verify_jwt = true
 
 [functions.execute-agent]
-verify_jwt = false
+verify_jwt = true
 
 [functions.zillow-search]
-verify_jwt = false
+verify_jwt = true
 
 [functions.zillow-property-detail]
-verify_jwt = false
+verify_jwt = true
 
 [functions.save-external-property]
-verify_jwt = false
+verify_jwt = true
 
 [functions.clone-shared-document]
-verify_jwt = false
+verify_jwt = true
 
 [functions.list-invoices]
-verify_jwt = false
+verify_jwt = true
 
 [functions.usage-history]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.check-milestone-reminders]
-verify_jwt = false
+verify_jwt = true
 
 [functions.deal-stage-webhook]
 verify_jwt = false
 
 [functions.send-invite]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-drip-email]
-verify_jwt = false
+verify_jwt = true
 
 [functions.execute-actions]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-agent-event]
-verify_jwt = false
+verify_jwt = true
 
 [functions.process-scheduled-agents]
+verify_jwt = true
+
+[functions.audit-document-indexing]
+verify_jwt = true
+
+[functions.calculate-profile-completion]
+verify_jwt = true
+
+[functions.create-workspace]
+verify_jwt = true
+
+[functions.generate-agent-prompt]
+verify_jwt = true
+
+[functions.index-entities]
+verify_jwt = true
+
+[functions.invite-to-workspace]
+verify_jwt = true
+
+[functions.mcp-gateway]
+verify_jwt = true
+
+[functions.playwright-mcp]
+verify_jwt = true
+
+[functions.playwright-webhook]
 verify_jwt = false
+
+[functions.switch-workspace]
+verify_jwt = true
