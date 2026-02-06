@@ -57,6 +57,9 @@ export default function Signup() {
           </div>
           <CardTitle className="text-2xl">Create an account</CardTitle>
           <CardDescription>Get started with Smart Agent today</CardDescription>
+          <div className="mt-3 rounded-lg bg-primary/10 px-3 py-2 text-sm text-primary">
+            <span className="font-medium">14-day free trial</span> included when you upgrade to a paid plan
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           <OAuthButtons mode="signup" />
@@ -144,6 +147,9 @@ export default function Signup() {
               <Link to="/login" className="font-medium text-primary hover:underline">
                 Sign in
               </Link>
+            </p>
+            <p className="text-center text-xs text-muted-foreground">
+              Start free, upgrade anytime for full features with a 14-day trial
             </p>
             <p className="text-center text-xs text-muted-foreground">
               <Link to="/terms" className="hover:underline">Terms of Service</Link>
