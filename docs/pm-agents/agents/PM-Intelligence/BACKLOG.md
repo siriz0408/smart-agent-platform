@@ -59,8 +59,10 @@ Create `docs/pm-agents/agents/PM-Intelligence/PROMPTS.md` documenting:
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
 | INT-000 | PM-Intelligence setup | 2026-02-05 | Initial |
+| INT-001 | Initial domain discovery audit | 2026-02-06 | DOMAIN_AUDIT.md created with full system mapping |
 | INT-002 | Audit RAG retrieval quality | 2026-02-06 | RAG_AUDIT.md created with full analysis |
 | INT-003 | Document current prompt templates | 2026-02-06 | PROMPTS.md created |
+| INT-004 | Set up AI quality monitoring | 2026-02-06 | ai_chat_metrics table created, tracking integrated into Chat.tsx, dashboard ready |
 | INT-006 | Improve citation formatting in responses | 2026-02-06 | Standardized to [Source: filename, page X], RAG_IMPROVEMENT_PROPOSAL.md created |
 
 ---

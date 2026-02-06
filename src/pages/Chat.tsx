@@ -58,6 +58,7 @@ export default function Chat() {
   const { streamMessage, isStreaming } = useAIStreaming();
   const { preferences, updatePreference } = useUserPreferences();
   const { measureAsync } = usePerformanceMonitoring("Chat");
+  const { startTracking, recordMetric } = useAIChatMetricsTracker();
 
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -306,34 +307,7 @@ export default function Chat() {
       onComplete: async (fullContent, embeddedComps) => {
         setCurrentStatus(null); // Clear status when complete
         if (fullContent) {
-          // Save assistant message and get the message ID
-          const { data: savedMessage, error: saveError } = await supabase
-            .from("ai_messages")
-            .insert({
-              conversation_id: convId!,
-              role: "assistant",
-              content: fullContent,
-              embedded_components: embeddedComps as Record<string, unknown> | null || null,
-            })
-            .select("id")
-            .single();
-
-          if (saveError) {
-            console.error("Failed to save assistant message:", saveError);
-            throw saveError;
-          }
-
-          // Record metrics for this AI response
-          if (savedMessage?.id && user?.id && profile?.tenant_id) {
-            await recordMetric(
-              savedMessage.id,
-              convId!,
-              user.id,
-              fullContent,
-              profile.tenant_id
-            );
-          }
-
+          await saveMessage(convId!, "assistant", fullContent, embeddedComps);
           await supabase
             .from("ai_conversations")
             .update({ updated_at: new Date().toISOString() })
