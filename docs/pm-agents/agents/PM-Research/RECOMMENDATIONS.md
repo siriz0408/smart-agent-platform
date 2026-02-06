@@ -1,7 +1,7 @@
 # PM-Research Recommendations Tracker
 
 > **Last Updated:** 2026-02-06  
-> **Status:** 8 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002)
+> **Status:** 11 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003)
 
 ---
 
@@ -250,6 +250,122 @@ Integrate GPT-4 Turbo as fallback option for Claude rate limits and specific use
 - Fallback chain: Claude → GPT-4 → Error
 - Rate limit detection and automatic routing
 - A/B testing infrastructure for model comparison
+
+### REC-009: Prioritize Bridge Interactive for Phase 3 IDX Integration
+**Source:** RES-003 MLS/IDX Integration Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-06
+
+**Recommendation:**
+Select Bridge Interactive as the primary IDX integration provider for Phase 3, with RESO Web API direct integration as a future option for specific MLS markets.
+
+**Rationale:**
+- Single API integration covers multiple MLSs (reduces development effort by 80%+)
+- Bridge handles MLS relationships and compliance (reduces operational overhead)
+- RESO-certified (industry standard, future-proof)
+- No Bridge service fees (only MLS licensing fees apply)
+- Centralized access management simplifies onboarding
+- Data replication options provide flexibility
+
+**Impact:**
+- **User Impact:** 5/5 (transformative - enables MLS property search)
+- **Vision Alignment:** 5/5 (core Phase 3 feature)
+- **Effort:** Medium (M) - Single API integration vs. per-MLS
+- **Owner:** PM-Integration
+- **Timeline:** Q2-Q3 2026 (Phase 3)
+
+**Implementation:**
+1. Contact Bridge Interactive: api@bridgeinteractive.com
+2. Request MLS access via Bridge dashboard
+3. Integrate Bridge API (RESO Web API)
+4. Map RESO fields to Smart Agent schema
+5. Implement sync job (daily full sync initially)
+6. Add MLS compliance UI (attribution, disclaimers)
+7. Test with pilot MLS markets
+
+**Cost Estimate:**
+- Development: $20K-$40K (single API vs. $50K-$200K+ per-MLS)
+- Bridge fees: $0
+- MLS fees: $0-$500/month per MLS (varies)
+- Maintenance: $5K-$10K/year
+
+**Competitive Context:**
+- Follow Up Boss: Limited MLS integration (200+ integrations but not comprehensive)
+- Chime: Includes IDX website builder (competitive feature)
+- Smart Agent: Phase 3 IDX integration will enable competitive MLS search
+
+---
+
+### REC-010: Implement MLS Compliance Framework
+**Source:** RES-003 MLS/IDX Integration Research  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-06
+
+**Recommendation:**
+Build MLS compliance framework alongside IDX integration to ensure ongoing adherence to MLS rules and prevent violations.
+
+**Rationale:**
+- MLS compliance violations can result in $15K fines or access loss
+- MLS rules vary and change frequently
+- Compliance is required for IDX display
+- Automated compliance reduces risk
+
+**Impact:**
+- **User Impact:** 3/5 (moderate - enables MLS integration)
+- **Vision Alignment:** 5/5 (required for Phase 3)
+- **Effort:** Small (S) - Framework implementation
+- **Owner:** PM-Integration + PM-Experience (UI)
+- **Timeline:** Q2 2026 (alongside IDX integration)
+
+**Implementation:**
+1. MLS compliance checklist system
+2. Required attribution display (listing brokerage, disclaimers)
+3. Data refresh monitoring (12-24 hour requirement)
+4. Quarterly compliance audit process
+5. MLS rule change tracking
+6. Compliance dashboard for admins
+
+**Competitive Context:**
+- All MLS-integrated platforms must maintain compliance
+- Automated compliance provides competitive advantage
+- Reduces risk of fines/access loss
+
+---
+
+### REC-011: Evaluate Direct RESO Web API for High-Value MLS Markets
+**Source:** RES-003 MLS/IDX Integration Research  
+**Priority:** P2 - Medium  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-06
+
+**Recommendation:**
+Consider direct RESO Web API integration for specific high-value MLS markets where Bridge Interactive coverage is limited or costs are prohibitive.
+
+**Rationale:**
+- Some MLSs may not be available via Bridge
+- Direct integration provides more control
+- May be cost-effective for single large MLS markets
+- Provides fallback if Bridge coverage gaps exist
+
+**Impact:**
+- **User Impact:** 3/5 (moderate - extends MLS coverage)
+- **Vision Alignment:** 4/5 (supports Phase 3 goals)
+- **Effort:** Large (L) - Per-MLS integration
+- **Owner:** PM-Integration
+- **Timeline:** Q3-Q4 2026 (after Bridge integration)
+
+**Implementation:**
+1. Identify high-value MLS markets not covered by Bridge
+2. Evaluate direct RESO Web API integration cost/benefit
+3. Prioritize MLSs with large agent populations
+4. Implement per-MLS integration for selected markets
+5. Maintain alongside Bridge integration
+
+**Competitive Context:**
+- Provides coverage for markets Bridge doesn't serve
+- Enables competitive positioning in specific regions
 
 ---
 

@@ -1,6 +1,6 @@
 # PM-Research Backlog
 
-> **Last Updated:** 2026-02-06
+> **Last Updated:** 2026-02-06 (RES-003 completed)
 
 ## In Progress
 
@@ -10,7 +10,6 @@ _None_
 
 | ID | Item | Priority | Effort | Owner |
 |----|------|----------|--------|-------|
-| RES-003 | Research MLS/IDX integration options and capabilities | P1 | M | PM-Research |
 | RES-004 | Analyze top 5 competitor platforms (features, pricing, UX) | P1 | L | PM-Research |
 | RES-005 | Research real estate agent pain points and workflow bottlenecks | P1 | M | PM-Research |
 | RES-006 | Evaluate email/calendar integration APIs (Gmail, Outlook, Google Calendar) | P1 | S | PM-Research |
@@ -26,3 +25,4 @@ _None_
 | RES-000 | PM-Research agent setup | 2026-02-06 |
 | RES-001 | Initial competitive analysis of real estate AI platforms | 2026-02-06 |
 | RES-002 | Evaluate current AI model landscape (Claude, GPT, Gemini) for real estate use cases | 2026-02-06 |
+| RES-003 | Research MLS/IDX integration options and capabilities | 2026-02-06 |
