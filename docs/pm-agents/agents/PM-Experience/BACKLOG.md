@@ -16,7 +16,6 @@
 |----|------|-----------|-------|
 | EXP-002 | Document UI Component Inventory | 2026-02-06 | Created comprehensive inventory with 50+ UI components and 7 layout components, including props, interfaces, and usage examples |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 | Already implemented in Contacts.tsx and Properties.tsx |
-| HO-005 | Trial Signup UI | 2026-02-06 | Added 14-day trial messaging to Signup page - highlighted banner in header and footer message about trial offer |
 
 ---
 
@@ -100,3 +99,4 @@ These tasks are ready for autonomous execution:
 | EXP-002 | Document UI Component Inventory | 2026-02-06 |
 | EXP-003 | Check and fix mobile padding issues | 2026-02-06 |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 |
+| HO-005 | Trial Signup UI | 2026-02-06 |
