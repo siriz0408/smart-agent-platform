@@ -69,6 +69,12 @@ const TEST_QUERIES: TestCase[] = [
   { query: '2024', expectedEntityTypes: undefined, minResults: 0, description: 'Search by year' },
   { query: 'pdf', expectedEntityTypes: ['document'], minResults: 0, description: 'Find PDF documents' },
   { query: 'email', expectedEntityTypes: ['contact'], minResults: 0, description: 'Find contacts with email' },
+  
+  // Fuzzy matching tests (DIS-006) - typos should still find results
+  { query: 'sara', expectedEntityTypes: ['contact'], minResults: 0, description: 'Fuzzy: Typo in "sarah" (missing h)' },
+  { query: 'sharondal', expectedEntityTypes: ['property'], minResults: 0, description: 'Fuzzy: Typo in "sharondale" (missing e)' },
+  { query: 'denvr', expectedEntityTypes: ['property'], minResults: 0, description: 'Fuzzy: Typo in "denver" (missing e)' },
+  { query: 'jonson', expectedEntityTypes: ['contact'], minResults: 0, description: 'Fuzzy: Typo in "johnson" (h->n)' },
 ];
 
 interface TestResult {

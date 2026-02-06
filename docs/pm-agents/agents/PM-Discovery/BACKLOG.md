@@ -11,7 +11,6 @@
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
 | DIS-005 | Improve ranking | P2 | L |
-| DIS-006 | Implement fuzzy matching | P1 | M |
 | DIS-007 | Add search suggestions/autocomplete | P1 | L |
 
 ## Completed
@@ -23,3 +22,4 @@
 | DIS-002 | Test 20 common searches | 2026-02-06 |
 | DIS-003 | Measure success rate | 2026-02-06 |
 | DIS-004 | Analyze zero results | 2026-02-06 |
+| DIS-006 | Implement fuzzy matching | 2026-02-06 |
