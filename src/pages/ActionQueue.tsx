@@ -400,7 +400,7 @@ export default function ActionQueue() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" aria-label="Filter by type">
                 <Filter className="mr-2 h-4 w-4" />
                 Filter by Type
                 {filterTypes.length > 0 && (

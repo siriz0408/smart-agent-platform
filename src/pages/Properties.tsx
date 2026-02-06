@@ -476,7 +476,7 @@ export default function Properties() {
               {savedSearches.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" aria-label="Saved searches">
                       <Bookmark className="h-4 w-4 mr-2" />
                       Saved Searches
                     </Button>

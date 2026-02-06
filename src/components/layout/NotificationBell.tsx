@@ -133,6 +133,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete, onNavigate, on
                   e.stopPropagation();
                   setShowQuickReply(!showQuickReply);
                 }}
+                aria-label="Reply to message"
               >
                 <Reply className="h-3 w-3 mr-1" />
                 Reply
@@ -181,6 +182,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete, onNavigate, on
                 className="h-7 w-7"
                 onClick={handleQuickReply}
                 disabled={!quickReplyText.trim() || isSending}
+                aria-label="Send reply"
               >
                 <MessageSquare className="h-3 w-3" />
               </Button>
@@ -192,6 +194,7 @@ function NotificationItem({ notification, onMarkAsRead, onDelete, onNavigate, on
                   setShowQuickReply(false);
                   setQuickReplyText("");
                 }}
+                aria-label="Cancel reply"
               >
                 <X className="h-3 w-3" />
               </Button>
@@ -266,6 +269,7 @@ export function NotificationBell() {
               size="sm"
               className="h-auto py-1 px-2 text-xs"
               onClick={() => markAllAsRead()}
+              aria-label="Mark all notifications as read"
             >
               <CheckCheck className="h-3 w-3 mr-1" />
               Mark all read
