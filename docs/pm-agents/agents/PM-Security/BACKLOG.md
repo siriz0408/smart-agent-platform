@@ -13,7 +13,6 @@
 
 | ID | Item | Priority | Effort | Owner |
 |----|------|----------|--------|-------|
-| SEC-004 | Scan for exposed secrets | P1 | S | PM-Security |
 | SEC-014 | Fix overly permissive RLS policies | P1 | S | PM-Context |
 | SEC-015 | Restrict CORS to specific origins | P1 | S | PM-Infrastructure |
 | SEC-016 | Sanitize error messages | P1 | M | PM-Infrastructure |
@@ -32,3 +31,4 @@
 | SEC-002 | Audit RLS policies | 2026-02-06 |
 | SEC-003 | Check auth flows | 2026-02-06 |
 | SEC-011 | Enable JWT verification in edge functions | 2026-02-06 |
+| SEC-004 | Scan for exposed secrets | 2026-02-06 |
