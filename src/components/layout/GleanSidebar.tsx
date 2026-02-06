@@ -171,6 +171,8 @@ export function GleanSidebar() {
                   <TooltipTrigger asChild>
                     <Link
                       to={item.href}
+                      aria-label={item.label}
+                      aria-current={isActive ? 'page' : undefined}
                       className={cn(
                         "flex flex-col items-center justify-center py-3 gap-1.5",
                         "transition-all duration-200 rounded-lg",
@@ -220,6 +222,8 @@ export function GleanSidebar() {
                   <TooltipTrigger asChild>
                     <Link
                       to={item.href}
+                      aria-label={item.label}
+                      aria-current={isActive ? 'page' : undefined}
                       className={cn(
                         "flex flex-col items-center justify-center py-2 gap-1",
                         "transition-all duration-200 rounded-lg",

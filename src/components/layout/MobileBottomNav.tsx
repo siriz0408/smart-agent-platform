@@ -184,6 +184,7 @@ export function MobileBottomNav() {
                 variant="ghost"
                 className="w-full justify-start h-14"
                 onClick={() => handleNavigate(page.href)}
+                aria-label={page.label}
               >
                 <page.icon className="h-5 w-5 mr-3" />
                 <span className="text-base">{page.label}</span>

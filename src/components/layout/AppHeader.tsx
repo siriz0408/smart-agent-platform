@@ -145,19 +145,20 @@ export function AppHeader() {
                     setTimeout(() => navigate("/admin"), 0);
                   }}
                   className="flex items-center gap-2 cursor-pointer"
+                  aria-label="Open admin console"
                 >
                   <Shield className="h-4 w-4" />
                   Admin Console
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                <Link to="/settings" className="flex items-center gap-2 cursor-pointer" aria-label="View profile">
                   <User className="h-4 w-4" />
                   Profile
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
+                <Link to="/settings" className="flex items-center gap-2 cursor-pointer" aria-label="Open settings">
                   <Settings className="h-4 w-4" />
                   Settings
                 </Link>
@@ -166,6 +167,7 @@ export function AppHeader() {
               <DropdownMenuItem 
                 onClick={handleSignOut}
                 className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                aria-label="Sign out"
               >
                 <LogOut className="h-4 w-4" />
                 Sign out

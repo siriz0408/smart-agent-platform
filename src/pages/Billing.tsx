@@ -11,6 +11,7 @@ import { useSubscription, createCheckoutSession, openCustomerPortal, PLAN_PRICES
 import { toast } from "sonner";
 import { InvoiceList } from "@/components/billing/InvoiceList";
 import { UsageChart } from "@/components/billing/UsageChart";
+import { TrialCountdown } from "@/components/billing/TrialCountdown";
 
 interface Plan {
   id: string;
@@ -78,7 +79,7 @@ const plans: Plan[] = [
 ];
 
 export default function Billing() {
-  const { subscription, usage, plan: currentPlan, limits, isLoading, refetch } = useSubscription();
+  const { subscription, usage, plan: currentPlan, limits, isLoading, refetch, isTrialing, trialDaysRemaining } = useSubscription();
   const [searchParams] = useSearchParams();
   const [upgradeLoading, setUpgradeLoading] = useState<string | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
@@ -168,6 +169,9 @@ export default function Billing() {
           </Button>
         </div>
 
+        {/* Trial Countdown Banner */}
+        {isTrialing && <TrialCountdown />}
+
         {/* Current Plan & Usage */}
         <div className="grid gap-6 md:grid-cols-2">
           <Card>
@@ -182,14 +186,27 @@ export default function Billing() {
                 <div>
                   <div className="text-2xl font-semibold capitalize">{currentPlan}</div>
                   <div className="text-muted-foreground">
-                    ${PLAN_PRICES[currentPlan] || 0}/month
+                    {isTrialing ? (
+                      <span className="text-primary font-medium">Free Trial • ${PLAN_PRICES[currentPlan] || 0}/month after trial</span>
+                    ) : (
+                      `$${PLAN_PRICES[currentPlan] || 0}/month`
+                    )}
                   </div>
                 </div>
-                <Badge variant={subscription?.status === "active" ? "default" : "secondary"}>
-                  {subscription?.status || "active"}
+                <Badge variant={subscription?.status === "active" || subscription?.status === "trialing" ? "default" : "secondary"}>
+                  {subscription?.status === "trialing" ? "Trial" : subscription?.status || "active"}
                 </Badge>
               </div>
-              {subscription?.current_period_end && (
+              {isTrialing && trialDaysRemaining !== undefined && (
+                <p className="text-sm text-muted-foreground mb-4">
+                  {trialDaysRemaining === 0
+                    ? "Your trial ends today"
+                    : trialDaysRemaining === 1
+                    ? "1 day remaining in your trial"
+                    : `${trialDaysRemaining} days remaining in your trial`}
+                </p>
+              )}
+              {!isTrialing && subscription?.current_period_end && (
                 <p className="text-sm text-muted-foreground mb-4">
                   Your plan renews on {formatDate(subscription.current_period_end)}
                 </p>
@@ -331,7 +348,13 @@ export default function Billing() {
                       {isUpgrading ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : null}
-                      {isCurrent ? "Current Plan" : plan.id === "free" ? "Free" : "Upgrade"}
+                      {isCurrent 
+                        ? "Current Plan" 
+                        : plan.id === "free" 
+                        ? "Free" 
+                        : isTrialing && plan.id === currentPlan
+                        ? "Trial Active"
+                        : "Start 14-Day Trial"}
                     </Button>
                   </CardFooter>
                 </Card>

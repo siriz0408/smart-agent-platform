@@ -330,7 +330,7 @@ export default function DocumentChat() {
 
               {messages.map((message, i) => {
                 // Parse citations for assistant messages
-                const { citations }: { citations: Array<{ document: string; chunk?: string }> } = message.role === "assistant"
+                const { citations }: { citations: Array<{ document: string; page?: string }> } = message.role === "assistant"
                   ? parseSourceCitations(message.content)
                   : { citations: [] };
 
