@@ -18,7 +18,6 @@
 | INF-005 | Optimize costs | P2 | L |
 | INF-008 | Enable edge function JWT verification | P0 | M |
 | INF-009 | Verify Sentry configuration | P1 | S |
-| INF-010 | Set up performance monitoring | P0 | L |
 | INF-011 | Add deployment verification | P2 | S |
 | INF-012 | Track build times | P2 | S |
 
@@ -29,3 +28,4 @@
 | INF-000 | PM-Infrastructure setup | 2026-02-05 |
 | INF-001 | Initial domain audit | 2026-02-06 |
 | INF-006 | Set up Lighthouse CI | 2026-02-06 |
+| INF-010 | Set up performance monitoring | 2026-02-06 |
