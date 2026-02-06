@@ -37,7 +37,7 @@ registry.register(new GmailConnector());
  * In production, use proper encryption/decryption library
  */
 async function decryptCredentials(
-  encryptedCredentials: any
+  encryptedCredentials: Record<string, unknown>
 ): Promise<ConnectorCredentials> {
   // TODO: Implement actual decryption logic
   // For now, assume credentials are stored encrypted and need decryption
@@ -45,18 +45,18 @@ async function decryptCredentials(
   // In production, decrypt access_token and refresh_token fields
   
   return {
-    id: encryptedCredentials.id,
-    workspace_connector_id: encryptedCredentials.workspace_connector_id,
-    access_token: encryptedCredentials.access_token, // Should be decrypted
-    refresh_token: encryptedCredentials.refresh_token, // Should be decrypted
-    token_expires_at: encryptedCredentials.token_expires_at,
-    credentials_json: encryptedCredentials.credentials_json || {},
-    token_type: encryptedCredentials.token_type || 'Bearer',
-    scope: encryptedCredentials.scope,
-    encrypted_at: encryptedCredentials.encrypted_at,
-    last_refreshed_at: encryptedCredentials.last_refreshed_at,
-    created_at: encryptedCredentials.created_at,
-    updated_at: encryptedCredentials.updated_at,
+    id: encryptedCredentials.id as string,
+    workspace_connector_id: encryptedCredentials.workspace_connector_id as string,
+    access_token: encryptedCredentials.access_token as string, // Should be decrypted
+    refresh_token: encryptedCredentials.refresh_token as string | undefined, // Should be decrypted
+    token_expires_at: (encryptedCredentials.token_expires_at as string | null) ?? null,
+    credentials_json: (encryptedCredentials.credentials_json as Record<string, unknown>) || {},
+    token_type: (encryptedCredentials.token_type as string) || 'Bearer',
+    scope: encryptedCredentials.scope as string | undefined,
+    encrypted_at: encryptedCredentials.encrypted_at as string | undefined,
+    last_refreshed_at: encryptedCredentials.last_refreshed_at as string | undefined,
+    created_at: encryptedCredentials.created_at as string,
+    updated_at: encryptedCredentials.updated_at as string,
   };
 }
 
@@ -114,8 +114,8 @@ async function loadConnectorData(
   connectorKey: string,
   workspaceId: string
 ): Promise<{
-  workspaceConnector: any;
-  connectorDefinition: any;
+  workspaceConnector: Record<string, unknown>;
+  connectorDefinition: Record<string, unknown>;
   credentials: ConnectorCredentials;
 }> {
   // Get connector definition

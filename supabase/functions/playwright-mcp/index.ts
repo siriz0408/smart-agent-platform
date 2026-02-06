@@ -383,7 +383,7 @@ async function handleCompareVisual(
   return {
     success: true,
     message: `Visual baseline found for "${testName}". Screenshot comparison not yet implemented.`,
-    // @ts-ignore - additional fields for context
+    // @ts-expect-error - additional fields for context
     baseline_id: baseline.id,
     baseline_image_url: baseline.image_url,
   };

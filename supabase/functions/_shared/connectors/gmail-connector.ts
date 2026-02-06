@@ -12,6 +12,31 @@ import {
   ConnectorAuthError,
 } from '../connector-types.ts';
 
+interface GmailHeader {
+  name: string;
+  value: string;
+}
+
+interface GmailMessagePart {
+  mimeType: string;
+  body?: { data?: string };
+  parts?: GmailMessagePart[];
+  headers?: GmailHeader[];
+}
+
+interface GmailMessagePayload {
+  headers?: GmailHeader[];
+  body?: { data?: string };
+  parts?: GmailMessagePart[];
+}
+
+interface GmailMessage {
+  id: string;
+  threadId: string;
+  snippet?: string;
+  payload?: GmailMessagePayload;
+}
+
 export class GmailConnector extends BaseConnector {
   readonly connectorKey = 'gmail';
 
@@ -262,16 +287,16 @@ export class GmailConnector extends BaseConnector {
       credentials
     );
 
-    const result = await this.parseJsonResponse(response);
+    const result = await this.parseJsonResponse<GmailMessage>(response);
 
     // Extract readable content from Gmail message format
-    const payload = (result as any).payload;
+    const payload = result.payload;
     let body = '';
     let subject = '';
 
     if (payload) {
       // Extract subject
-      const subjectHeader = payload.headers?.find((h: any) => h.name === 'Subject');
+      const subjectHeader = payload.headers?.find((h: GmailHeader) => h.name === 'Subject');
       subject = subjectHeader?.value || '';
 
       // Extract body
@@ -289,14 +314,14 @@ export class GmailConnector extends BaseConnector {
     }
 
     return this.createSuccessResult({
-      message_id: (result as any).id,
-      thread_id: (result as any).threadId,
+      message_id: result.id,
+      thread_id: result.threadId,
       subject,
       body,
-      snippet: (result as any).snippet,
-      from: payload?.headers?.find((h: any) => h.name === 'From')?.value,
-      to: payload?.headers?.find((h: any) => h.name === 'To')?.value,
-      date: payload?.headers?.find((h: any) => h.name === 'Date')?.value,
+      snippet: result.snippet,
+      from: payload?.headers?.find((h: GmailHeader) => h.name === 'From')?.value,
+      to: payload?.headers?.find((h: GmailHeader) => h.name === 'To')?.value,
+      date: payload?.headers?.find((h: GmailHeader) => h.name === 'Date')?.value,
     });
   }
 
@@ -334,14 +359,14 @@ export class GmailConnector extends BaseConnector {
             { method: 'GET' },
             credentials
           );
-          const msgData = await this.parseJsonResponse(msgResponse);
+          const msgData = await this.parseJsonResponse<GmailMessage>(msgResponse);
           return {
             id: msg.id,
             thread_id: msg.threadId,
-            subject: (msgData as any).payload?.headers?.find((h: any) => h.name === 'Subject')?.value,
-            from: (msgData as any).payload?.headers?.find((h: any) => h.name === 'From')?.value,
-            date: (msgData as any).payload?.headers?.find((h: any) => h.name === 'Date')?.value,
-            snippet: (msgData as any).snippet,
+            subject: msgData.payload?.headers?.find((h: GmailHeader) => h.name === 'Subject')?.value,
+            from: msgData.payload?.headers?.find((h: GmailHeader) => h.name === 'From')?.value,
+            date: msgData.payload?.headers?.find((h: GmailHeader) => h.name === 'Date')?.value,
+            snippet: msgData.snippet,
           };
         } catch {
           return {

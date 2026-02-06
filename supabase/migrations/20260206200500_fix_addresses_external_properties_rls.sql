@@ -8,6 +8,17 @@
 -- ============================================================================
 
 -- ============================================================================
+-- PHASE 0: Fix ambiguous get_user_tenant_id() function
+-- ============================================================================
+-- There are two overloads: get_user_tenant_id() and get_user_tenant_id(uuid DEFAULT NULL)
+-- Both match a no-arg call, causing SQLSTATE 42725.
+-- Both have dependent policies, can't drop either, can't remove defaults.
+-- Solution: All policies in this migration use explicit tenant_id lookup
+-- instead of calling the ambiguous function. We also drop the no-arg version
+-- with CASCADE and immediately recreate it plus any affected policies later.
+-- For now, we just inline the query in all policies below.
+
+-- ============================================================================
 -- PHASE 1: Fix addresses table RLS policies
 -- ============================================================================
 -- Addresses are normalized and referenced by properties and contacts.
@@ -20,6 +31,7 @@ DROP POLICY IF EXISTS "Authenticated users can insert addresses" ON public.addre
 DROP POLICY IF EXISTS "Authenticated users can update addresses" ON public.addresses;
 
 -- SELECT: Users can only view addresses used by properties/contacts in their workspace
+DROP POLICY IF EXISTS "addresses_select_by_workspace" ON public.addresses;
 CREATE POLICY "addresses_select_by_workspace"
 ON public.addresses FOR SELECT
 USING (
@@ -28,13 +40,13 @@ USING (
   -- Address is used by a property in user's workspace
   id IN (
     SELECT address_id FROM public.properties
-    WHERE tenant_id = public.get_user_tenant_id()
+    WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND address_id IS NOT NULL
   ) OR
   -- Address is used by a contact in user's workspace
   id IN (
     SELECT address_id FROM public.contacts
-    WHERE tenant_id = public.get_user_tenant_id()
+    WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND address_id IS NOT NULL
   ) OR
   -- Address is used by an external_property that is saved by users in user's workspace
@@ -42,30 +54,32 @@ USING (
     SELECT ep.address_id FROM public.external_properties ep
     INNER JOIN public.saved_properties sp ON sp.external_property_id = ep.id
     INNER JOIN public.profiles p ON p.user_id = sp.user_id
-    WHERE p.tenant_id = public.get_user_tenant_id()
+    WHERE p.tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND ep.address_id IS NOT NULL
   )
 );
 
 -- INSERT: Users can insert addresses (they'll be linked to properties/contacts with workspace isolation)
+DROP POLICY IF EXISTS "addresses_insert_authenticated" ON public.addresses;
 CREATE POLICY "addresses_insert_authenticated"
 ON public.addresses FOR INSERT
 TO authenticated
 WITH CHECK (true);
 
 -- UPDATE: Users can only update addresses used by properties/contacts in their workspace
+DROP POLICY IF EXISTS "addresses_update_by_workspace" ON public.addresses;
 CREATE POLICY "addresses_update_by_workspace"
 ON public.addresses FOR UPDATE
 USING (
   (SELECT public.is_super_admin()) OR
   id IN (
     SELECT address_id FROM public.properties
-    WHERE tenant_id = public.get_user_tenant_id()
+    WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND address_id IS NOT NULL
   ) OR
   id IN (
     SELECT address_id FROM public.contacts
-    WHERE tenant_id = public.get_user_tenant_id()
+    WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND address_id IS NOT NULL
   )
 )
@@ -73,17 +87,18 @@ WITH CHECK (
   (SELECT public.is_super_admin()) OR
   id IN (
     SELECT address_id FROM public.properties
-    WHERE tenant_id = public.get_user_tenant_id()
+    WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND address_id IS NOT NULL
   ) OR
   id IN (
     SELECT address_id FROM public.contacts
-    WHERE tenant_id = public.get_user_tenant_id()
+    WHERE tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND address_id IS NOT NULL
   )
 );
 
 -- DELETE: Only super admin can delete addresses (to prevent orphaned references)
+DROP POLICY IF EXISTS "addresses_delete_super_admin" ON public.addresses;
 CREATE POLICY "addresses_delete_super_admin"
 ON public.addresses FOR DELETE
 USING ((SELECT public.is_super_admin()));
@@ -109,6 +124,7 @@ DROP POLICY IF EXISTS "Service role can update external properties" ON public.ex
 
 -- SELECT: Users can only view external_properties saved by users in their workspace
 -- This ensures workspace isolation: users can see properties saved by colleagues in their workspace
+DROP POLICY IF EXISTS "external_properties_select_by_workspace" ON public.external_properties;
 CREATE POLICY "external_properties_select_by_workspace"
 ON public.external_properties FOR SELECT
 USING (
@@ -119,12 +135,13 @@ USING (
   id IN (
     SELECT sp.external_property_id FROM public.saved_properties sp
     INNER JOIN public.profiles p ON p.user_id = sp.user_id
-    WHERE p.tenant_id = public.get_user_tenant_id()
+    WHERE p.tenant_id = (SELECT tenant_id FROM public.profiles WHERE user_id = auth.uid() LIMIT 1)
     AND sp.external_property_id IS NOT NULL
   )
 );
 
 -- INSERT: Only service role can insert (via edge functions)
+DROP POLICY IF EXISTS "external_properties_insert_service_role" ON public.external_properties;
 CREATE POLICY "external_properties_insert_service_role"
 ON public.external_properties FOR INSERT
 TO service_role
@@ -138,11 +155,13 @@ USING (true)
 WITH CHECK (true);
 
 -- DELETE: Only super admin can delete
+DROP POLICY IF EXISTS "external_properties_delete_super_admin" ON public.external_properties;
 CREATE POLICY "external_properties_delete_super_admin"
 ON public.external_properties FOR DELETE
 USING ((SELECT public.is_super_admin()));
 
 -- Super admin bypass
+DROP POLICY IF EXISTS "external_properties_super_admin" ON public.external_properties;
 CREATE POLICY "external_properties_super_admin"
 ON public.external_properties FOR ALL
 USING ((SELECT public.is_super_admin()));

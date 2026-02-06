@@ -27,8 +27,14 @@ ALTER TABLE public.subscriptions
 ALTER TABLE public.subscriptions
   DROP CONSTRAINT IF EXISTS subscriptions_tenant_id_key;
 
-ALTER TABLE public.subscriptions
-  ADD CONSTRAINT subscriptions_workspace_id_key UNIQUE (workspace_id);
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'subscriptions_workspace_id_key'
+  ) THEN
+    ALTER TABLE public.subscriptions
+      ADD CONSTRAINT subscriptions_workspace_id_key UNIQUE (workspace_id);
+  END IF;
+END $$;
 
 -- Step 6: Update RLS policies to use workspace_id
 -- Drop old policies
@@ -37,6 +43,7 @@ DROP POLICY IF EXISTS "users_update_own_subscription" ON public.subscriptions;
 DROP POLICY IF EXISTS "users_insert_own_subscription" ON public.subscriptions;
 
 -- Create new policies using workspace_id
+DROP POLICY IF EXISTS "users_view_own_subscription" ON public.subscriptions;
 CREATE POLICY "users_view_own_subscription"
 ON public.subscriptions FOR SELECT
 USING (
@@ -54,6 +61,7 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "users_update_own_subscription" ON public.subscriptions;
 CREATE POLICY "users_update_own_subscription"
 ON public.subscriptions FOR UPDATE
 USING (
@@ -65,6 +73,7 @@ USING (
   OR (SELECT public.is_super_admin())
 );
 
+DROP POLICY IF EXISTS "users_insert_own_subscription" ON public.subscriptions;
 CREATE POLICY "users_insert_own_subscription"
 ON public.subscriptions FOR INSERT
 WITH CHECK (

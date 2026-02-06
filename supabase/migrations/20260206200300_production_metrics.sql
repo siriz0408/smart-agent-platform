@@ -259,6 +259,7 @@ COMMENT ON FUNCTION public.aggregate_production_metrics IS 'Aggregate daily prod
 ALTER TABLE public.production_metrics ENABLE ROW LEVEL SECURITY;
 
 -- Admins can view all metrics
+DROP POLICY IF EXISTS "Admins can view production metrics" ON public.production_metrics;
 CREATE POLICY "Admins can view production metrics"
   ON public.production_metrics
   FOR SELECT
@@ -271,6 +272,7 @@ CREATE POLICY "Admins can view production metrics"
   );
 
 -- Service role can insert/update (for aggregation function)
+DROP POLICY IF EXISTS "Service role can manage production metrics" ON public.production_metrics;
 CREATE POLICY "Service role can manage production metrics"
   ON public.production_metrics
   FOR ALL

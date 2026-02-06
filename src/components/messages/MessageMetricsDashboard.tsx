@@ -77,7 +77,7 @@ export function MessageMetricsDashboard() {
         {/* North Star Metric */}
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Response Rate (<4hr)</CardTitle>
+            <CardTitle className="text-sm font-medium">Response Rate (&lt;4hr)</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -100,7 +100,7 @@ export function MessageMetricsDashboard() {
                   ) : (
                     <>
                       <TrendingDown className="h-3 w-3 text-red-500" />
-                      <span className="text-xs text-red-500">Below target (<80%)</span>
+                      <span className="text-xs text-red-500">Below target (&lt;80%)</span>
                     </>
                   )}
                 </div>

@@ -101,6 +101,7 @@ COMMENT ON FUNCTION public.calculate_message_response_time IS 'Calculates respon
 -- 3. TRIGGER: Auto-calculate metrics on message insert
 -- ============================================================================
 
+DROP TRIGGER IF EXISTS calculate_message_metrics ON public.messages;
 CREATE TRIGGER calculate_message_metrics
   AFTER INSERT ON public.messages
   FOR EACH ROW
@@ -242,6 +243,7 @@ ALTER TABLE public.message_metrics ENABLE ROW LEVEL SECURITY;
 -- ============================================================================
 
 -- Users can view metrics for conversations they participate in
+DROP POLICY IF EXISTS "Users can view metrics for their conversations" ON public.message_metrics;
 CREATE POLICY "Users can view metrics for their conversations"
   ON public.message_metrics FOR SELECT
   USING (
@@ -253,6 +255,7 @@ CREATE POLICY "Users can view metrics for their conversations"
   );
 
 -- Users can view metrics for their tenant (for dashboard)
+DROP POLICY IF EXISTS "Users can view tenant metrics" ON public.message_metrics;
 CREATE POLICY "Users can view tenant metrics"
   ON public.message_metrics FOR SELECT
   USING (
