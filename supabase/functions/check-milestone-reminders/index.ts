@@ -9,7 +9,8 @@ const corsHeaders = {
 };
 
 // This function is designed to be called by a cron job daily
-// It checks for milestones due within the next 24 hours and sends reminder notifications
+// It checks for milestones due within the next 3 days and sends reminder notifications
+// Matches UI indicator logic: "due soon" = within 3 days
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -23,9 +24,10 @@ serve(async (req) => {
     // Use service role for cron job
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Get milestones due in the next 24 hours that haven't been completed
+    // Get milestones due in the next 3 days that haven't been completed
+    // This matches the UI indicator logic for "due soon"
     const now = new Date();
-    const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    const threeDaysFromNow = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
     const { data: upcomingMilestones, error: milestonesError } = await supabase
       .from("deal_milestones")
@@ -50,7 +52,7 @@ serve(async (req) => {
       `)
       .is("completed_at", null)
       .gte("due_date", now.toISOString().split("T")[0])
-      .lte("due_date", tomorrow.toISOString().split("T")[0]);
+      .lte("due_date", threeDaysFromNow.toISOString().split("T")[0]);
 
     if (milestonesError) {
       throw new Error(`Failed to fetch milestones: ${milestonesError.message}`);
@@ -76,10 +78,20 @@ serve(async (req) => {
 
       if (!deal?.agent_id) continue;
 
-      // Calculate due text
+      // Calculate due text with proper urgency levels
       const dueDate = new Date(milestone.due_date);
-      const isToday = dueDate.toDateString() === now.toDateString();
-      const dueText = isToday ? "today" : "tomorrow";
+      const daysUntilDue = Math.floor((dueDate.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+      const isToday = daysUntilDue === 0;
+      const isTomorrow = daysUntilDue === 1;
+      
+      let dueText: string;
+      if (isToday) {
+        dueText = "today";
+      } else if (isTomorrow) {
+        dueText = "tomorrow";
+      } else {
+        dueText = `in ${daysUntilDue} days`;
+      }
 
       // Get property name for the deal (properties is an array from the join)
       const property = deal.properties?.[0];
