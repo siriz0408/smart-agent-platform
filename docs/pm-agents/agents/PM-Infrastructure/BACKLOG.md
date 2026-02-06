@@ -7,8 +7,6 @@
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
 | INF-002 | Run performance tests | P0 | M |
-| INF-003 | Check uptime history | P0 | S |
-| INF-007 | Create production metrics dashboard | P0 | M |
 
 ## Ready
 
@@ -16,7 +14,6 @@
 |----|------|----------|--------|
 | INF-004 | Audit deployment pipeline | P1 | M |
 | INF-005 | Optimize costs | P2 | L |
-| INF-008 | Enable edge function JWT verification | P0 | M |
 | INF-009 | Verify Sentry configuration | P1 | S |
 | INF-011 | Add deployment verification | P2 | S |
 | INF-012 | Track build times | P2 | S |
