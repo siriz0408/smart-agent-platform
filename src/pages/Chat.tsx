@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MentionInput, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, parseCollectionMentions, fetchMentionData, type Mention, type CollectionType } from "@/hooks/useMentionSearch";
+import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
+import { useAIChatMetricsTracker } from "@/hooks/useAIChatMetrics";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
