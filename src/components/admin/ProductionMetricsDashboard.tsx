@@ -36,7 +36,7 @@ export function ProductionMetricsDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Date Range Selector */}
+      {/* Date Range Selector and Actions */}
       <div className="flex items-center gap-4">
         <Popover>
           <PopoverTrigger asChild>
@@ -78,6 +78,15 @@ export function ProductionMetricsDashboard() {
             />
           </PopoverContent>
         </Popover>
+        <Button
+          variant="outline"
+          onClick={handleTriggerAggregation}
+          disabled={isTriggering}
+          className="gap-2"
+        >
+          <RefreshCw className={cn("h-4 w-4", isTriggering && "animate-spin")} />
+          {isTriggering ? "Triggering..." : "Trigger Aggregation"}
+        </Button>
       </div>
 
       {/* Summary Cards */}
