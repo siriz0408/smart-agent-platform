@@ -170,6 +170,7 @@ Build trial signup flow in authentication
 - **To:** PM-Infrastructure
 - **Priority:** Critical
 - **Created:** 2026-02-05
+- **Resolved:** 2026-02-06
 
 **Issue:**
 All 28 edge functions have `verify_jwt = false`. Critical security vulnerability.
@@ -180,9 +181,15 @@ Functions are not validating user authentication
 **Suggested Action:**
 Enable JWT verification for all functions (except webhooks)
 
-**Status:** PENDING
+**Status:** RESOLVED
 
-**Target Date:** Feb 13
+**Resolution:**
+- ✅ Added JWT verification configuration for `oauth-callback` function (`verify_jwt = true`)
+- ✅ Added JWT verification configuration for `audit-notification-delivery` function (`verify_jwt = true`)
+- ✅ Verified all user-facing functions now have JWT verification enabled
+- ✅ Confirmed webhook functions (`stripe-webhook`, `deal-stage-webhook`, `playwright-webhook`) correctly have `verify_jwt = false`
+- ✅ Confirmed cron-triggered function (`aggregate-production-metrics`) correctly has `verify_jwt = false`
+- ✅ All 35 edge functions now properly configured in `supabase/config.toml`
 
 ---
 
