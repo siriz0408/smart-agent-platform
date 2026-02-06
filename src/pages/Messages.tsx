@@ -66,9 +66,12 @@ export default function Messages() {
     navigate("/messages");
   };
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (
+    content: string,
+    uploadAttachments?: (messageId: string) => Promise<void>
+  ) => {
     if (selectedConversationId) {
-      await sendMessage(content);
+      await sendMessage(content, uploadAttachments);
     }
   };
 

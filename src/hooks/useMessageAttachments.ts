@@ -108,7 +108,8 @@ export function useMessageAttachments() {
     const uploaded: MessageAttachment[] = [];
 
     for (const attachment of pendingAttachments) {
-      const storagePath = `${conversationId}/${messageId}/${Date.now()}-${attachment.name}`;
+      // Storage path must start with user_id to match RLS policy
+      const storagePath = `${user.id}/${conversationId}/${messageId}/${Date.now()}-${attachment.name}`;
 
       // Upload to storage
       const { error: uploadError } = await supabase.storage

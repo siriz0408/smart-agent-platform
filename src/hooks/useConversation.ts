@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
+import type { MessageAttachment } from "@/hooks/useMessageAttachments";
 
 interface Participant {
   user_id: string | null;
@@ -36,10 +37,12 @@ interface Message {
   sender_id: string;
   sent_at: string;
   message_type: string;
+  file_url?: string | null;
   senderProfile?: {
     full_name: string | null;
     email: string;
   } | null;
+  attachments?: MessageAttachment[];
 }
 
 export function useConversation(conversationId: string | null) {
@@ -141,13 +144,13 @@ export function useConversation(conversationId: string | null) {
 
       const { data, error } = await supabase
         .from("messages")
-        .select("id, content, sender_id, sent_at, message_type")
+        .select("id, content, sender_id, sent_at, message_type, file_url")
         .eq("conversation_id", conversationId)
         .order("sent_at", { ascending: true });
 
       if (error) throw error;
 
-      // Get sender profiles
+      // Get sender profiles and attachments for each message
       const messagesWithProfiles: Message[] = await Promise.all(
         (data || []).map(async (msg) => {
           const { data: profileData } = await supabase
@@ -155,7 +158,19 @@ export function useConversation(conversationId: string | null) {
             .select("full_name, email")
             .eq("user_id", msg.sender_id)
             .single();
-          return { ...msg, senderProfile: profileData };
+
+          // Fetch attachments for this message
+          const { data: attachments } = await supabase
+            .from("message_attachments")
+            .select("id, message_id, file_name, file_type, file_size, storage_path")
+            .eq("message_id", msg.id)
+            .order("created_at", { ascending: true });
+
+          return {
+            ...msg,
+            senderProfile: profileData,
+            attachments: attachments || [],
+          };
         })
       );
 
@@ -169,23 +184,46 @@ export function useConversation(conversationId: string | null) {
 
   // Send message mutation
   const sendMessageMutation = useMutation({
-    mutationFn: async (content: string) => {
+    mutationFn: async ({
+      content,
+      uploadAttachments,
+    }: {
+      content: string;
+      uploadAttachments?: (messageId: string) => Promise<void>;
+    }) => {
       if (!user?.id || !conversationId) throw new Error("Not authenticated or no conversation");
 
-      const { error } = await supabase.from("messages").insert({
-        conversation_id: conversationId,
-        sender_id: user.id,
-        content,
-        message_type: "text",
-      });
+      // Insert message first to get message_id
+      const { data: newMessage, error } = await supabase
+        .from("messages")
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          content,
+          message_type: "text",
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
+
+      // Upload attachments if provided (pass messageId)
+      if (uploadAttachments && newMessage?.id) {
+        try {
+          await uploadAttachments(newMessage.id);
+        } catch (attachmentError) {
+          logger.error("Failed to upload attachments:", attachmentError);
+          toast.error("Message sent but attachments failed to upload");
+        }
+      }
 
       // Update conversation updated_at
       await supabase
         .from("conversations")
         .update({ updated_at: new Date().toISOString() })
         .eq("id", conversationId);
+
+      return newMessage.id;
     },
     onSuccess: () => {
       refetchMessages();
@@ -339,13 +377,20 @@ export function useConversation(conversationId: string | null) {
     [user?.id, tenantId, refetchConversations]
   );
 
+  const sendMessage = useCallback(
+    async (content: string, uploadAttachments?: (messageId: string) => Promise<void>) => {
+      return sendMessageMutation.mutateAsync({ content, uploadAttachments });
+    },
+    [sendMessageMutation]
+  );
+
   return {
     conversations,
     isLoadingConversations,
     messages,
     isLoadingMessages,
     selectedConversation,
-    sendMessage: sendMessageMutation.mutateAsync,
+    sendMessage,
     isSending: sendMessageMutation.isPending,
     refetchConversations,
     refetchMessages,

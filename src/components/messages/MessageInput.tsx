@@ -7,7 +7,7 @@ import { useTypingIndicator } from "@/hooks/useTypingIndicator";
 import { toast } from "sonner";
 
 interface MessageInputProps {
-  onSend: (content: string, uploadAttachments?: () => Promise<void>) => Promise<void>;
+  onSend: (content: string, uploadAttachments?: (messageId: string) => Promise<void>) => Promise<void>;
   disabled?: boolean;
   conversationId?: string;
 }
@@ -17,17 +17,25 @@ export function MessageInput({ onSend, disabled, conversationId }: MessageInputP
   const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { pendingAttachments, addFiles, removeFile, clearFiles, hasAttachments } = useMessageAttachments();
+  const { pendingAttachments, addFiles, removeFile, clearFiles, hasAttachments, uploadAttachments } =
+    useMessageAttachments();
   const { handleTyping, stopTyping } = useTypingIndicator(conversationId ?? null);
 
   const handleSend = async () => {
     const trimmedContent = content.trim();
-    if ((!trimmedContent && !hasAttachments) || isSending) return;
+    if ((!trimmedContent && !hasAttachments) || isSending || !conversationId) return;
 
     setIsSending(true);
     stopTyping(); // Stop typing indicator when sending
     try {
-      await onSend(trimmedContent || "(Attachment)");
+      // Create upload function that receives messageId
+      const uploadFn = hasAttachments
+        ? async (messageId: string) => {
+            await uploadAttachments(conversationId, messageId);
+          }
+        : undefined;
+
+      await onSend(trimmedContent || "(Attachment)", uploadFn);
       setContent("");
       clearFiles();
     } finally {
