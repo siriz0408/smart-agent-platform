@@ -26,20 +26,20 @@ test.describe('Contacts', () => {
     await page.getByRole('button', { name: /add contact/i }).click();
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
 
-    // Fill basic info - look for input fields by placeholder or label
-    await page.locator('input[name="firstName"]').fill('John');
-    await page.locator('input[name="lastName"]').fill('TestBuyer');
+    // Fill basic info - use snake_case field names
+    await page.locator('input[name="first_name"]').fill('John');
+    await page.locator('input[name="last_name"]').fill('TestBuyer');
     await page.locator('input[name="email"]').fill(`john.buyer.${Date.now()}@test.com`);
     
-    // Select buyer type - find the contact type select
-    const typeSelect = page.locator('button').filter({ hasText: /select type|buyer|seller|lead/i }).first();
+    // Select buyer type - find the contact type select trigger
+    const typeSelect = page.locator('[role="dialog"]').locator('button').filter({ hasText: /lead|buyer|seller/i }).first();
     await typeSelect.click();
-    await page.getByRole('option', { name: /buyer/i }).click();
+    await page.locator('[role="option"]').filter({ hasText: /^buyer$/i }).click();
 
-    // Save contact (basic info only for speed)
+    // Save contact
     await page.getByRole('button', { name: /create contact/i }).click();
 
-    // Verify success - look for toast or dialog closing
+    // Verify success - dialog should close
     await expect(page.getByRole('dialog')).not.toBeVisible({ timeout: 10000 });
   });
 
@@ -47,15 +47,15 @@ test.describe('Contacts', () => {
     await page.getByRole('button', { name: /add contact/i }).click();
     await expect(page.getByRole('dialog')).toBeVisible({ timeout: 5000 });
 
-    // Fill basic info
-    await page.locator('input[name="firstName"]').fill('Lisa');
-    await page.locator('input[name="lastName"]').fill('TestSeller');
+    // Fill basic info - use snake_case field names
+    await page.locator('input[name="first_name"]').fill('Lisa');
+    await page.locator('input[name="last_name"]').fill('TestSeller');
     await page.locator('input[name="email"]').fill(`lisa.seller.${Date.now()}@test.com`);
 
     // Select seller type
-    const typeSelect = page.locator('button').filter({ hasText: /select type|buyer|seller|lead/i }).first();
+    const typeSelect = page.locator('[role="dialog"]').locator('button').filter({ hasText: /lead|buyer|seller/i }).first();
     await typeSelect.click();
-    await page.getByRole('option', { name: /seller/i }).click();
+    await page.locator('[role="option"]').filter({ hasText: /^seller$/i }).click();
 
     // Save
     await page.getByRole('button', { name: /create contact/i }).click();

@@ -7,15 +7,22 @@ export async function login(page: Page) {
   const email = process.env.TEST_USER_EMAIL || 'siriz04081@gmail.com';
   const password = process.env.TEST_USER_PASSWORD || 'Test1234';
 
-  await page.goto('/');
+  // Go directly to login page for reliability
+  await page.goto('/login');
   await page.waitForLoadState('networkidle');
   
-  // Check if already logged in
+  // Check if we need to log in (sign in button visible)
   const signInButton = page.getByRole('button', { name: /sign in/i });
-  if (await signInButton.isVisible()) {
+  const isOnLoginPage = await signInButton.isVisible().catch(() => false);
+  
+  if (isOnLoginPage) {
     await page.getByRole('textbox', { name: /email/i }).fill(email);
     await page.getByRole('textbox', { name: /password/i }).fill(password);
     await signInButton.click();
+    
+    // Wait for navigation away from login page
+    await page.waitForURL((url) => !url.pathname.includes('/login'), { timeout: 15000 });
+    await page.waitForLoadState('networkidle');
   }
   
   // Wait for contacts link to appear (indicates successful login)

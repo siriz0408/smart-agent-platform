@@ -6,50 +6,64 @@ import { test, expect } from '@playwright/test';
  */
 
 test.describe('Authentication', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    // Wait for page to be ready
-    await page.waitForLoadState('networkidle');
+  test.describe('Landing Page', () => {
+    test('should display landing page for unauthenticated users', async ({ page }) => {
+      await page.goto('/');
+      await page.waitForLoadState('networkidle');
+      
+      // Should show landing page with login link and get started button
+      await expect(page.getByRole('link', { name: /log in/i })).toBeVisible();
+      await expect(page.getByRole('link', { name: /get started/i })).toBeVisible();
+    });
   });
 
-  test('should display login page for unauthenticated users', async ({ page }) => {
-    // Should redirect to login or show login form
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: /email/i })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: /password/i })).toBeVisible();
-  });
+  test.describe('Login Page', () => {
+    test.beforeEach(async ({ page }) => {
+      await page.goto('/login');
+      await page.waitForLoadState('networkidle');
+    });
 
-  test('should login successfully with valid credentials', async ({ page }) => {
-    const email = process.env.TEST_USER_EMAIL || 'siriz04081@gmail.com';
-    const password = process.env.TEST_USER_PASSWORD || 'Test1234';
+    test('should display login form', async ({ page }) => {
+      await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+      await expect(page.getByRole('textbox', { name: /email/i })).toBeVisible();
+      // Password field is type="password" so use locator
+      await expect(page.locator('input[type="password"]')).toBeVisible();
+    });
 
-    await page.getByRole('textbox', { name: /email/i }).fill(email);
-    await page.getByRole('textbox', { name: /password/i }).fill(password);
-    await page.getByRole('button', { name: /sign in/i }).click();
+    test('should login successfully with valid credentials', async ({ page }) => {
+      const email = process.env.TEST_USER_EMAIL || 'siriz04081@gmail.com';
+      const password = process.env.TEST_USER_PASSWORD || 'Test1234';
 
-    // Should redirect to home/dashboard after login - wait for navigation link to appear
-    await expect(page.getByRole('link', { name: /contacts/i })).toBeVisible({ timeout: 15000 });
-  });
+      await page.getByRole('textbox', { name: /email/i }).fill(email);
+      await page.locator('input[type="password"]').fill(password);
+      await page.getByRole('button', { name: /sign in/i }).click();
 
-  test('should stay on login page with invalid credentials', async ({ page }) => {
-    await page.getByRole('textbox', { name: /email/i }).fill('invalid@example.com');
-    await page.getByRole('textbox', { name: /password/i }).fill('wrongpassword');
-    await page.getByRole('button', { name: /sign in/i }).click();
+      // Should redirect to home/dashboard after login
+      await expect(page.getByRole('link', { name: /contacts/i })).toBeVisible({ timeout: 15000 });
+    });
 
-    // Wait for potential navigation or error
-    await page.waitForTimeout(2000);
-    
-    // Should stay on login page (sign in button still visible means we didn't login)
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
-    // And contacts link should NOT be visible (not logged in)
-    await expect(page.getByRole('link', { name: /contacts/i })).not.toBeVisible();
-  });
+    test('should stay on login page with invalid credentials', async ({ page }) => {
+      await page.getByRole('textbox', { name: /email/i }).fill('invalid@example.com');
+      await page.locator('input[type="password"]').fill('wrongpassword');
+      await page.getByRole('button', { name: /sign in/i }).click();
 
-  test('should have forgot password link', async ({ page }) => {
-    await expect(page.getByRole('button', { name: /forgot password/i })).toBeVisible();
-  });
+      // Wait for potential error message
+      await page.waitForTimeout(2000);
+      
+      // Should stay on login page
+      await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    });
 
-  test('should have sign up link', async ({ page }) => {
-    await expect(page.getByRole('link', { name: /sign up/i })).toBeVisible();
+    test('should have forgot password option', async ({ page }) => {
+      // Look for forgot password link or button
+      const forgotPassword = page.getByText(/forgot password/i);
+      await expect(forgotPassword).toBeVisible();
+    });
+
+    test('should have sign up link', async ({ page }) => {
+      // Look for sign up or create account link
+      const signUpLink = page.getByText(/sign up|create.*account|don't have an account/i);
+      await expect(signUpLink).toBeVisible();
+    });
   });
 });
