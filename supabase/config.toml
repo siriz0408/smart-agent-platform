@@ -104,3 +104,9 @@ verify_jwt = true
 
 [functions.aggregate-production-metrics]
 verify_jwt = false
+
+[functions.oauth-callback]
+verify_jwt = true
+
+[functions.audit-notification-delivery]
+verify_jwt = true
