@@ -8,6 +8,8 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
@@ -147,10 +149,10 @@ export default function Settings() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5" />
-                  Notifications
+                  Notification Channels
                 </CardTitle>
                 <CardDescription>
-                  Configure how you receive notifications
+                  Choose how you receive notifications
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -181,6 +183,30 @@ export default function Settings() {
                     onCheckedChange={(checked) => updatePreference("pushNotifications", checked)}
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Notification Types</CardTitle>
+                <CardDescription>
+                  Control what types of events trigger notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="message-notifications">Messages</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified when you receive new messages
+                    </p>
+                  </div>
+                  <Switch
+                    id="message-notifications"
+                    checked={preferences.messageNotifications ?? true}
+                    onCheckedChange={(checked) => updatePreference("messageNotifications", checked)}
+                  />
+                </div>
                 <Separator />
                 <div className="flex items-center justify-between">
                   <div>
@@ -195,6 +221,88 @@ export default function Settings() {
                     onCheckedChange={(checked) => updatePreference("dealUpdates", checked)}
                   />
                 </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor="property-notifications">Property Updates</Label>
+                    <p className="text-sm text-muted-foreground">
+                      Get notified about new matches and price changes
+                    </p>
+                  </div>
+                  <Switch
+                    id="property-notifications"
+                    checked={preferences.propertyNotifications ?? true}
+                    onCheckedChange={(checked) => updatePreference("propertyNotifications", checked)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Email Frequency</CardTitle>
+                <CardDescription>
+                  Control how often you receive email notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email-frequency">Email Frequency</Label>
+                  <Select
+                    value={preferences.emailFrequency ?? "instant"}
+                    onValueChange={(value) => updatePreference("emailFrequency", value)}
+                  >
+                    <SelectTrigger id="email-frequency">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="instant">Instant (as soon as events occur)</SelectItem>
+                      <SelectItem value="daily">Daily Digest (once per day)</SelectItem>
+                      <SelectItem value="weekly">Weekly Summary (once per week)</SelectItem>
+                      <SelectItem value="off">Off (no email notifications)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {preferences.emailFrequency === "instant" && "You'll receive emails immediately when events occur"}
+                    {preferences.emailFrequency === "daily" && "You'll receive a summary email once per day"}
+                    {preferences.emailFrequency === "weekly" && "You'll receive a summary email once per week"}
+                    {preferences.emailFrequency === "off" && "No email notifications will be sent"}
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Quiet Hours</CardTitle>
+                <CardDescription>
+                  Set times when you don't want to receive notifications
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="quiet-hours-start">Start Time</Label>
+                    <Input
+                      id="quiet-hours-start"
+                      type="time"
+                      value={preferences.quietHoursStart ?? ""}
+                      onChange={(e) => updatePreference("quietHoursStart", e.target.value || null)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quiet-hours-end">End Time</Label>
+                    <Input
+                      id="quiet-hours-end"
+                      type="time"
+                      value={preferences.quietHoursEnd ?? ""}
+                      onChange={(e) => updatePreference("quietHoursEnd", e.target.value || null)}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  During quiet hours, notifications will be delayed until the end time
+                </p>
               </CardContent>
             </Card>
           </TabsContent>

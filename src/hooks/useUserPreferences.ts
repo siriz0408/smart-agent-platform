@@ -13,6 +13,11 @@ const DEFAULT_PREFERENCES = {
   emailNotifications: true,
   pushNotifications: false,
   dealUpdates: true,
+  messageNotifications: true,
+  propertyNotifications: true,
+  emailFrequency: "instant" as "instant" | "daily" | "weekly" | "off",
+  quietHoursStart: null as string | null,
+  quietHoursEnd: null as string | null,
   darkMode: false,
   aiModel: "default",
   searchMode: "web",
@@ -27,7 +32,7 @@ type PreferenceKey = keyof typeof DEFAULT_PREFERENCES;
  */
 export function useUserPreferences(): {
   preferences: typeof DEFAULT_PREFERENCES;
-  updatePreference: (key: PreferenceKey, value: boolean | string) => void;
+  updatePreference: (key: PreferenceKey, value: boolean | string | null) => void;
   isLoading: boolean;
 };
 
@@ -75,16 +80,31 @@ export function useUserPreferences(userId?: string | null | undefined, enabled =
     staleTime: 1000 * 60 * 5, // 5 minutes - preferences don't change often
   });
   
+  // Map camelCase frontend keys to snake_case database columns
+  const keyMapping: Record<string, string> = {
+    emailNotifications: "email_notifications",
+    pushNotifications: "push_notifications",
+    dealUpdates: "deal_updates",
+    messageNotifications: "message_notifications",
+    propertyNotifications: "property_notifications",
+    emailFrequency: "email_frequency",
+    quietHoursStart: "quiet_hours_start",
+    quietHoursEnd: "quiet_hours_end",
+  };
+
   // Mutation for updating preferences
   const updateMutation = useMutation({
-    mutationFn: async ({ key, value }: { key: PreferenceKey; value: boolean | string }) => {
+    mutationFn: async ({ key, value }: { key: PreferenceKey; value: boolean | string | null }) => {
       if (!targetUserId) throw new Error("No user ID");
+
+      // Map camelCase key to snake_case database column
+      const dbKey = keyMapping[key] || key;
 
       const { error } = await supabase
         .from("user_preferences")
         .upsert({
           user_id: targetUserId,
-          [key]: value,
+          [dbKey]: value,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: "user_id",
@@ -97,14 +117,35 @@ export function useUserPreferences(userId?: string | null | undefined, enabled =
     },
   });
   
-  // Merged preferences with defaults
-  const preferences = useMemo(() => ({
-    ...DEFAULT_PREFERENCES,
-    ...(query.data || {}),
-  }), [query.data]);
+  // Merged preferences with defaults, mapping snake_case DB columns to camelCase frontend keys
+  const preferences = useMemo(() => {
+    const dbData = query.data || {};
+    const reverseMapping: Record<string, string> = {
+      email_notifications: "emailNotifications",
+      push_notifications: "pushNotifications",
+      deal_updates: "dealUpdates",
+      message_notifications: "messageNotifications",
+      property_notifications: "propertyNotifications",
+      email_frequency: "emailFrequency",
+      quiet_hours_start: "quietHoursStart",
+      quiet_hours_end: "quietHoursEnd",
+    };
+
+    // Map database snake_case to camelCase
+    const mappedData: Record<string, any> = {};
+    Object.keys(dbData).forEach((key) => {
+      const mappedKey = reverseMapping[key] || key;
+      mappedData[mappedKey] = dbData[key as keyof typeof dbData];
+    });
+
+    return {
+      ...DEFAULT_PREFERENCES,
+      ...mappedData,
+    };
+  }, [query.data]);
   
   // Update function
-  const updatePreference = useCallback((key: PreferenceKey, value: boolean | string) => {
+  const updatePreference = useCallback((key: PreferenceKey, value: boolean | string | null) => {
     updateMutation.mutate({ key, value });
   }, [updateMutation]);
   

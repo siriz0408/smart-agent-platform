@@ -4,9 +4,7 @@
 
 ## In Progress
 
-| ID | Item | Priority | Effort |
-|----|------|----------|--------|
-| INF-002 | Run performance tests | P0 | M |
+_No items in progress_
 
 ## Ready
 
