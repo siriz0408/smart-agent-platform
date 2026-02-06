@@ -41,12 +41,15 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       </div>
 
       {/* Welcome Text */}
-      <div className="space-y-2">
+      <div className="space-y-3">
         <h1 className="text-3xl font-bold tracking-tight">
           Welcome to Smart Agent
         </h1>
         <p className="text-muted-foreground text-lg max-w-md mx-auto">
-          Your AI-powered real estate assistant. Let's get you set up in just a few steps.
+          Your AI-powered real estate assistant that helps you work smarter, not harder.
+        </p>
+        <p className="text-sm text-muted-foreground max-w-md mx-auto">
+          Get started in under 2 minutes and unlock powerful tools for managing deals, analyzing documents, and growing your business.
         </p>
       </div>
 
@@ -66,10 +69,15 @@ export function WelcomeStep({ onNext }: WelcomeStepProps) {
       </div>
 
       {/* CTA */}
-      <Button size="lg" onClick={onNext} className="w-full max-w-xs">
-        Get Started
-        <ArrowRight className="h-4 w-4 ml-2" />
-      </Button>
+      <div className="space-y-2 pt-2">
+        <Button size="lg" onClick={onNext} className="w-full max-w-xs">
+          Get Started
+          <ArrowRight className="h-4 w-4 ml-2" />
+        </Button>
+        <p className="text-xs text-muted-foreground">
+          Takes less than 2 minutes • No credit card required
+        </p>
+      </div>
     </div>
   );
 }

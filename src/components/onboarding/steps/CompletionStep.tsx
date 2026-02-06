@@ -70,6 +70,9 @@ export function CompletionStep({ data, onComplete, isCompleting }: CompletionSte
         <p className="text-muted-foreground text-lg max-w-md mx-auto">
           {data.fullName ? `Welcome, ${data.fullName.split(" ")[0]}!` : "Welcome!"} Your Smart Agent workspace is ready to go.
         </p>
+        <p className="text-sm text-muted-foreground max-w-md mx-auto pt-1">
+          Here's what you can do next to get the most out of Smart Agent:
+        </p>
       </div>
 
       {/* Completed Items */}
@@ -101,21 +104,38 @@ export function CompletionStep({ data, onComplete, isCompleting }: CompletionSte
 
       {/* Suggested Next Steps */}
       <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">Suggested next steps</p>
+        <p className="text-sm font-medium text-foreground">Quick start guide</p>
         <div className="grid gap-2">
-          {suggestedNextSteps.map((step) => (
+          {suggestedNextSteps.map((step, index) => (
             <Button
               key={step.label}
               variant="outline"
-              className="justify-start"
+              className="justify-start h-auto py-3 hover:bg-accent/50 transition-colors"
               asChild
             >
               <a href={step.href}>
-                <step.icon className="h-4 w-4 mr-2" />
-                {step.label}
+                <div className="flex items-center gap-3 w-full">
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <step.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">{step.label}</div>
+                    {index === 0 && (
+                      <div className="text-xs text-muted-foreground mt-0.5">
+                        Recommended first step
+                      </div>
+                    )}
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                </div>
               </a>
             </Button>
           ))}
+        </div>
+        <div className="pt-2 border-t">
+          <p className="text-xs text-muted-foreground text-center">
+            💡 Tip: You can access these anytime from your dashboard
+          </p>
         </div>
       </div>
 
