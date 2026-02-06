@@ -4,6 +4,8 @@ import { Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { SearchResultsDropdown } from "./SearchResultsDropdown";
+import { useSearchSuggestions, saveRecentSearch, type SearchSuggestion } from "@/hooks/useSearchSuggestions";
+import { SearchSuggestionsDropdown } from "./SearchSuggestionsDropdown";
 
 /**
  * Global Search Component
@@ -37,6 +39,11 @@ export const GlobalSearch = memo(function GlobalSearch() {
     enabled: query.length >= 2,
   });
 
+  // Get search suggestions for autocomplete (when query length < 2)
+  const { suggestions, isLoading: isLoadingSuggestions } = useSearchSuggestions(query);
+  const showSuggestions = query.length >= 1 && query.length < 2;
+  const showResults = query.length >= 2;
+
   // rerender-functional-setstate: Use functional updates for stable callbacks
   const handleClear = useCallback(() => {
     setQuery("");
@@ -48,6 +55,10 @@ export const GlobalSearch = memo(function GlobalSearch() {
   const handleResultClick = useCallback(
     (entityType: string, entityId: string) => {
       setIsOpen(false);
+      // Save the search query before navigating
+      if (query.trim().length >= 2) {
+        saveRecentSearch(query);
+      }
       setQuery("");
 
       // Navigate to entity detail page
@@ -67,15 +78,55 @@ export const GlobalSearch = memo(function GlobalSearch() {
           break;
       }
     },
-    [navigate]
+    [navigate, query]
   );
 
   // Navigate to full search results page
   const handleViewAllResults = useCallback(() => {
     console.log('🔍 handleViewAllResults clicked:', { query });
     setIsOpen(false);
+    if (query.trim().length >= 2) {
+      saveRecentSearch(query);
+    }
     navigate(`/search?q=${encodeURIComponent(query)}`);
   }, [navigate, query]);
+
+  // Handle suggestion selection
+  const handleSuggestionSelect = useCallback(
+    (suggestion: SearchSuggestion) => {
+      setIsOpen(false);
+      
+      if (suggestion.type === "recent") {
+        // For recent searches, set the query and trigger search
+        setQuery(suggestion.label);
+        setIsOpen(true);
+        return;
+      }
+
+      // For entity suggestions, navigate directly
+      if (suggestion.id) {
+        switch (suggestion.type) {
+          case "document":
+            navigate(`/documents/${suggestion.id}`);
+            break;
+          case "contact":
+            navigate(`/contacts/${suggestion.id}`);
+            break;
+          case "property":
+            navigate(`/properties/${suggestion.id}`);
+            break;
+        }
+      }
+    },
+    [navigate]
+  );
+
+  // Handle selecting a recent search query
+  const handleSelectQuery = useCallback((selectedQuery: string) => {
+    setQuery(selectedQuery);
+    setIsOpen(selectedQuery.length >= 1);
+    inputRef.current?.focus();
+  }, []);
 
   // client-passive-event-listeners: Close dropdown on outside click
   useEffect(() => {
@@ -119,9 +170,9 @@ export const GlobalSearch = memo(function GlobalSearch() {
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
-            setIsOpen(e.target.value.length >= 2);
+            setIsOpen(e.target.value.length >= 1);
           }}
-          onFocus={() => query.length >= 2 && setIsOpen(true)}
+          onFocus={() => query.length >= 1 && setIsOpen(true)}
           className="w-full pl-10 pr-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"
           aria-label="Global search"
           aria-expanded={isOpen}
@@ -140,7 +191,17 @@ export const GlobalSearch = memo(function GlobalSearch() {
         )}
       </div>
 
-      {isOpen && (
+      {isOpen && showSuggestions && (
+        <SearchSuggestionsDropdown
+          suggestions={suggestions}
+          isLoading={isLoadingSuggestions}
+          query={query}
+          onSelect={handleSuggestionSelect}
+          onSelectQuery={handleSelectQuery}
+        />
+      )}
+
+      {isOpen && showResults && (
         <SearchResultsDropdown
           results={results}
           isSearching={isSearching}
