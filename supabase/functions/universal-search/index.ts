@@ -237,12 +237,57 @@ Deno.serve(async (req) => {
     }
 
     // ========================================================================
+    // Log zero results for analytics (DIS-004)
+    // ========================================================================
+
+    const resultCount = results?.length || 0;
+    if (resultCount === 0 && query.length >= 2) {
+      // Parse query for analysis
+      const queryWords = query
+        .toLowerCase()
+        .trim()
+        .split(/\s+/)
+        .filter((word) => word.length > 0);
+      
+      const hasSpecialChars = /[^a-z0-9\s]/.test(query.toLowerCase());
+      const isNumeric = /^\d+$/.test(query.trim());
+      const isSingleWord = queryWords.length === 1;
+
+      // Log zero result asynchronously (don't block response)
+      supabaseAdmin
+        .from("zero_results_log")
+        .insert({
+          tenant_id: tenantId,
+          user_id: user.id,
+          query: query.trim(),
+          query_length: query.length,
+          entity_types: entityTypes,
+          match_count_per_type: matchCountPerType,
+          query_words: queryWords,
+          query_word_count: queryWords.length,
+          has_special_chars: hasSpecialChars,
+          is_numeric: isNumeric,
+          is_single_word: isSingleWord,
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error("❌ Failed to log zero result:", error);
+          } else {
+            console.log("📊 Logged zero result for analytics");
+          }
+        })
+        .catch((err) => {
+          console.error("❌ Error logging zero result:", err);
+        });
+    }
+
+    // ========================================================================
     // Return results
     // ========================================================================
 
     const response: { results: SearchResult[]; count: number } = {
       results: results || [],
-      count: results?.length || 0,
+      count: resultCount,
     };
 
     return new Response(JSON.stringify(response), {

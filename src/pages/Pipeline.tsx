@@ -346,6 +346,9 @@ export default function Pipeline() {
         {/* Pipeline Analytics */}
         <PipelineAnalytics dealType={dealType} stages={stages} />
 
+        {/* Deal Health Audit */}
+        <DealHealthAudit dealType={dealType} />
+
         {/* Quick Filters */}
         <div className="flex items-center gap-2 flex-wrap">
           <Filter className="h-4 w-4 text-muted-foreground" />
