@@ -62,6 +62,9 @@ const Privacy = lazy(() => import("./pages/Privacy"));
 const About = lazy(() => import("./pages/About"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
+const GrowthMetrics = lazy(() => import("./pages/GrowthMetrics"));
+const ConversionFunnel = lazy(() => import("./pages/ConversionFunnel"));
+const SearchAnalytics = lazy(() => import("./pages/SearchAnalytics"));
 
 function LoadingSpinner() {
   return (

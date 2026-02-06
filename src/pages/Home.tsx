@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { MentionInput, ChatMarkdown, UserMessageContent, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, fetchMentionData, type Mention } from "@/hooks/useMentionSearch";
 import { supabase } from "@/integrations/supabase/client";
+import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
 import { QuickActionCard, RecentActivityFeed, StatsOverview, OnboardingChecklist } from "@/components/dashboard";
 
 const suggestedPrompts = [
