@@ -60,6 +60,8 @@ Create `docs/pm-agents/agents/PM-Intelligence/PROMPTS.md` documenting:
 |----|------|-----------|-------|
 | INT-000 | PM-Intelligence setup | 2026-02-05 | Initial |
 | INT-002 | Audit RAG retrieval quality | 2026-02-06 | RAG_AUDIT.md created with full analysis |
+| INT-003 | Document current prompt templates | 2026-02-06 | PROMPTS.md created |
+| INT-006 | Improve citation formatting in responses | 2026-02-06 | Standardized to [Source: filename, page X], RAG_IMPROVEMENT_PROPOSAL.md created |
 
 ---
 
