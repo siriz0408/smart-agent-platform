@@ -1,6 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink, Bot } from "lucide-react";
+import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink, Bot, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -145,6 +145,21 @@ export default function Admin() {
                 <div className="flex-1">
                   <div className="font-medium">Data Sources</div>
                   <div className="text-sm text-muted-foreground">Connect apps</div>
+                </div>
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/admin/metrics">
+            <Card className="cursor-pointer hover:border-primary/50 transition-colors">
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-accent">
+                  <BarChart3 className="h-5 w-5 text-accent-foreground" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-medium">Metrics</div>
+                  <div className="text-sm text-muted-foreground">Monitor performance</div>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
               </CardContent>
