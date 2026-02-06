@@ -273,10 +273,11 @@ function runTests(testFiles: string[]): { passed: number; failed: number; skippe
       failed: failedMatch ? parseInt(failedMatch[1]) : 0,
       skipped: skippedMatch ? parseInt(skippedMatch[1]) : 0,
     };
-  } catch (error: any) {
-    console.error('❌ Test execution failed:', error.message);
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error('❌ Test execution failed:', errorMessage);
     // If tests fail, try to extract failure count
-    const output = error.stdout || error.message || '';
+    const output = (error as { stdout?: string }).stdout || errorMessage || '';
     const failedMatch = output.match(/(\d+) failed/);
     return {
       passed: 0,
