@@ -1,13 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { Loader2, ChevronDown, ChevronRight, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
+import { validatePhone } from "@/lib/contactValidation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
   DialogContent,
@@ -45,7 +47,10 @@ const contactSchema = z.object({
   first_name: z.string().min(1, "First name is required").max(100),
   last_name: z.string().min(1, "Last name is required").max(100),
   email: z.string().email("Invalid email address").max(255).optional().or(z.literal("")),
-  phone: z.string().max(50).optional(),
+  phone: z.string().max(50).optional().refine(
+    (val) => !val || validatePhone(val),
+    "Phone number must have 10-15 digits"
+  ),
   company: z.string().max(100).optional(),
   contact_type: z.enum(["lead", "buyer", "seller", "both", "agent", "vendor"]).default("lead"),
   notes: z.string().max(1000).optional(),
@@ -63,7 +68,10 @@ const contactSchema = z.object({
   // Communication
   preferred_contact_method: z.enum(["phone", "email", "text", ""]).optional(),
   best_time_to_call: z.string().max(100).optional(),
-  secondary_phone: z.string().max(50).optional(),
+  secondary_phone: z.string().max(50).optional().refine(
+    (val) => !val || validatePhone(val),
+    "Phone number must have 10-15 digits"
+  ),
   secondary_email: z.string().email("Invalid email").max(255).optional().or(z.literal("")),
   // Lead tracking
   lead_source: z.string().max(100).optional(),
@@ -130,8 +138,25 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
   });
 
   const contactType = form.watch("contact_type");
+  const email = form.watch("email");
   const showBuyerFields = ["buyer", "both", "lead"].includes(contactType);
   const showSellerFields = ["seller", "both"].includes(contactType);
+
+  // Check for duplicate email
+  const { data: duplicateContact } = useQuery({
+    queryKey: ["check-duplicate-email", email, profile?.tenant_id],
+    queryFn: async () => {
+      if (!email || !profile?.tenant_id) return null;
+      const { data } = await supabase
+        .from("contacts")
+        .select("id, first_name, last_name")
+        .eq("tenant_id", profile.tenant_id)
+        .eq("email", email.toLowerCase())
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!email && !!profile?.tenant_id && email.length > 0,
+  });
 
   const createContactMutation = useMutation({
     mutationFn: async (data: ContactFormData) => {
@@ -222,6 +247,16 @@ export function CreateContactDialog({ open, onOpenChange }: CreateContactDialogP
         <ScrollArea className="max-h-[calc(90vh-120px)] pr-4">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              {/* Duplicate Warning */}
+              {duplicateContact && email && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>
+                    A contact with this email already exists: {duplicateContact.first_name} {duplicateContact.last_name}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               {/* Basic Info Section */}
               <div className="grid grid-cols-2 gap-4">
                 <FormField

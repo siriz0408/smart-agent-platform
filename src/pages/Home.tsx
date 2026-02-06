@@ -11,9 +11,7 @@ import { cn } from "@/lib/utils";
 import { MentionInput, ChatMarkdown, UserMessageContent, AISettingsPopover } from "@/components/ai-chat";
 import { parseMentions, fetchMentionData, type Mention } from "@/hooks/useMentionSearch";
 import { supabase } from "@/integrations/supabase/client";
-import { QuickActionCard } from "@/components/dashboard/QuickActionCard";
-import { RecentActivityFeed } from "@/components/dashboard/RecentActivityFeed";
-import { StatsOverview } from "@/components/dashboard/StatsOverview";
+import { QuickActionCard, RecentActivityFeed, StatsOverview } from "@/components/dashboard";
 
 const suggestedPrompts = [
   "What can I afford on a $100k salary?",
@@ -121,57 +119,109 @@ export default function Home() {
         {/* Chat Area - responsive padding */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {messages.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center max-w-2xl mx-auto text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary mb-6">
-                <Sparkles className="h-8 w-8 text-primary-foreground" />
-              </div>
-              <h1 className="text-3xl font-semibold mb-2">
-                Good {getTimeOfDay()}, {firstName}
-              </h1>
-              <p className="text-muted-foreground text-lg mb-4">
-                How can I help you with your real estate business today?
-              </p>
-              <p className="text-sm text-muted-foreground mb-6 max-w-xl">
-                Smart Agent is your AI-powered assistant for real estate professionals.
-                Analyze <a href="/documents" className="text-primary hover:underline">documents</a>, manage your{" "}
-                <a href="/contacts" className="text-primary hover:underline">CRM</a>, chat with multiple documents simultaneously,
-                and get intelligent insights to streamline your workflow. Visit our{" "}
-                <a href="/help" className="text-primary hover:underline">help center</a> to learn more, or check out{" "}
-                <a href="https://www.nar.realtor/research-and-statistics" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                  NAR research
-                </a> for real estate market insights.
-              </p>
-
-              {/* Suggested Prompts */}
-              <div className="w-full max-w-2xl mb-6">
-                <p className="text-xs font-medium text-muted-foreground mb-3">Try asking:</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {suggestedPrompts.map((prompt, idx) => (
-                    <Button
-                      key={idx}
-                      variant="outline"
-                      className="h-auto py-2.5 px-4 text-left justify-start text-sm font-normal hover:bg-accent hover:text-accent-foreground"
-                      onClick={() => handleSuggestedPrompt(prompt)}
-                    >
-                      {prompt}
-                    </Button>
-                  ))}
+            <div className="max-w-7xl mx-auto w-full space-y-6 sm:space-y-8">
+              {/* Welcome Header */}
+              <div className="text-center space-y-3 sm:space-y-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary mx-auto mb-4">
+                  <Sparkles className="h-8 w-8 text-primary-foreground" />
                 </div>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-semibold">
+                  Good {getTimeOfDay()}, {firstName}
+                </h1>
+                <p className="text-muted-foreground text-base sm:text-lg max-w-2xl mx-auto">
+                  How can I help you with your real estate business today?
+                </p>
               </div>
 
-              {/* Quick Actions */}
-              <div className="flex flex-wrap gap-2 justify-center">
-                {quickActions.map((action) => (
-                  <Button
-                    key={action.label}
-                    variant="outline"
-                    className="gap-2"
-                    onClick={() => handleSuggestedPrompt(`Show me ${action.label.toLowerCase()}`)}
-                  >
-                    <action.icon className="h-4 w-4" />
-                    {action.label}
-                  </Button>
-                ))}
+              {/* Stats Overview */}
+              <StatsOverview
+                onStatClick={(stat) => {
+                  const routes: Record<typeof stat, string> = {
+                    documents: "/documents",
+                    contacts: "/contacts",
+                    deals: "/pipeline",
+                    conversations: "/chat",
+                  };
+                  navigate(routes[stat]);
+                }}
+              />
+
+              {/* Main Content Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+                {/* Left Column - Quick Actions & Prompts */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Quick Action Cards */}
+                  <div>
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                      Quick Actions
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                      <QuickActionCard
+                        icon={Upload}
+                        title="Upload Document"
+                        description="Add contracts, inspections, or other real estate documents"
+                        onClick={() => navigate("/documents")}
+                        variant="primary"
+                      />
+                      <QuickActionCard
+                        icon={Users}
+                        title="Add Contact"
+                        description="Create a new contact in your CRM"
+                        onClick={() => navigate("/contacts")}
+                      />
+                      <QuickActionCard
+                        icon={TrendingUp}
+                        title="View Pipeline"
+                        description="Track your deals and transactions"
+                        onClick={() => navigate("/pipeline")}
+                      />
+                      <QuickActionCard
+                        icon={MessageSquare}
+                        title="Start Chat"
+                        description="Chat with AI about your real estate needs"
+                        onClick={() => navigate("/chat")}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Suggested Prompts */}
+                  <div>
+                    <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+                      Try Asking
+                    </h2>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {suggestedPrompts.map((prompt, idx) => (
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          className="h-auto py-2.5 px-4 text-left justify-start text-sm font-normal hover:bg-accent hover:text-accent-foreground"
+                          onClick={() => handleSuggestedPrompt(prompt)}
+                        >
+                          {prompt}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Helpful Links */}
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Smart Agent is your AI-powered assistant for real estate professionals.
+                      Analyze <a href="/documents" className="text-primary hover:underline">documents</a>, manage your{" "}
+                      <a href="/contacts" className="text-primary hover:underline">CRM</a>, chat with multiple documents simultaneously,
+                      and get intelligent insights to streamline your workflow. Visit our{" "}
+                      <a href="/help" className="text-primary hover:underline">help center</a> to learn more, or check out{" "}
+                      <a href="https://www.nar.realtor/research-and-statistics" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        NAR research
+                      </a> for real estate market insights.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Right Column - Recent Activity */}
+                <div className="lg:col-span-1">
+                  <RecentActivityFeed limit={5} />
+                </div>
               </div>
             </div>
           ) : (

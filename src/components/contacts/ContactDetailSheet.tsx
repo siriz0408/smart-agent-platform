@@ -2,9 +2,11 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Mail, Phone, Building, Calendar, User as UserIcon, Tag, FileText, Trash2, DollarSign, Home, Clock, ChevronDown, ChevronRight, MessageSquare, Target, Link as LinkIcon, Unlink } from "lucide-react";
+import { Mail, Phone, Building, Calendar, User as UserIcon, Tag, FileText, Trash2, DollarSign, Home, Clock, ChevronDown, ChevronRight, MessageSquare, Target, Link as LinkIcon, Unlink, AlertTriangle } from "lucide-react";
+import { validatePhone } from "@/lib/contactValidation";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Sheet,
   SheetContent,
@@ -66,7 +68,10 @@ const contactSchema = z.object({
   first_name: z.string().min(1, "First name is required"),
   last_name: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")).refine(
+    (val) => !val || validatePhone(val),
+    "Phone number must have 10-15 digits"
+  ),
   company: z.string().optional().or(z.literal("")),
   contact_type: z.enum(["lead", "buyer", "seller", "agent", "vendor", "both"]),
   notes: z.string().optional().or(z.literal("")),
@@ -84,7 +89,10 @@ const contactSchema = z.object({
   // Communication
   preferred_contact_method: z.string().optional().or(z.literal("")),
   best_time_to_call: z.string().optional().or(z.literal("")),
-  secondary_phone: z.string().optional().or(z.literal("")),
+  secondary_phone: z.string().optional().or(z.literal("")).refine(
+    (val) => !val || validatePhone(val),
+    "Phone number must have 10-15 digits"
+  ),
   secondary_email: z.string().email("Invalid email").optional().or(z.literal("")),
   // Lead tracking
   lead_source: z.string().optional().or(z.literal("")),
@@ -172,8 +180,26 @@ export function ContactDetailSheet({
   });
 
   const contactType = form.watch("contact_type");
+  const email = form.watch("email");
   const showBuyerFields = ["buyer", "both", "lead"].includes(contactType);
   const showSellerFields = ["seller", "both"].includes(contactType);
+
+  // Check for duplicate email (excluding current contact)
+  const { data: duplicateContact } = useQuery({
+    queryKey: ["check-duplicate-email", email, contact?.id, profile?.tenant_id],
+    queryFn: async () => {
+      if (!email || !profile?.tenant_id || !contact) return null;
+      const { data } = await supabase
+        .from("contacts")
+        .select("id, first_name, last_name")
+        .eq("tenant_id", profile.tenant_id)
+        .eq("email", email.toLowerCase())
+        .neq("id", contact.id)
+        .maybeSingle();
+      return data;
+    },
+    enabled: !!email && !!profile?.tenant_id && !!contact && email.length > 0,
+  });
 
   useEffect(() => {
     if (contact) {
@@ -631,6 +657,16 @@ export function ContactDetailSheet({
               <ScrollArea className="h-[calc(100vh-280px)]">
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 pr-4">
+                    {/* Duplicate Warning */}
+                    {duplicateContact && email && (
+                      <Alert variant="destructive">
+                        <AlertTriangle className="h-4 w-4" />
+                        <AlertDescription>
+                          A contact with this email already exists: {duplicateContact.first_name} {duplicateContact.last_name}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+
                     {/* Basic Info */}
                     <div className="grid grid-cols-2 gap-4">
                       <FormField
