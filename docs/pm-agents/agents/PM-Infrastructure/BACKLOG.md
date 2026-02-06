@@ -27,5 +27,8 @@
 |----|------|-----------|
 | INF-000 | PM-Infrastructure setup | 2026-02-05 |
 | INF-001 | Initial domain audit | 2026-02-06 |
+| INF-003 | Check uptime history | 2026-02-06 |
 | INF-006 | Set up Lighthouse CI | 2026-02-06 |
+| INF-007 | Create production metrics dashboard | 2026-02-06 |
+| INF-008 | Enable edge function JWT verification | 2026-02-06 |
 | INF-010 | Set up performance monitoring | 2026-02-06 |
