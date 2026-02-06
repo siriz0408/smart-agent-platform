@@ -23,6 +23,7 @@ import {
 } from "../_shared/connector-types.ts";
 import { GmailConnector } from "../_shared/connectors/gmail-connector.ts";
 import { BridgeMLSConnector } from "../_shared/connectors/bridge-mls-connector.ts";
+import { GoogleCalendarConnector } from "../_shared/connectors/google-calendar-connector.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,7 @@ const corsHeaders = {
 const registry = new ConnectorRegistry();
 registry.register(new GmailConnector());
 registry.register(new BridgeMLSConnector());
+registry.register(new GoogleCalendarConnector());
 
 /**
  * Decrypt credentials (placeholder - implement actual decryption)
