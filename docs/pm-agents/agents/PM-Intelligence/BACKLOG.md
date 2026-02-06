@@ -64,6 +64,7 @@ Create `docs/pm-agents/agents/PM-Intelligence/PROMPTS.md` documenting:
 | INT-003 | Document current prompt templates | 2026-02-06 | PROMPTS.md created |
 | INT-004 | Set up AI quality monitoring | 2026-02-06 | ai_chat_metrics table created, tracking integrated into Chat.tsx, dashboard ready |
 | INT-006 | Improve citation formatting in responses | 2026-02-06 | Standardized to [Source: filename, page X], RAG_IMPROVEMENT_PROPOSAL.md created |
+| INT-011 | Create AgentDetail.tsx page | 2026-02-06 | Created missing AgentDetail.tsx page with full agent details view, added route, linked from Agents.tsx |
 
 ---
 
