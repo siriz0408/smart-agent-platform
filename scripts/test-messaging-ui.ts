@@ -9,8 +9,8 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = 'https://sthnezuadfbmbqlxiwtq.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0aG5lenVhZGZibWJxbHhpd3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk4MDAyOTEsImV4cCI6MjA4NTM3NjI5MX0.AGaxneydQTcb85MliGK1BT9fEPHa8cU3VCRr2UAu5hQ';
+const supabaseUrl = Deno.env.get("VITE_SUPABASE_URL") || 'https://sthnezuadfbmbqlxiwtq.supabase.co';
+const supabaseAnonKey = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY") || 'your-anon-key-here';
 
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 

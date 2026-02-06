@@ -7,8 +7,8 @@ echo "🔍 Testing Universal Search Edge Function"
 echo "=========================================="
 echo ""
 
-SUPABASE_URL="https://sthnezuadfbmbqlxiwtq.supabase.co"
-ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0aG5lenVhZGZibWJxbHhpd3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTQ3MjksImV4cCI6MjA1MTQzMDcyOX0.Ct7dL5Sl_rHBZXfHI-xXMlKNwcPY8Oj2xdCjBdqWgNw"
+SUPABASE_URL="${VITE_SUPABASE_URL:-https://sthnezuadfbmbqlxiwtq.supabase.co}"
+ANON_KEY="${VITE_SUPABASE_PUBLISHABLE_KEY:-your-anon-key-here}"
 
 # First, let's check if the function is deployed
 echo "📡 Step 1: Checking if edge function exists..."

@@ -162,8 +162,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
-        const SUPABASE_URL = 'https://sthnezuadfbmbqlxiwtq.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0aG5lenVhZGZibWJxbHhpd3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTQ3MjksImV4cCI6MjA1MTQzMDcyOX0.Ct7dL5Sl_rHBZXfHI-xXMlKNwcPY8Oj2xdCjBdqWgNw';
+        // Read from environment variable or use placeholder
+        // Set via: window.SUPABASE_URL and window.SUPABASE_ANON_KEY before this script runs
+        // Or set via meta tags: <meta name="supabase-url" content="...">
+        const SUPABASE_URL = window.SUPABASE_URL || document.querySelector('meta[name="supabase-url"]')?.content || 'https://sthnezuadfbmbqlxiwtq.supabase.co';
+        const SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || document.querySelector('meta[name="supabase-anon-key"]')?.content || 'your-anon-key-here';
 
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let session = null;

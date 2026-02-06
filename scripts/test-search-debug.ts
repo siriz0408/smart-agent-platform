@@ -15,8 +15,8 @@ interface SearchResult {
   rrf_score?: number;
 }
 
-const SUPABASE_URL = 'https://sthnezuadfbmbqlxiwtq.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN0aG5lenVhZGZibWJxbHhpd3RxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzU4NTQ3MjksImV4cCI6MjA1MTQzMDcyOX0.Ct7dL5Sl_rHBZXfHI-xXMlKNwcPY8Oj2xdCjBdqWgNw';
+const SUPABASE_URL = Deno.env.get("VITE_SUPABASE_URL") || 'https://sthnezuadfbmbqlxiwtq.supabase.co';
+const SUPABASE_ANON_KEY = Deno.env.get("VITE_SUPABASE_PUBLISHABLE_KEY") || 'your-anon-key-here';
 
 async function testSearch() {
   console.log('\n🔍 Starting Universal Search Debug\n');
