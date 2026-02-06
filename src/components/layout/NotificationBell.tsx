@@ -12,7 +12,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useNotifications, type Notification } from "@/hooks/useNotifications";
-import { useConversation } from "@/hooks/useConversation";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
@@ -51,61 +52,163 @@ interface NotificationItemProps {
   notification: Notification;
   onMarkAsRead: (id: string) => void;
   onDelete: (id: string) => void;
+  onNavigate?: (url: string) => void;
+  onQuickReply?: (conversationId: string, message: string) => Promise<void>;
 }
 
-function NotificationItem({ notification, onMarkAsRead, onDelete }: NotificationItemProps) {
+function NotificationItem({ notification, onMarkAsRead, onDelete, onNavigate, onQuickReply }: NotificationItemProps) {
+  const [showQuickReply, setShowQuickReply] = useState(false);
+  const [quickReplyText, setQuickReplyText] = useState("");
+  const [isSending, setIsSending] = useState(false);
+  
+  const conversationId = notification.metadata?.conversation_id as string | undefined;
+  const isMessageNotification = notification.type === "message_received" && conversationId;
+
   const handleClick = () => {
     if (!notification.read) {
       onMarkAsRead(notification.id);
     }
+    
+    // Navigate to conversation or action_url if available
+    if (isMessageNotification && conversationId) {
+      onNavigate?.(`/messages/${conversationId}`);
+    } else if (notification.action_url) {
+      onNavigate?.(notification.action_url);
+    }
+  };
+
+  const handleQuickReply = async () => {
+    if (!conversationId || !quickReplyText.trim() || !onQuickReply) return;
+    
+    setIsSending(true);
+    try {
+      await onQuickReply(conversationId, quickReplyText.trim());
+      setQuickReplyText("");
+      setShowQuickReply(false);
+      onMarkAsRead(notification.id);
+      toast.success("Reply sent");
+    } catch (error) {
+      toast.error("Failed to send reply");
+    } finally {
+      setIsSending(false);
+    }
   };
 
   return (
-    <div
-      className={cn(
-        "flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors cursor-pointer",
-        !notification.read && "bg-primary/5"
-      )}
-      onClick={handleClick}
-    >
-      <div className="flex-shrink-0 mt-0.5">
-        {getNotificationIcon(notification.type)}
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-2">
-          <p className={cn("text-sm", !notification.read && "font-medium")}>
-            {notification.title}
-          </p>
-          {!notification.read && (
-            <span className="flex-shrink-0 h-2 w-2 rounded-full bg-primary" />
-          )}
-        </div>
-        {notification.body && (
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-            {notification.body}
-          </p>
+    <div className="group">
+      <div
+        className={cn(
+          "flex items-start gap-3 p-3 hover:bg-muted/50 transition-colors cursor-pointer",
+          !notification.read && "bg-primary/5"
         )}
-        <p className="text-xs text-muted-foreground mt-1">
-          {formatTimeAgo(notification.created_at)}
-        </p>
-      </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
-        onClick={(e) => {
-          e.stopPropagation();
-          onDelete(notification.id);
-        }}
-        aria-label="Delete notification"
+        onClick={handleClick}
       >
-        <Trash2 className="h-3 w-3" />
-      </Button>
+        <div className="flex-shrink-0 mt-0.5">
+          {getNotificationIcon(notification.type)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p className={cn("text-sm", !notification.read && "font-medium")}>
+              {notification.title}
+            </p>
+            {!notification.read && (
+              <span className="flex-shrink-0 h-2 w-2 rounded-full bg-primary" />
+            )}
+          </div>
+          {notification.body && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+              {notification.body}
+            </p>
+          )}
+          <div className="flex items-center justify-between mt-1">
+            <p className="text-xs text-muted-foreground">
+              {formatTimeAgo(notification.created_at)}
+            </p>
+            {isMessageNotification && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 hover:opacity-100"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowQuickReply(!showQuickReply);
+                }}
+              >
+                <Reply className="h-3 w-3 mr-1" />
+                Reply
+              </Button>
+            )}
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(notification.id);
+          }}
+          aria-label="Delete notification"
+        >
+          <Trash2 className="h-3 w-3" />
+        </Button>
+      </div>
+      
+      {/* Quick Reply Input */}
+      {showQuickReply && isMessageNotification && onQuickReply && (
+        <div className="px-3 pb-3 border-t border-border" onClick={(e) => e.stopPropagation()}>
+          <div className="flex gap-2 mt-2">
+            <Textarea
+              value={quickReplyText}
+              onChange={(e) => setQuickReplyText(e.target.value)}
+              placeholder="Type a quick reply..."
+              className="min-h-[60px] text-sm resize-none"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleQuickReply();
+                }
+                if (e.key === "Escape") {
+                  setShowQuickReply(false);
+                  setQuickReplyText("");
+                }
+              }}
+              autoFocus
+            />
+            <div className="flex flex-col gap-1">
+              <Button
+                size="icon"
+                className="h-7 w-7"
+                onClick={handleQuickReply}
+                disabled={!quickReplyText.trim() || isSending}
+              >
+                <MessageSquare className="h-3 w-3" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-7 w-7"
+                onClick={() => {
+                  setShowQuickReply(false);
+                  setQuickReplyText("");
+                }}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-1">
+            Press Enter to send, Esc to cancel
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
 export function NotificationBell() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const {
     notifications,
     unreadCount,
@@ -116,6 +219,31 @@ export function NotificationBell() {
   } = useNotifications();
 
   const recentNotifications = notifications.slice(0, 10);
+
+  const handleNavigate = (url: string) => {
+    navigate(url);
+  };
+
+  const handleQuickReply = async (conversationId: string, content: string) => {
+    if (!user?.id) throw new Error("Not authenticated");
+
+    const { error } = await supabase
+      .from("messages")
+      .insert({
+        conversation_id: conversationId,
+        sender_id: user.id,
+        content,
+        message_type: "text",
+      });
+
+    if (error) throw error;
+
+    // Update conversation timestamp
+    await supabase
+      .from("conversations")
+      .update({ updated_at: new Date().toISOString() })
+      .eq("id", conversationId);
+  };
 
   return (
     <DropdownMenu>
@@ -164,6 +292,8 @@ export function NotificationBell() {
                   notification={notification}
                   onMarkAsRead={markAsRead}
                   onDelete={deleteNotification}
+                  onNavigate={handleNavigate}
+                  onQuickReply={handleQuickReply}
                 />
               ))}
             </div>

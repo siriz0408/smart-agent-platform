@@ -7,9 +7,11 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
 import { useSaveToDocuments, useGetAttachmentUrl, type MessageAttachment } from "@/hooks/useMessageAttachments";
-import { FileText, Download, FolderPlus, Loader2 } from "lucide-react";
+import { FileText, Download, FolderPlus, Loader2, Check, CheckCheck } from "lucide-react";
 import { toast } from "sonner";
 import { TypingIndicator } from "./TypingIndicator";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Message {
   id: string;
@@ -35,10 +37,51 @@ export function MessageThread({ messages, isLoading, conversationId }: MessageTh
   const { user } = useAuth();
   const bottomRef = useRef<HTMLDivElement>(null);
 
+  // Fetch read receipts for other participants
+  const { data: readReceipts } = useQuery({
+    queryKey: ["read-receipts", conversationId],
+    queryFn: async () => {
+      if (!conversationId || !user?.id) return {};
+      
+      // Get all participants' last_read_at timestamps
+      const { data: participants } = await supabase
+        .from("conversation_participants")
+        .select("user_id, contact_id, last_read_at")
+        .eq("conversation_id", conversationId);
+      
+      if (!participants) return {};
+      
+      // Create a map of participant IDs to their last_read_at
+      const receipts: Record<string, string> = {};
+      participants.forEach((p) => {
+        const participantId = p.user_id || p.contact_id;
+        if (participantId && participantId !== user.id && p.last_read_at) {
+          receipts[participantId] = p.last_read_at;
+        }
+      });
+      
+      return receipts;
+    },
+    enabled: !!conversationId && !!user?.id,
+    refetchInterval: 5000, // Refresh every 5 seconds
+  });
+
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Check if a message has been read by other participants
+  const isMessageRead = (message: Message, isOwnMessage: boolean): boolean => {
+    if (!isOwnMessage || !readReceipts || Object.keys(readReceipts).length === 0) return false;
+    
+    const messageTime = new Date(message.sent_at).getTime();
+    // Check if any participant has read this message (their last_read_at is after message sent_at)
+    return Object.values(readReceipts).some((lastReadAt) => {
+      if (!lastReadAt) return false;
+      return new Date(lastReadAt).getTime() >= messageTime;
+    });
+  };
 
   const getInitials = (message: Message) => {
     const name = message.senderProfile?.full_name || message.senderProfile?.email || "?";
@@ -88,6 +131,7 @@ export function MessageThread({ messages, isLoading, conversationId }: MessageTh
           const showTimestamp =
             index === messages.length - 1 ||
             messages[index + 1].sender_id !== message.sender_id;
+          const isRead = isOwnMessage && isMessageRead(message, isOwnMessage);
 
           return (
             <div
@@ -157,9 +201,23 @@ export function MessageThread({ messages, isLoading, conversationId }: MessageTh
                 )}
 
                 {showTimestamp && (
-                  <span className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(message.sent_at), "h:mm a")}
-                  </span>
+                  <div className="flex items-center gap-1 mt-1">
+                    <span className="text-xs text-muted-foreground">
+                      {format(new Date(message.sent_at), "h:mm a")}
+                    </span>
+                    {isOwnMessage && (
+                      <span className={cn(
+                        "flex items-center",
+                        isRead ? "text-primary" : "text-muted-foreground/50"
+                      )}>
+                        {isRead ? (
+                          <CheckCheck className="h-3 w-3" />
+                        ) : (
+                          <Check className="h-3 w-3" />
+                        )}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
