@@ -373,6 +373,41 @@ INSERT INTO public.connector_definitions (
   '{"icon": "calendar", "color": "#4285F4"}'::JSONB
 ) ON CONFLICT (connector_key) DO NOTHING;
 
+-- Bridge Interactive MLS Connector
+INSERT INTO public.connector_definitions (
+  connector_key,
+  name,
+  description,
+  category,
+  oauth_provider,
+  oauth_scopes,
+  oauth_authorize_url,
+  oauth_token_url,
+  supported_actions,
+  requires_approval_by_default,
+  rate_limit_per_hour,
+  max_connections_per_workspace,
+  is_active,
+  is_beta,
+  metadata
+) VALUES (
+  'bridge_mls',
+  'Bridge Interactive MLS',
+  'Connect to MLS via Bridge Interactive RESO Web API for property listings and data',
+  'property_data',
+  'custom',
+  ARRAY['reso.property.read', 'reso.property.search'],
+  NULL, -- Bridge OAuth URL configured per MLS
+  NULL, -- Bridge token URL configured per MLS
+  ARRAY['search_listings', 'get_listing_details', 'get_listing_photos', 'sync_listings'],
+  false, -- MLS searches typically don't require approval
+  500, -- Lower rate limit for MLS API
+  NULL,
+  false, -- Not active yet, requires Bridge API setup
+  true,
+  '{"icon": "home", "color": "#0066CC", "provider": "Bridge Interactive", "reso_certified": true}'::JSONB
+) ON CONFLICT (connector_key) DO NOTHING;
+
 -- ============================================================================
 -- PHASE 8: Create updated_at trigger
 -- ============================================================================

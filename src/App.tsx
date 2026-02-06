@@ -193,6 +193,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/admin/growth-metrics"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <GrowthMetrics />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/admin/data-health"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
@@ -239,14 +247,6 @@ const App = () => (
                 element={
                   <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
                     <AgentEdit />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/agents/:id"
-                element={
-                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
-                    <AgentDetail />
                   </ProtectedRoute>
                 }
               />

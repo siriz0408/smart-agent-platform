@@ -1,6 +1,6 @@
 import { Link, Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink, Bot, BarChart3, Sparkles } from "lucide-react";
+import { Users, Database, Key, Zap, ChevronRight, Plus, Check, ExternalLink, Bot, BarChart3, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

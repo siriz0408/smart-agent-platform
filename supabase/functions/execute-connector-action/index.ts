@@ -22,6 +22,7 @@ import {
   ConnectorRateLimitError,
 } from "../_shared/connector-types.ts";
 import { GmailConnector } from "../_shared/connectors/gmail-connector.ts";
+import { BridgeMLSConnector } from "../_shared/connectors/bridge-mls-connector.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,6 +32,7 @@ const corsHeaders = {
 // Initialize connector registry
 const registry = new ConnectorRegistry();
 registry.register(new GmailConnector());
+registry.register(new BridgeMLSConnector());
 
 /**
  * Decrypt credentials (placeholder - implement actual decryption)
