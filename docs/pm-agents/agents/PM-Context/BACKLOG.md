@@ -16,7 +16,6 @@
 | CTX-005 | Add bulk CSV import | P1 | M |
 | CTX-006 | Research MLS integration | P2 | L |
 | CTX-007 | Implement production metrics monitoring | P0 | S |
-| CTX-008 | Verify search functionality in production | P0 | S |
 | CTX-009 | Run entity embedding backfill if needed | P1 | S |
 
 ## Completed
@@ -26,3 +25,4 @@
 | CTX-000 | PM-Context setup | 2026-02-05 |
 | CTX-001 | Initial domain audit | 2026-02-06 |
 | CTX-002 | Audit document indexing | 2026-02-06 |
+| CTX-008 | Verify search functionality in production | 2026-02-06 |
