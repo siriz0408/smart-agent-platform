@@ -6,13 +6,11 @@
 
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
-| INF-002 | Run performance tests | P0 | M |
 
 ## Ready
 
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
-| INF-004 | Audit deployment pipeline | P1 | M |
 | INF-005 | Optimize costs | P2 | L |
 | INF-009 | Verify Sentry configuration | P1 | S |
 | INF-011 | Add deployment verification | P2 | S |
@@ -30,3 +28,5 @@
 | INF-007 | Create production metrics dashboard | 2026-02-06 |
 | INF-008 | Enable edge function JWT verification | 2026-02-06 |
 | INF-010 | Set up performance monitoring | 2026-02-06 |
+| INF-004 | Audit deployment pipeline | 2026-02-06 |
+| INF-009 | Verify Sentry configuration | 2026-02-06 |
