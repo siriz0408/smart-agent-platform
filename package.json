@@ -34,6 +34,8 @@
     "test:performance": "npx tsx scripts/run-performance-tests.ts",
     "test:integration": "npx tsx scripts/test-search-integration.ts",
     "test:search-debug": "npx tsx scripts/test-search-debug.ts",
+    "check:embeddings": "npx tsx scripts/check-entity-embeddings.ts",
+    "index:entities": "npx tsx scripts/index-entities-backfill.ts",
     "seed:test-data": "/bin/bash /tmp/add-test-data.sh",
     "test:e2e": "npx playwright test",
     "test:e2e:ui": "npx playwright test --ui",

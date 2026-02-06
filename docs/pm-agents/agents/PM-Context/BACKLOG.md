@@ -13,7 +13,6 @@ _None_
 | CTX-004 | Improve PDF parsing | P1 | L |
 | CTX-005 | Add bulk CSV import | P1 | M |
 | CTX-006 | Research MLS integration | P2 | L |
-| CTX-009 | Run entity embedding backfill if needed | P1 | S |
 
 ## Completed
 
@@ -25,3 +24,4 @@ _None_
 | CTX-003 | Check CRM completeness | 2026-02-06 |
 | CTX-007 | Implement production metrics monitoring | 2026-02-06 |
 | CTX-008 | Verify search functionality in production | 2026-02-06 |
+| CTX-009 | Run entity embedding backfill if needed | 2026-02-06 |
