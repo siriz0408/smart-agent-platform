@@ -217,7 +217,7 @@ export default function Contact() {
           </div>
 
           {/* Additional Info */}
-          <Card className="p-8 bg-muted/50">
+          <Card className="p-4 md:p-6 lg:p-8 bg-muted/50">
             <h2 className="text-2xl font-semibold mb-4">Business Hours</h2>
             <div className="grid md:grid-cols-2 gap-6">
               <div>

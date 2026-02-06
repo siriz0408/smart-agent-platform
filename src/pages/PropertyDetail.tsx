@@ -76,7 +76,7 @@ export default function PropertyDetail() {
 
   return (
     <>
-      <div className="container mx-auto p-6 max-w-5xl">
+      <div className="container mx-auto p-4 md:p-6 max-w-5xl">
         {/* Breadcrumb Navigation */}
         <Breadcrumb className="mb-6">
           <BreadcrumbList>
