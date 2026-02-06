@@ -97,4 +97,5 @@ These tasks are ready for autonomous execution:
 |----|------|-----------|
 | EXP-000 | PM-Experience setup | 2026-02-05 |
 | EXP-002 | Document UI Component Inventory | 2026-02-06 |
+| EXP-003 | Check and fix mobile padding issues | 2026-02-06 |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 |
