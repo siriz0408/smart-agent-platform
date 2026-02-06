@@ -1,6 +1,6 @@
 # PM-Research Backlog
 
-> **Last Updated:** 2026-02-06 (RES-003 completed)
+> **Last Updated:** 2026-02-06 (RES-004 completed)
 
 ## In Progress
 
@@ -10,7 +10,6 @@ _None_
 
 | ID | Item | Priority | Effort | Owner |
 |----|------|----------|--------|-------|
-| RES-004 | Analyze top 5 competitor platforms (features, pricing, UX) | P1 | L | PM-Research |
 | RES-005 | Research real estate agent pain points and workflow bottlenecks | P1 | M | PM-Research |
 | RES-006 | Evaluate email/calendar integration APIs (Gmail, Outlook, Google Calendar) | P1 | S | PM-Research |
 | RES-007 | Research GTM strategy for agent onboarding and acquisition | P2 | M | PM-Research |
