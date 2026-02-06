@@ -321,7 +321,15 @@ function AgentGrid({ agents, isLoading, favoriteAgentIds, onToggleFavorite, onAg
                   </Button>
                 </div>
               </div>
-              <CardTitle className="text-base mt-3">{agent.name}</CardTitle>
+              <CardTitle className="text-base mt-3">
+                <Link
+                  to={`/agents/${agent.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className="hover:text-primary transition-colors"
+                >
+                  {agent.name}
+                </Link>
+              </CardTitle>
               <CardDescription className="line-clamp-2">
                 {agent.description || "No description available"}
               </CardDescription>

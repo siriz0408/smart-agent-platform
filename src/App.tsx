@@ -243,6 +243,14 @@ const App = () => (
                 }
               />
               <Route
+                path="/agents/:id"
+                element={
+                  <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
+                    <AgentDetail />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/action-queue"
                 element={
                   <ProtectedRoute requiredRoles={['agent', 'admin', 'super_admin']}>
