@@ -1,6 +1,6 @@
 # PM-Experience Backlog
 
-> **Last Updated:** 2026-02-05
+> **Last Updated:** 2026-02-06
 
 ---
 
@@ -10,31 +10,18 @@
 |----|------|----------|
 | EXP-001 | Initial domain audit | P0 |
 
+## Completed ✅
+
+| ID | Item | Completed | Notes |
+|----|------|-----------|-------|
+| EXP-002 | Document UI Component Inventory | 2026-02-06 | Created comprehensive inventory with 50+ UI components and 7 layout components, including props, interfaces, and usage examples |
+| EXP-005 | Improve loading states with skeletons | 2026-02-06 | Already implemented in Contacts.tsx and Properties.tsx |
+
 ---
 
 ## Ready
 
 These tasks are ready for autonomous execution:
-
-### EXP-002: Document UI Component Inventory
-**Priority:** P0 | **Effort:** S
-
-**Objective:** Create an inventory of all UI components.
-
-**Files to Read:**
-- `src/components/ui/*` (all files)
-- `src/components/layout/*`
-
-**Deliverable:**
-Create `docs/pm-agents/agents/PM-Experience/COMPONENT_INVENTORY.md` with:
-- List of all components in `src/components/ui/`
-- Their props/interfaces
-- Usage examples from codebase
-
-**Acceptance Criteria:**
-- [ ] All UI components listed
-- [ ] Props documented
-- [ ] File committed
 
 ---
 
@@ -81,24 +68,16 @@ Create `docs/pm-agents/agents/PM-Experience/COMPONENT_INVENTORY.md` with:
 
 ---
 
-### EXP-005: Improve loading states with skeletons
-**Priority:** P2 | **Effort:** M
+### EXP-005: Improve loading states with skeletons ✅ COMPLETED
+**Priority:** P2 | **Effort:** M | **Completed:** 2026-02-06
 
 **Objective:** Add skeleton loading states to main data pages.
 
-**Files to Edit:**
-- `src/pages/Contacts.tsx`
-- `src/pages/Properties.tsx`
+**Status:** ✅ Already implemented in Contacts.tsx and Properties.tsx
+- Contacts.tsx: Skeleton components used for stats cards, contact cards, table rows
+- Properties.tsx: Skeleton components used for stats cards, property cards
 
-**Task:**
-1. Import Skeleton component from shadcn
-2. Show skeleton while data is loading
-3. Replace spinner with skeleton layout
-
-**Acceptance Criteria:**
-- [ ] Skeleton shows during load
-- [ ] Looks appropriate for content
-- [ ] Tests pass
+**Verification:** Both files import and use `<Skeleton />` component appropriately
 
 ---
 
@@ -117,3 +96,5 @@ Create `docs/pm-agents/agents/PM-Experience/COMPONENT_INVENTORY.md` with:
 | ID | Item | Completed |
 |----|------|-----------|
 | EXP-000 | PM-Experience setup | 2026-02-05 |
+| EXP-002 | Document UI Component Inventory | 2026-02-06 |
+| EXP-005 | Improve loading states with skeletons | 2026-02-06 |
