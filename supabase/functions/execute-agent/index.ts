@@ -148,6 +148,25 @@ serve(async (req) => {
       });
     }
 
+    // SECURITY: Validate tenant isolation - ensure agent belongs to user's workspace or is public
+    // Public agents (tenant_id IS NULL) can be executed by any user
+    // Workspace-specific agents can only be executed by users in that workspace
+    if (agent.tenant_id !== null && agent.tenant_id !== tenantId) {
+      logger.warn("Tenant isolation violation attempted", {
+        user_id: userId,
+        user_tenant_id: tenantId,
+        agent_id: agent_id,
+        agent_tenant_id: agent.tenant_id,
+      });
+      return new Response(
+        JSON.stringify({ error: "Forbidden: Agent does not belong to your workspace" }),
+        {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
     // Create agent run record
     const { data: agentRun, error: runError } = await serviceClient
       .from("agent_runs")
