@@ -137,6 +137,8 @@ class OrchestratorConfig:
         "PM-Communication",
         "PM-Infrastructure",
         "PM-Security",
+        "PM-Research",
+        "PM-QA",
     ])
     
     # "Quick run" agents - just the most important 3
@@ -144,6 +146,8 @@ class OrchestratorConfig:
         "PM-Intelligence",
         "PM-Experience", 
         "PM-Context",
+        "PM-Research",
+        "PM-QA",
     ])
     
     # Maximum runtime for entire orchestration (seconds)

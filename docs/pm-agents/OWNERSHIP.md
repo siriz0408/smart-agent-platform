@@ -1,7 +1,7 @@
 # Feature Ownership Map
 
 > **Owned by:** PM-Orchestrator  
-> **Last Updated:** 2026-02-05
+> **Last Updated:** 2026-02-06
 
 This document maps every feature and system area to its owning PM. When in doubt about who owns something, check here.
 
@@ -151,6 +151,35 @@ This document maps every feature and system area to its owning PM. When in doubt
 | Compliance | GDPR, CCPA | Privacy regulations |
 | Security Auditing | Audit logs | Access tracking |
 | API Security | Rate limiting, auth | API protection |
+
+---
+
+### PM-Research (The Scout)
+*R&D, market intelligence, competitive analysis*
+
+| Feature/System | Files/Paths | Notes |
+|----------------|-------------|-------|
+| Competitive Analysis | Market research reports | Feature gap analysis |
+| Technology Trends | AI model evaluations | Capability assessments |
+| User Needs Research | Pain point analysis | Workflow optimization research |
+| GTM Strategy | Launch planning docs | Positioning, messaging |
+| Tool/API Evaluation | Integration research | Pre-build capability assessment |
+| Industry Intelligence | Market trend reports | Regulatory, MLS/IDX landscape |
+
+---
+
+### PM-QA (The Gatekeeper)
+*E2E testing, browser automation, bug detection, debugging*
+
+| Feature/System | Files/Paths | Notes |
+|----------------|-------------|-------|
+| E2E Test Suite | `tests/e2e/*.spec.ts` | Playwright tests |
+| Test Helpers | `tests/e2e/fixtures/helpers.ts` | Shared utilities |
+| Playwright Config | `playwright.config.ts` | Test configuration |
+| Browser Automation | Playwright MCP | Live testing |
+| Bug Detection | Runtime instrumentation | Log analysis |
+| Regression Testing | Pre-merge tests | Post-deploy smoke tests |
+| Post-Cycle QA Gate | QA gate process | Blocks merge on critical bugs |
 
 ---
 

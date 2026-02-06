@@ -8,7 +8,7 @@
 | Indicator | Status |
 |-----------|--------|
 | **Overall Health** | 🟢 Healthy |
-| **Agents Active** | 10/10 |
+| **Agents Active** | 12/12 |
 | **Development Velocity** | 🟢 Excellent (55+ commits since Feb 5) |
 | **Phase 1 MVP** | 98% Complete |
 | **Phase 2 Features** | 90% Complete |
@@ -29,12 +29,14 @@
 | PM-Communication | 🟢 | Notifications: quick reply, read receipts | 3 |
 | PM-Infrastructure | 🟢 | Performance: monitoring hooks, QueryClient optimization, bundle splitting | 3 |
 | PM-Security | 🟢 | SEC-013: tenant isolation in agent execution FIXED | 3 |
+| PM-Research | 🟢 | New agent — initial setup complete | 0 |
+| PM-QA | 🟢 | New agent — initial setup complete | 0 |
 
 ## Development Cycle 4 Summary
 
 **Focus: User Experience Enhancements & Security Fix**
 
-All 10 PMs completed their tasks. Key outcomes:
+All 10 original PMs completed their tasks (PM-Research and PM-QA added post-cycle). Key outcomes:
 - Dashboard completely redesigned with stats, quick actions, activity feed
 - AI Chat UX improved with suggested prompts and keyboard shortcuts
 - CRM data quality tools: validation, completeness scoring, duplicate detection

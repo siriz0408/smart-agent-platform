@@ -22,18 +22,18 @@ That's it. The PM system will:
 
 ## Invocation Commands
 
-### Full Standups (All 11 PMs)
+### Full Standups (All 13 PMs)
 
 | Command | When to Use | Report Location |
 |---------|-------------|-----------------|
 | `Run PM morning standup` | 8:00 AM EST daily | `reports/YYYY-MM-DD/08-00-morning.md` |
 | `Run PM evening summary` | 8:00 PM EST daily | `reports/YYYY-MM-DD/20-00-evening.md` |
 
-### Core Standups (5 Essential PMs)
+### Core Standups (7 Essential PMs)
 
 | Command | When to Use | PMs Involved |
 |---------|-------------|--------------|
-| `Run PM midday check` | 12:00 PM EST | Orchestrator, Intelligence, Context, Experience, Growth |
+| `Run PM midday check` | 12:00 PM EST | Orchestrator, Intelligence, Context, Experience, Growth, Research, QA |
 
 ### Quick Health Check
 
@@ -62,14 +62,14 @@ Different run types for different needs:
 
 | Tier | PMs | Est. Cost | When |
 |------|-----|-----------|------|
-| **Full** | All 11 | $$$ | Morning, evening, major decisions |
-| **Core** | 5 essential | $$ | Midday routine |
+| **Full** | All 13 | $$$ | Morning, evening, major decisions |
+| **Core** | 7 essential | $$ | Midday routine |
 | **Quick** | 1 (sampling) | $ | Quick status checks |
 | **Single** | 1 specific | $ | Deep investigation |
 
 ### Which PMs in Each Tier
 
-**Full (11):**
+**Full (13):**
 - PM-Orchestrator
 - PM-Intelligence
 - PM-Context
@@ -81,13 +81,17 @@ Different run types for different needs:
 - PM-Communication
 - PM-Infrastructure
 - PM-Security
+- PM-Research
+- PM-QA
 
-**Core (5):**
+**Core (7):**
 - PM-Orchestrator
 - PM-Intelligence
 - PM-Context
 - PM-Experience
 - PM-Growth
+- PM-Research
+- PM-QA
 
 ---
 

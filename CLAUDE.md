@@ -523,15 +523,15 @@ See [`plugins/compound-engineering/README.md`](./plugins/compound-engineering/RE
 
 **Location**: `docs/pm-agents/`
 
-An autonomous Product Manager agent system with 11 AI agents that manage product development, conduct R&D, and report 3x daily.
+An autonomous Product Manager agent system with 13 AI agents (1 orchestrator + 12 domain PMs) that manage product development, conduct R&D, run QA tests, and report 3x daily.
 
 ### Quick Start
 
 ```bash
-# Run morning standup (all 11 PMs)
+# Run morning standup (all 13 PMs)
 "Run PM morning standup"
 
-# Run midday check (5 core PMs)
+# Run midday check (7 core PMs)
 "Run PM midday check"
 
 # Run evening summary
@@ -559,6 +559,8 @@ An autonomous Product Manager agent system with 11 AI agents that manage product
 | **PM-Communication** | Messaging, notifications | Response Time <4hr |
 | **PM-Infrastructure** | DevOps, performance | Uptime 99.9% |
 | **PM-Security** | Auth, compliance | 0 Incidents |
+| **PM-Research** | R&D, market intelligence | Recommendation Adoption >40% |
+| **PM-QA** | Testing, browser automation | Bug Escape Rate <5% |
 
 ### Key Files
 
@@ -575,8 +577,8 @@ An autonomous Product Manager agent system with 11 AI agents that manage product
 
 | Tier | Command | PMs | When |
 |------|---------|-----|------|
-| Full | "Run PM morning standup" | All 11 | 8am, 8pm EST |
-| Core | "Run PM midday check" | 5 | 12pm EST |
+| Full | "Run PM morning standup" | All 13 | 8am, 8pm EST |
+| Core | "Run PM midday check" | 7 | 12pm EST |
 | Quick | "Run PM health check" | 1 | Quick status |
 | Single | "Run PM-[Name] deep dive" | 1 | Investigation |
 
@@ -646,8 +648,10 @@ python3 -m pm_core.pm_orchestrator
     ├─ Run PM-Experience
     │   └─ Executes task from BACKLOG.md
     │   └─ Commits changes
-    ├─ ... (all 10 domain PMs)
+    ├─ ... (all 12 domain PMs)
     │
+    ├─ Verify backlog sync (all PMs updated BACKLOG.md)
+    ├─ Run PM-QA post-cycle gate (browser tests)
     ├─ Generate daily report
     ├─ Save to ~/Desktop/PM-Report-YYYY-MM-DD.md
     └─ Update STATE.md
