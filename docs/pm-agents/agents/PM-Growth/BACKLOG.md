@@ -28,3 +28,5 @@
 | GRW-006 | Complete workspace billing migration | 2026-02-06 |
 | GRW-007 | Implement trial signup flow | 2026-02-06 |
 | GRW-008 | Add usage limit enforcement | 2026-02-06 |
+| GRW-009 | Build growth metrics dashboard | 2026-02-06 |
+| GRW-010 | Implement conversion funnel analysis | 2026-02-06 |
