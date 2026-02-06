@@ -44,6 +44,7 @@ const DocumentDetail = lazy(() => import("./pages/DocumentDetail"));
 const DocumentChat = lazy(() => import("./pages/DocumentChat"));
 const SearchResults = lazy(() => import("./pages/SearchResults"));
 const Messages = lazy(() => import("./pages/Messages"));
+const MessageMetrics = lazy(() => import("./pages/MessageMetrics"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
@@ -103,6 +104,7 @@ const App = () => (
               <Route path="/search" element={<ProtectedRoute><SearchResults /></ProtectedRoute>} />
               <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
               <Route path="/messages/:conversationId" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
+              <Route path="/messages/metrics" element={<ProtectedRoute><MessageMetrics /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
               <Route path="/tools" element={<ProtectedRoute><Tools /></ProtectedRoute>} />

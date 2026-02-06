@@ -1,6 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useWorkspace } from "@/contexts/WorkspaceContext";
 
 export interface PlanLimits {
   aiQueries: number;
@@ -26,29 +27,35 @@ export const PLAN_PRICES: Record<string, number> = {
 
 export function useSubscription() {
   const { profile } = useAuth();
+  const { activeWorkspace } = useWorkspace();
   const queryClient = useQueryClient();
 
+  // Get workspace_id: prefer activeWorkspace, fallback to profile tenant_id/active_workspace_id
+  const workspaceId = activeWorkspace?.id 
+    || (profile as { active_workspace_id?: string })?.active_workspace_id 
+    || profile?.tenant_id;
+
   const subscriptionQuery = useQuery({
-    queryKey: ["subscription", profile?.tenant_id],
+    queryKey: ["subscription", workspaceId],
     queryFn: async () => {
-      if (!profile?.tenant_id) return null;
+      if (!workspaceId) return null;
       
       const { data, error } = await supabase
         .from("subscriptions")
         .select("*")
-        .eq("tenant_id", profile.tenant_id)
+        .eq("workspace_id", workspaceId)
         .maybeSingle();
       
       if (error) throw error;
       return data;
     },
-    enabled: !!profile?.tenant_id,
+    enabled: !!workspaceId,
   });
 
   const usageQuery = useQuery({
-    queryKey: ["usage", profile?.tenant_id],
+    queryKey: ["usage", workspaceId],
     queryFn: async () => {
-      if (!profile?.tenant_id) return { aiQueries: 0, documents: 0 };
+      if (!workspaceId) return { aiQueries: 0, documents: 0 };
       
       // Get subscription period start or default to start of month
       const subscription = subscriptionQuery.data;
@@ -57,27 +64,30 @@ export function useSubscription() {
         : new Date(new Date().getFullYear(), new Date().getMonth(), 1);
       
       // Count AI queries this period
+      // Note: usage_records may still use tenant_id - using workspace_id for consistency
+      // If workspace_id doesn't exist, fallback to tenant_id
       const { data: usageRecords } = await supabase
         .from("usage_records")
         .select("quantity")
-        .eq("tenant_id", profile.tenant_id)
+        .or(`workspace_id.eq.${workspaceId},tenant_id.eq.${workspaceId}`)
         .eq("record_type", "ai_query")
         .gte("recorded_at", periodStart.toISOString());
       
       const aiQueries = usageRecords?.reduce((sum, r) => sum + (r.quantity || 1), 0) || 0;
       
       // Count total documents
+      // Note: documents may still use tenant_id - using workspace_id for consistency
       const { count: docCount } = await supabase
         .from("documents")
         .select("*", { count: "exact", head: true })
-        .eq("tenant_id", profile.tenant_id);
+        .or(`workspace_id.eq.${workspaceId},tenant_id.eq.${workspaceId}`);
       
       return {
         aiQueries,
         documents: docCount || 0,
       };
     },
-    enabled: !!profile?.tenant_id,
+    enabled: !!workspaceId,
     // Refetch when subscription data changes
     refetchInterval: 30000, // Refresh every 30 seconds
   });
@@ -100,7 +110,7 @@ export function useSubscription() {
   const isTrialEndingSoon = isTrialing && trialDaysRemaining <= 7 && trialDaysRemaining > 0;
 
   const refetchUsage = () => {
-    queryClient.invalidateQueries({ queryKey: ["usage", profile?.tenant_id] });
+    queryClient.invalidateQueries({ queryKey: ["usage", workspaceId] });
   };
 
   return {

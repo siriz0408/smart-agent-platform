@@ -17,7 +17,7 @@ export default function AgentCreate() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/agents")} aria-label="Back to agents">

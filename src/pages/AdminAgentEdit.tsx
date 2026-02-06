@@ -84,7 +84,7 @@ export default function AdminAgentEdit() {
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="p-6 space-y-6 max-w-3xl mx-auto">
+        <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
           <div className="flex items-center gap-4">
             <Skeleton className="h-10 w-10 rounded" />
             <div className="space-y-2">
@@ -101,7 +101,7 @@ export default function AdminAgentEdit() {
   if (error || !agent) {
     return (
       <AppLayout>
-        <div className="p-6 space-y-6 max-w-3xl mx-auto">
+        <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/admin/agents")} aria-label="Back to agents">
               <ArrowLeft className="h-4 w-4" />
@@ -124,7 +124,7 @@ export default function AdminAgentEdit() {
   if (!canEdit) {
     return (
       <AppLayout>
-        <div className="p-6 space-y-6 max-w-3xl mx-auto">
+        <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={() => navigate("/admin/agents")} aria-label="Back to agents">
               <ArrowLeft className="h-4 w-4" />
@@ -154,7 +154,7 @@ export default function AdminAgentEdit() {
 
   return (
     <AppLayout>
-      <div className="p-6 space-y-6 max-w-3xl mx-auto">
+      <div className="p-4 md:p-6 space-y-6 max-w-3xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/admin/agents")}>

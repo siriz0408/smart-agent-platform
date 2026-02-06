@@ -52,21 +52,24 @@ serve(async (req) => {
     const userId = userData.user.id;
     const userEmail = userData.user.email;
 
-    // Get tenant_id and subscription
+    // Get workspace_id from profile (active_workspace_id or tenant_id fallback)
     const { data: profile } = await supabase
       .from("profiles")
-      .select("tenant_id")
+      .select("active_workspace_id, tenant_id")
       .eq("user_id", userId)
       .single();
 
-    if (!profile?.tenant_id) {
-      throw new Error("Profile not found");
+    const workspaceId = (profile as { active_workspace_id?: string })?.active_workspace_id 
+      || profile?.tenant_id;
+
+    if (!workspaceId) {
+      throw new Error("Workspace not found");
     }
 
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("stripe_customer_id")
-      .eq("tenant_id", profile.tenant_id)
+      .eq("workspace_id", workspaceId)
       .maybeSingle();
 
     const { plan } = await req.json();
@@ -85,7 +88,7 @@ serve(async (req) => {
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: userEmail,
-        metadata: { tenant_id: profile.tenant_id },
+        metadata: { workspace_id: workspaceId },
       });
       customerId = customer.id;
 
@@ -93,10 +96,10 @@ serve(async (req) => {
       await supabase
         .from("subscriptions")
         .update({ stripe_customer_id: customerId })
-        .eq("tenant_id", profile.tenant_id);
+        .eq("workspace_id", workspaceId);
     }
 
-    // Create checkout session
+    // Create checkout session with 14-day trial
     const origin = req.headers.get("origin") || "https://lovable.dev";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -105,7 +108,8 @@ serve(async (req) => {
       success_url: `${origin}/settings/billing?success=true`,
       cancel_url: `${origin}/settings/billing?canceled=true`,
       subscription_data: {
-        metadata: { tenant_id: profile.tenant_id },
+        metadata: { workspace_id: workspaceId },
+        trial_period_days: 14,
       },
     });
 

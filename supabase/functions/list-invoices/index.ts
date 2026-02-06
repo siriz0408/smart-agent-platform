@@ -56,14 +56,17 @@ serve(async (req) => {
 
     const userId = userData.user.id;
 
-    // Get tenant_id and subscription
+    // Get workspace_id from profile (active_workspace_id or tenant_id fallback)
     const { data: profile } = await supabase
       .from("profiles")
-      .select("tenant_id")
+      .select("active_workspace_id, tenant_id")
       .eq("user_id", userId)
       .single();
 
-    if (!profile?.tenant_id) {
+    const workspaceId = (profile as { active_workspace_id?: string })?.active_workspace_id 
+      || profile?.tenant_id;
+
+    if (!workspaceId) {
       return new Response(JSON.stringify({ invoices: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -72,7 +75,7 @@ serve(async (req) => {
     const { data: subscription } = await supabase
       .from("subscriptions")
       .select("stripe_customer_id")
-      .eq("tenant_id", profile.tenant_id)
+      .eq("workspace_id", workspaceId)
       .single();
 
     if (!subscription?.stripe_customer_id) {

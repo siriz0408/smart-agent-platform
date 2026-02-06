@@ -1218,7 +1218,11 @@ const MULTI_DOC_SYSTEM_PROMPT = `
 
 You have access to content from the user's documents. When answering questions:
 
-1. **ALWAYS cite your sources** using format: [Source: Document Name, Section X]
+1. **ALWAYS cite your sources** using format: [Source: filename, page X]
+   - Use the exact document filename (not full path)
+   - Use the page number shown in the document context (e.g., "page 1", "page 2")
+   - Group citations at the end of relevant paragraphs when citing multiple sources
+   - Example: "The purchase price is $450,000 [Source: Purchase_Agreement.pdf, page 3]"
 2. **Synthesize across documents** when multiple are provided - compare, contrast, and cross-reference
 3. **Group findings by document** when listing information from multiple sources
 4. **Be specific** - quote relevant text and exact figures when helpful
@@ -3512,11 +3516,14 @@ ${JSON.stringify(meta.extracted_data, null, 2)}
               });
               
               const chunkTexts = sortedChunks.map(c => 
-                `[Section ${c.chunk_index + 1}]: ${c.content.substring(0, 3000)}${c.content.length > 3000 ? '...' : ''}`
+                `[Page ${c.chunk_index + 1}]: ${c.content.substring(0, 3000)}${c.content.length > 3000 ? '...' : ''}`
               ).join("\n\n");
               
+              // Extract filename from document name (remove path if present)
+              const filename = docData.name.split('/').pop() || docData.name;
+              
               contextParts.push(
-                `## Document ${docIndex}: ${docData.name} (${docData.category})\n\n${chunkTexts}`
+                `## Document ${docIndex}: ${docData.name} (${docData.category})\n\nEach chunk below is labeled with its page number. When citing, use the filename "${filename}" and the page number shown.\n\n${chunkTexts}`
               );
               docIndex++;
             }

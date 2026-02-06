@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Search, Plus } from "lucide-react";
+import { Search, Plus, BarChart3 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -54,6 +55,7 @@ export function ConversationList({
   onNewConversation,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   // Get unread counts for all conversations
   const conversationIds = conversations.map((c) => c.id);
@@ -101,16 +103,27 @@ export function ConversationList({
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Messages</h2>
-          {onNewConversation && (
+          <div className="flex items-center gap-2">
             <Button
               size="sm"
-              onClick={onNewConversation}
+              variant="ghost"
+              onClick={() => navigate("/messages/metrics")}
               className="gap-1"
+              title="View metrics"
             >
-              <Plus className="h-4 w-4" />
-              New
+              <BarChart3 className="h-4 w-4" />
             </Button>
-          )}
+            {onNewConversation && (
+              <Button
+                size="sm"
+                onClick={onNewConversation}
+                className="gap-1"
+              >
+                <Plus className="h-4 w-4" />
+                New
+              </Button>
+            )}
+          </div>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

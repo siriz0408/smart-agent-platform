@@ -96,18 +96,19 @@ serve(async (req) => {
       case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
-        const tenantId = subscription.metadata?.tenant_id;
+        // Support both workspace_id (new) and tenant_id (legacy) in metadata
+        const workspaceId = subscription.metadata?.workspace_id || subscription.metadata?.tenant_id;
         
-        if (!tenantId) {
-          // Try to find tenant by customer ID
+        if (!workspaceId) {
+          // Try to find workspace by customer ID
           const { data: existingSub } = await supabase
             .from("subscriptions")
-            .select("tenant_id")
+            .select("workspace_id")
             .eq("stripe_customer_id", subscription.customer as string)
-            .single();
+            .maybeSingle();
           
-          if (!existingSub) {
-            console.error("No tenant found for subscription:", subscription.id);
+          if (!existingSub?.workspace_id) {
+            console.error("No workspace found for subscription:", subscription.id);
             break;
           }
         }
@@ -130,9 +131,9 @@ serve(async (req) => {
             : null,
         };
 
-        // Update by tenant_id or stripe_customer_id
-        const updateQuery = tenantId
-          ? supabase.from("subscriptions").update(updateData).eq("tenant_id", tenantId)
+        // Update by workspace_id (preferred) or stripe_customer_id (fallback)
+        const updateQuery = workspaceId
+          ? supabase.from("subscriptions").update(updateData).eq("workspace_id", workspaceId)
           : supabase.from("subscriptions").update(updateData).eq("stripe_customer_id", subscription.customer as string);
 
         const { error } = await updateQuery;

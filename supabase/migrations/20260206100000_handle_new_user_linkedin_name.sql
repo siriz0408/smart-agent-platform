@@ -52,8 +52,8 @@ BEGIN
   INSERT INTO public.user_roles (user_id, tenant_id, role)
   VALUES (NEW.id, new_workspace_id, user_role);
 
-  -- Create subscription (default: free)
-  INSERT INTO public.subscriptions (tenant_id, plan, status)
+  -- Create subscription (default: free) - USING workspace_id
+  INSERT INTO public.subscriptions (workspace_id, plan, status)
   VALUES (new_workspace_id, 'free', 'active');
 
   RETURN NEW;

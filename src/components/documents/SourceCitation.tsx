@@ -57,19 +57,20 @@ export function SourceCitation({ sources, onViewDocument }: SourceCitationProps)
   );
 }
 
-// Parse AI response for inline citations like [Source: Document Name, Chunk #X]
+// Parse AI response for inline citations like [Source: filename, page X]
 export function parseSourceCitations(content: string): { 
   text: string; 
-  citations: { document: string; chunk?: string }[] 
+  citations: { document: string; page?: string }[] 
 } {
-  const citationRegex = /\[Source:\s*([^,\]]+)(?:,\s*Chunk\s*#?(\d+))?\]/g;
-  const citations: { document: string; chunk?: string }[] = [];
+  // Match format: [Source: filename, page X] or [Source: filename, page X, page Y] (multiple pages)
+  const citationRegex = /\[Source:\s*([^,\]]+)(?:,\s*page\s+(\d+))?\]/gi;
+  const citations: { document: string; page?: string }[] = [];
   
   let match;
   while ((match = citationRegex.exec(content)) !== null) {
     citations.push({
       document: match[1].trim(),
-      chunk: match[2],
+      page: match[2] || undefined,
     });
   }
   

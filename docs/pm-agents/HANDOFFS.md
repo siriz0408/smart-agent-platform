@@ -42,7 +42,208 @@
 ---
 -->
 
-*No active handoffs at this time.*
+### [HO-001] Search Functionality Verification
+- **From:** PM-Context
+- **To:** PM-Discovery
+- **Priority:** High
+- **Created:** 2026-02-05
+- **Resolved:** 2026-02-06
+
+**Issue:**
+Historical search bug (Feb 2) may not be fully resolved. Need production verification that search works correctly.
+
+**Impact:**
+Cannot confirm search success rate (North Star: >95%)
+
+**Suggested Action:**
+Test search in production with common queries (e.g., "sarah" → Sarah Johnson)
+
+**Status:** RESOLVED
+
+**Resolution:**
+- ✅ Tested 20 common search queries in production
+- ✅ Verified search success rate: 95% (19/20 queries successful)
+- ✅ Confirmed average latency: 245ms (meets <500ms target)
+- ✅ Verified all entity types searchable (contacts, properties, documents, deals)
+- ✅ Cross-entity search working correctly
+- ✅ Search UI verified in production browser
+- Report: `docs/pm-agents/reports/2026-02-06/pm-discovery-search-verification.md`
+
+---
+
+### [HO-002] Production Metrics Dashboard
+- **From:** PM-Context
+- **To:** PM-Infrastructure
+- **Priority:** High
+- **Created:** 2026-02-05
+
+**Issue:**
+Need production metrics dashboard for document indexing success rate, latency, and search performance.
+
+**Impact:**
+Cannot measure domain health metrics
+
+**Suggested Action:**
+Set up monitoring queries and dashboard
+
+**Status:** PENDING
+
+---
+
+### [HO-003] Lighthouse CI Setup
+- **From:** PM-Experience
+- **To:** PM-Infrastructure
+- **Priority:** High
+- **Created:** 2026-02-05
+- **Resolved:** 2026-02-06
+
+**Issue:**
+No Lighthouse CI for tracking performance and accessibility scores.
+
+**Impact:**
+Cannot measure North Star Metric (NPS >50) indicators
+
+**Suggested Action:**
+Implement Lighthouse CI in GitHub Actions
+
+**Status:** RESOLVED
+
+**Resolution:**
+- Created `.github/workflows/lighthouse-ci.yml` workflow
+- Created `.lighthouserc.js` configuration with performance budgets
+- Configured to run on PRs and pushes to main
+- Set thresholds: Performance 70+, Accessibility 90+, Best Practices 85+, SEO 80+
+- Core Web Vitals: FCP <2s, LCP <2.5s, TBT <300ms, CLS <0.1
+- Results uploaded as artifacts and commented on PRs
+
+---
+
+### [HO-004] Workspace Billing Migration
+- **From:** PM-Growth
+- **To:** PM-Infrastructure
+- **Priority:** Critical
+- **Created:** 2026-02-05
+- **Resolved:** 2026-02-06
+
+**Issue:**
+Subscriptions still use `tenant_id` instead of workspace model. Blocks multi-workspace billing.
+
+**Impact:**
+Cannot support multiple workspaces per user (PRD requirement)
+
+**Suggested Action:**
+Migrate billing to workspace-based model
+
+**Status:** RESOLVED
+
+**Resolution:**
+- Created migration to add workspace_id column to subscriptions table
+- Migrated existing data from tenant_id to workspace_id
+- Updated all subscription queries in hooks and edge functions
+- Updated RLS policies to use workspace_id
+- Updated handle_new_user trigger to use workspace_id
+- All billing functions now support workspace-based model
+
+---
+
+### [HO-005] Trial Signup UI
+- **From:** PM-Growth
+- **To:** PM-Experience
+- **Priority:** Critical
+- **Created:** 2026-02-05
+
+**Issue:**
+14-day trial mechanics not implemented (no UI/flow).
+
+**Impact:**
+Missing conversion opportunity
+
+**Suggested Action:**
+Build trial signup flow in authentication
+
+**Status:** PENDING
+
+---
+
+### [HO-006] Enable JWT Verification
+- **From:** PM-Security
+- **To:** PM-Infrastructure
+- **Priority:** Critical
+- **Created:** 2026-02-05
+
+**Issue:**
+All 28 edge functions have `verify_jwt = false`. Critical security vulnerability.
+
+**Impact:**
+Functions are not validating user authentication
+
+**Suggested Action:**
+Enable JWT verification for all functions (except webhooks)
+
+**Status:** PENDING
+
+**Target Date:** Feb 13
+
+---
+
+### [HO-007] SessionStorage Migration
+- **From:** PM-Security
+- **To:** PM-Experience
+- **Priority:** Critical
+- **Created:** 2026-02-05
+
+**Issue:**
+Session tokens stored in localStorage are vulnerable to XSS attacks.
+
+**Impact:**
+Security vulnerability for all users
+
+**Suggested Action:**
+Migrate to sessionStorage in Supabase client config
+
+**Status:** PENDING
+
+**Target Date:** Feb 13
+
+---
+
+### [HO-008] Fix RLS Policies
+- **From:** PM-Security
+- **To:** PM-Context
+- **Priority:** High
+- **Created:** 2026-02-05
+
+**Issue:**
+Overly permissive RLS policies on `addresses` and `external_properties` tables.
+
+**Impact:**
+Potential data exposure across tenants
+
+**Suggested Action:**
+Tighten RLS policies to enforce tenant isolation
+
+**Status:** PENDING
+
+---
+
+### [HO-009] Tenant Isolation in Actions
+- **From:** PM-Security
+- **To:** PM-Intelligence
+- **Priority:** Critical
+- **Created:** 2026-02-05
+
+**Issue:**
+Missing tenant isolation checks in action executors (`agentActions.ts`).
+
+**Impact:**
+Agents could access data across tenant boundaries
+
+**Suggested Action:**
+Add explicit tenant_id validation before data access
+
+**Status:** PENDING
+
+**Target Date:** Feb 13
 
 ---
 
