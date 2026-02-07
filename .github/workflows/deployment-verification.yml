@@ -28,10 +28,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
-    # For deployment_status events, only run on success status
+    # Only run on production deployments or manual triggers
+    # Skip preview deployments (they require Vercel auth and return 401)
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'deployment_status' && github.event.deployment_status.state == 'success')
+      (github.event_name == 'deployment_status' &&
+       github.event.deployment_status.state == 'success' &&
+       github.event.deployment_status.environment == 'Production')
 
     env:
       # Resolve the URL: manual input > deployment target URL > production fallback
