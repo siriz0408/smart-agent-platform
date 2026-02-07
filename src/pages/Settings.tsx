@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check, Plug2 } from "lucide-react";
+import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check, Plug2, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { useTheme, type Theme } from "@/contexts/ThemeContext";
 import { useProfileCompletion } from "@/hooks/useProfileCompletion";
+import { useRole } from "@/contexts/RoleContext";
 import { EditProfileDialog } from "@/components/settings/EditProfileDialog";
 import { DataExportDialog } from "@/components/settings/DataExportDialog";
 import { DataDeletionDialog } from "@/components/settings/DataDeletionDialog";
@@ -25,10 +26,12 @@ import { CredentialsManagement } from "@/components/settings/CredentialsManageme
 import { SocialLinksManagement } from "@/components/settings/SocialLinksManagement";
 import { PhotoGalleryManagement } from "@/components/settings/PhotoGalleryManagement";
 import { IntegrationsSettings } from "@/components/settings/IntegrationsSettings";
+import { GrowthMetricsDashboard } from "@/components/growth/GrowthMetricsDashboard";
 import { Progress } from "@/components/ui/progress";
 
 export default function Settings() {
   const { user, profile } = useAuth();
+  const { isAdmin } = useRole();
   const { preferences, updatePreference } = useUserPreferences();
   const { data: profileCompletion } = useProfileCompletion();
   const { theme, setTheme } = useTheme();
@@ -99,6 +102,12 @@ export default function Settings() {
               <Shield className="h-4 w-4" />
               <span className="hidden sm:inline">Security</span>
             </TabsTrigger>
+            {isAdmin && (
+              <TabsTrigger value="growth" className="gap-1.5">
+                <TrendingUp className="h-4 w-4" />
+                <span className="hidden sm:inline">Growth</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="billing" className="gap-1.5">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">More</span>
@@ -450,6 +459,13 @@ export default function Settings() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Growth Tab (Admin Only) */}
+          {isAdmin && (
+            <TabsContent value="growth" className="space-y-4 md:space-y-6">
+              <GrowthMetricsDashboard />
+            </TabsContent>
+          )}
 
           {/* Billing & More Tab */}
           <TabsContent value="billing" className="space-y-4 md:space-y-6">

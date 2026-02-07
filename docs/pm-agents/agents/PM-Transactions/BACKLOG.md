@@ -1,18 +1,20 @@
 # PM-Transactions Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle 9 - TRX-007 completed)
+> **Last Updated:** 2026-02-07 (Cycle 9 - TRX-008 investigated)
 
 ## In Progress
 
-_No items in progress_
+| ID | Item | Priority | Status |
+|----|------|----------|--------|
+| TRX-008 | Deal Activity Timeline | P2 | Investigation complete, ready for implementation |
 
 ## Ready
 
 | ID | Item | Priority | Description | Acceptance Criteria |
 |----|------|----------|-------------|---------------------|
-| TRX-008 | Deal Activity Timeline | P2 | Create a unified activity timeline for the deal detail view that aggregates notes, stage changes, milestone completions, and document uploads in chronological order. Currently activities are scattered across separate sections. | - New `DealActivityTimeline` component in deal detail sheet - Shows notes with timestamps - Shows milestone events (created, completed, overdue) - Chronological ordering with visual timeline |
 | TRX-009 | Deal Document Association View | P2 | Show documents linked to a specific deal in the deal detail sheet. Currently there's no way to see which documents are associated with a deal from the deal view. | - Documents section in DealDetailSheet - Shows documents where `documents.deal_id` matches - Link to document view - Count badge on section header |
 | TRX-010 | Align Pipeline Stages with PRD | P3 | Current stages (6 per type) don't match PRD which defines 8 buyer stages and 7 seller stages. Missing: Active Buyer, Property Search, Making Offers, Closing, Closed Lost (buyer); Pre-Listing, Offer Review, Closing Prep (seller). | - Buyer stages match PRD Section 8.1 - Seller stages match PRD Section 8.2 - Migration path for existing deals - Stage color assignments for new stages |
+| TRX-011 | Enhanced Activity Logging | P3 | Create dedicated `deal_activities` table for comprehensive audit trail with stage changes, individual note timestamps, field updates, and rich activity metadata. Deferred from TRX-008 Option B. Requires schema migration, hook updates, and backfill strategy. | - New `deal_activities` table with activity_type, metadata JSONB - Stage change tracking via trigger or hook - Individual note timestamps - Field update tracking - Migration with backfill for existing deals - Activity log query API |
 
 ## Completed
 

@@ -323,11 +323,109 @@ Reviewer submits a brief report:
 |------|---------|
 | All docs/pm-agents/ files | Full read/write |
 | PRD (Smart_Agent_Platform_PRD_v3.md) | Vision reference |
-| ARCHITECTURE.md | Technical reference |
+| ARCHITECTURE.md | Technical reference (read for architecture understanding) |
 | CLAUDE.md | Update with PM system info |
 | Task tool | Spawn sub-PMs |
 | All code (read) | Understand system |
 | Git | Track changes |
+| `smart-agent-roadmap.html` | Read human feedback, update roadmap |
+
+---
+
+## 13.5. Enhanced Capabilities
+
+### Writing Skills
+- Write clear, concise, strategic reports
+- Synthesize complex information into actionable insights
+- Communicate technical concepts clearly
+- Write for different audiences (human, PMs, stakeholders)
+- Use strategic language, not just operational summaries
+
+### Strategic Thinking
+- Identify trends and patterns across PM reports
+- Proactively identify opportunities and risks
+- Connect work to larger goals and vision
+- Think long-term (not just operational)
+- Anticipate needs before PMs surface them
+
+### Architecture Understanding
+- Read and understand `ARCHITECTURE.md`
+- Assess technical feasibility of proposals
+- Identify architectural risks and dependencies
+- Coordinate cross-cutting architectural decisions
+- Understand system design and data flows
+
+### Risk Assessment
+- Proactively identify risks (technical, product, process)
+- Assess risk severity and likelihood
+- Develop mitigation strategies
+- Track risk resolution
+- Update roadmap risks section
+
+### Proactive Planning
+- Anticipate needs before PMs surface them
+- Plan for dependencies and blockers
+- Identify resource constraints early
+- Coordinate cross-PM initiatives
+- Strategic planning (quarterly OKRs, roadmap)
+
+---
+
+## 13.6. Weekly Strategic Review (Every Monday)
+
+1. **Trend Analysis**
+   - Review last week's work across all PMs
+   - Identify patterns (what's working, what's not)
+   - Spot emerging risks or opportunities
+   - Update strategic insights in reports
+
+2. **Architecture Review**
+   - Review recent architectural changes
+   - Read `ARCHITECTURE.md` for context
+   - Identify technical debt accumulation
+   - Assess system health and scalability
+
+3. **Risk Assessment**
+   - Review active risks from roadmap
+   - Identify new risks proactively
+   - Update risk mitigation plans
+   - Document in roadmap risks section
+
+4. **Strategic Planning**
+   - Review progress toward North Star metrics
+   - Identify strategic initiatives needed
+   - Plan cross-PM coordination
+   - Update roadmap priorities
+
+5. **PM Performance Review**
+   - Review PM performance metrics (`PERFORMANCE.md`)
+   - Identify PMs needing support
+   - Share best practices across PMs
+   - Update performance tracking
+
+---
+
+## 13.7. Roadmap Integration
+
+**Read Roadmap Before Each Cycle:**
+1. Read `smart-agent-roadmap.html`
+2. Check "Feedback & Tasks" tab for human input
+3. Process:
+   - Strategic feedback → Update VISION.md or priorities
+   - Bug reports → Route to appropriate PM
+   - Task delegation → Add to PM backlogs
+   - Research assignments → Assign to PM-Research
+   - Feature requests → Score and route
+   - Decision responses → Update DECISIONS.md
+
+**Update Roadmap After Each Cycle:**
+1. Update task statuses from STATE.md
+2. Update phase progress bars
+3. Update PM agent statuses
+4. Update "Last Updated" timestamp
+5. Preserve human feedback section
+
+**Script:** Use `docs/pm-agents/scripts/update-roadmap.sh` for automated updates
 
 ---
 
@@ -526,22 +624,35 @@ Escalate when:
 
 The PM-Orchestrator is invoked by the Python orchestrator (`pm_core/pm_orchestrator.py`) and is responsible for planning and reviewing the day's work.
 
-### Daily Orchestration Flow
+### Daily Orchestration Flow (Enhanced)
 
 ```
 8:00 AM - Orchestrator wakes up
   │
   ├─ Load system state (STATE.md)
   │
+  ├─ Read roadmap HTML (`smart-agent-roadmap.html`)
+  │   └─ Check "Feedback & Tasks" tab for human input
+  │   └─ Process: strategic feedback, bug reports, task delegation, research assignments
+  │
   ├─ Review yesterday's commits
   │   └─ What was accomplished?
+  │   └─ Strategic insights: trends, patterns, opportunities
   │
   ├─ Check HANDOFFS.md for pending items
   │
   ├─ Review PM-Research recommendations (intake pipeline)
   │   └─ Score, adopt/defer/reject, assign to domain PMs
   │
+  ├─ Strategic Review (if Monday)
+  │   ├─ Trend analysis across PMs
+  │   ├─ Architecture review (read ARCHITECTURE.md)
+  │   ├─ Risk assessment (proactive identification)
+  │   ├─ Strategic planning (initiatives, coordination)
+  │   └─ PM performance review
+  │
   ├─ Plan today's work for each PM
+  │   ├─ Consider cross-PM dependencies (read CROSS_PM_AWARENESS.md)
   │   ├─ PM-Intelligence: Top task from backlog
   │   ├─ PM-Experience: Top task from backlog
   │   ├─ PM-Context: Top task from backlog
@@ -562,6 +673,9 @@ The PM-Orchestrator is invoked by the Python orchestrator (`pm_core/pm_orchestra
   ├─ Verify backlog sync (each PM updated BACKLOG.md)
   │   └─ Flag any PM that didn't sync
   │
+  ├─ Verify memory updates (each PM updated MEMORY.md)
+  │   └─ Flag any PM that didn't update memory
+  │
   ├─ Run PM-QA post-cycle gate
   │   ├─ PASS → Approve merge
   │   ├─ WARN → Merge with notes
@@ -569,9 +683,22 @@ The PM-Orchestrator is invoked by the Python orchestrator (`pm_core/pm_orchestra
   │
   ├─ Assign cross-PM review (rotating)
   │
-  ├─ Generate daily report
+  ├─ Generate daily report (with strategic insights)
+  │   ├─ Executive summary (strategic, not just operational)
+  │   ├─ Trends and patterns identified
+  │   ├─ Risks and opportunities
+  │   ├─ Ready to Test / In Progress sections
+  │   └─ Progress toward larger goals
   │
-  └─ Update STATE.md
+  ├─ Update STATE.md
+  │
+  ├─ Update CROSS_PM_AWARENESS.md
+  │
+  ├─ Update roadmap HTML
+  │   └─ Update task statuses, phase progress, PM statuses
+  │   └─ Preserve human feedback section
+  │
+  └─ Update PERFORMANCE.md (weekly)
 ```
 
 ### What PM-Orchestrator Does NOT Do

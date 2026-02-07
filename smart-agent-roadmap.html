@@ -402,6 +402,7 @@
     <button class="tab" data-tab="agents">PM Agents (13)</button>
     <button class="tab" data-tab="recs">Recommendations (26)</button>
     <button class="tab" data-tab="risks">Risks & Gaps</button>
+    <button class="tab" data-tab="feedback">Feedback & Tasks</button>
   </div>
 
   <!-- TAB: ROADMAP -->
@@ -1160,6 +1161,105 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <!-- TAB: FEEDBACK & TASKS -->
+  <div class="tab-content" id="tab-feedback">
+    <div class="card">
+      <div class="card-header">
+        <h2>📝 Feedback & Communication</h2>
+        <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px;">
+          PM-Orchestrator reads this section before each cycle. Provide strategic feedback, report bugs, delegate tasks, assign research, or respond to decisions.
+        </p>
+        <p style="color: var(--text-muted); font-size: 12px; margin-top: 4px;">
+          <strong>Last Updated by PM-Orchestrator:</strong> <span id="last-updated">2026-02-07 08:00 EST</span>
+        </p>
+      </div>
+      <div style="padding: 20px; display: flex; flex-direction: column; gap: 24px;">
+        
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
+            Strategic Feedback
+          </label>
+          <textarea 
+            id="strategic-feedback"
+            placeholder="Provide strategic direction, vision feedback, priority changes, or high-level guidance for PM-Orchestrator..."
+            style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
+            Bug Reports
+          </label>
+          <textarea 
+            id="bug-reports"
+            placeholder="Report bugs you've found. Include: description, steps to reproduce, expected vs actual behavior, severity (P0/P1/P2)..."
+            style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
+            Task Delegation
+          </label>
+          <textarea 
+            id="task-delegation"
+            placeholder="Delegate specific tasks to PMs. Format: PM-[Name]: [Task description]..."
+            style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
+            Research Assignments
+          </label>
+          <textarea 
+            id="research-assignments"
+            placeholder="Assign research tasks to PM-Research. Include: topic, scope, deadline (if any)..."
+            style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
+            Feature Requests
+          </label>
+          <textarea 
+            id="feature-requests"
+            placeholder="Request new features or enhancements. Include: description, user benefit, priority..."
+            style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
+            Decision Responses
+          </label>
+          <textarea 
+            id="decision-responses"
+            placeholder="Respond to decisions in DECISIONS.md. Format: Decision ID: [Approve/Reject/Modify] - [Reasoning]..."
+            style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+        </div>
+
+        <div style="padding-top: 16px; border-top: 1px solid var(--border);">
+          <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
+            <strong>How PM-Orchestrator processes this:</strong><br>
+            • Reads this section before each cycle (8am, 12pm, 8pm EST)<br>
+            • Strategic feedback → Updates VISION.md or priorities<br>
+            • Bug reports → Routes to appropriate PM<br>
+            • Task delegation → Adds to PM backlogs<br>
+            • Research assignments → Assigns to PM-Research<br>
+            • Feature requests → Scores and routes using prioritization framework<br>
+            • Decision responses → Updates DECISIONS.md<br><br>
+            <strong>Note:</strong> PM-Orchestrator preserves your input but may clear fields after processing to keep this section manageable.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
     <div class="review-section">
       <h3>✅ What's Going Well</h3>

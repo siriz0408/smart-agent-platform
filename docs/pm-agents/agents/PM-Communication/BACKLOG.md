@@ -1,6 +1,6 @@
 # PM-Communication Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-07 (Cycle 9 - Final)
 
 ## In Progress
 
@@ -29,3 +29,4 @@
 | COM-006 | Add message search/archive | 2026-02-07 |
 | COM-009 | Test message flow end-to-end | 2026-02-06 |
 | COM-010 | Audit notification delivery | 2026-02-06 |
+| COM-013 | Add E2E tests for message search/archive | 2026-02-07 |

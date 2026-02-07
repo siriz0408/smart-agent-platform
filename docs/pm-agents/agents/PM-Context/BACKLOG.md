@@ -1,17 +1,18 @@
 # PM-Context Backlog
 
-> **Last Updated:** 2026-02-06
+> **Last Updated:** 2026-02-07 (Cycle 9)
 
 ## In Progress
 
-_None_
+| ID | Item | Priority | Effort | Notes |
+|----|------|----------|--------|-------|
+| CTX-010 | Add metadata column to document_chunks table | P1 | S | Migration created, pending deployment (see CTX-010_INVESTIGATION.md) |
 
 ## Ready
 
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
 | CTX-006 | Research MLS integration | P2 | L |
-| CTX-010 | Add metadata column to document_chunks table | P1 | S |
 | CTX-011 | Verify re-indexing of existing documents with improved parser | P2 | M |
 
 ## Completed

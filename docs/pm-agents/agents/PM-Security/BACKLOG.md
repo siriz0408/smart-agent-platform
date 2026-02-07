@@ -17,7 +17,6 @@
 | SEC-017 | Create missing RLS policies | P2 | M | PM-Context |
 | SEC-018 | Standardize admin check implementation | P2 | S | PM-Context |
 | SEC-019 | Add explicit tenant_id filters to frontend | P2 | L | PM-Experience |
-| SEC-006 | Set up security monitoring | P2 | M | PM-Security |
 
 ## Completed
 
@@ -33,3 +32,4 @@
 | SEC-005 | Review GDPR compliance | 2026-02-06 |
 | SEC-015 | Restrict CORS to specific origins (38 edge functions migrated) | 2026-02-06 |
 | SEC-014 | Fix overly permissive RLS policies (9 tables: email_campaign_recipients, email_send_history, email_campaign_steps, production_metrics, search_metrics, ai_chat_metrics, zero_results_log, notifications, usage_records_archive) | 2026-02-07 |
+| SEC-006 | Set up security monitoring (2 tables: security_events, security_alerts; 4 views; brute force detection; security health scoring) | 2026-02-07 |
