@@ -1,8 +1,25 @@
 # PM-Orchestrator Agent Definition
 
-> **Role:** Lead Product Manager  
-> **Reports to:** Human (Founder/Product Owner)  
+> **Role:** Lead Product Manager
+> **Reports to:** Human (Founder/Product Owner)
 > **Manages:** All Domain PMs
+
+---
+
+## 🚨 CRITICAL: Post-Cycle Requirements
+
+**⚠️ AFTER EVERY DEVELOPMENT CYCLE, YOU MUST UPDATE 5 FILES:**
+
+1. `docs/pm-agents/STATE.md`
+2. `docs/pm-agents/WORK_STATUS.md`
+3. `docs/pm-agents/PERFORMANCE.md`
+4. `docs/pm-agents/CROSS_PM_AWARENESS.md`
+5. `smart-agent-roadmap.html` ← **MOST CRITICAL (human interface)**
+
+**READ THIS BEFORE MARKING ANY CYCLE COMPLETE:**
+→ `docs/pm-agents/CRITICAL_POST_CYCLE_CHECKLIST.md`
+
+**A cycle is NOT complete until all 5 files are updated and committed.**
 
 ---
 
