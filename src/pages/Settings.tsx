@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check } from "lucide-react";
+import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check, Plug2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -24,6 +24,7 @@ import { PrivacySettings } from "@/components/settings/PrivacySettings";
 import { CredentialsManagement } from "@/components/settings/CredentialsManagement";
 import { SocialLinksManagement } from "@/components/settings/SocialLinksManagement";
 import { PhotoGalleryManagement } from "@/components/settings/PhotoGalleryManagement";
+import { IntegrationsSettings } from "@/components/settings/IntegrationsSettings";
 import { Progress } from "@/components/ui/progress";
 
 export default function Settings() {
@@ -86,6 +87,10 @@ export default function Settings() {
               <Bell className="h-4 w-4" />
               <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
+            <TabsTrigger value="integrations" className="gap-1.5">
+              <Plug2 className="h-4 w-4" />
+              <span className="hidden sm:inline">Integrations</span>
+            </TabsTrigger>
             <TabsTrigger value="appearance" className="gap-1.5">
               <Palette className="h-4 w-4" />
               <span className="hidden sm:inline">Appearance</span>
@@ -145,6 +150,24 @@ export default function Settings() {
             <CredentialsManagement />
             <SocialLinksManagement />
             <PhotoGalleryManagement />
+          </TabsContent>
+
+          {/* Integrations Tab */}
+          <TabsContent value="integrations" className="space-y-4 md:space-y-6">
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Plug2 className="h-5 w-5" />
+                  Integrations
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm">
+                  Connect your favorite tools and services to Smart Agent
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <IntegrationsSettings />
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* Notifications Tab */}

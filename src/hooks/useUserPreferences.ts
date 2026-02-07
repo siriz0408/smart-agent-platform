@@ -132,7 +132,7 @@ export function useUserPreferences(userId?: string | null | undefined, enabled =
     };
 
     // Map database snake_case to camelCase
-    const mappedData: Record<string, any> = {};
+    const mappedData: Record<string, unknown> = {};
     Object.keys(dbData).forEach((key) => {
       const mappedKey = reverseMapping[key] || key;
       mappedData[mappedKey] = dbData[key as keyof typeof dbData];

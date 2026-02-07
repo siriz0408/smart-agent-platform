@@ -31,7 +31,6 @@ const ActionQueue = lazy(() => import("./pages/ActionQueue"));
 const AdminAgents = lazy(() => import("./pages/AdminAgents"));
 const AdminAgentEdit = lazy(() => import("./pages/AdminAgentEdit"));
 const AdminTeammates = lazy(() => import("./pages/AdminTeammates"));
-const AdminDataSources = lazy(() => import("./pages/AdminDataSources"));
 const Contacts = lazy(() => import("./pages/Contacts"));
 const ContactDetail = lazy(() => import("./pages/ContactDetail"));
 const Pipeline = lazy(() => import("./pages/Pipeline"));
@@ -54,7 +53,6 @@ const Admin = lazy(() => import("./pages/Admin"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Billing = lazy(() => import("./pages/Billing"));
 const Tools = lazy(() => import("./pages/Tools"));
-const Integrations = lazy(() => import("./pages/Integrations"));
 const TrialExpired = lazy(() => import("./pages/TrialExpired"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Help = lazy(() => import("./pages/Help"));
@@ -145,7 +143,8 @@ const App = () => (
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/settings/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
               <Route path="/tools" element={<ProtectedRoute><Tools /></ProtectedRoute>} />
-              <Route path="/integrations" element={<ProtectedRoute><Integrations /></ProtectedRoute>} />
+              {/* Integrations moved to Settings page - redirect legacy route */}
+              <Route path="/integrations" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/help" element={<ProtectedRoute><Help /></ProtectedRoute>} />
 
               {/* Protected routes - Admin Only */}
@@ -181,14 +180,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="/admin/data-sources"
-                element={
-                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
-                    <AdminDataSources />
-                  </ProtectedRoute>
-                }
-              />
+              {/* admin/data-sources removed - integrations moved to Settings */}
               <Route
                 path="/admin/metrics"
                 element={

@@ -14,6 +14,24 @@ interface DealSuggestion {
   };
 }
 
+interface DealMilestone {
+  title: string;
+  due_date?: string;
+  completed_at?: string;
+}
+
+interface DealActivity {
+  activity_type: string;
+  description: string;
+  created_at: string;
+}
+
+interface DealContext {
+  milestones: Array<{ title: string; due_date?: string; completed_at?: string; is_overdue: boolean; is_due_soon: boolean }>;
+  recent_activities: Array<{ type: string; description: string; created_at: string }>;
+  [key: string]: unknown;
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -133,7 +151,7 @@ serve(async (req) => {
         price: deal.properties.price,
         status: deal.properties.status,
       } : null,
-      milestones: (deal.deal_milestones || []).map((m: any) => ({
+      milestones: (deal.deal_milestones || []).map((m: DealMilestone) => ({
         title: m.title,
         due_date: m.due_date,
         completed_at: m.completed_at,
@@ -144,7 +162,7 @@ serve(async (req) => {
           return daysUntilDue >= 0 && daysUntilDue <= 3;
         })(),
       })),
-      recent_activities: (deal.deal_activities || []).slice(0, 5).map((a: any) => ({
+      recent_activities: (deal.deal_activities || []).slice(0, 5).map((a: DealActivity) => ({
         type: a.activity_type,
         description: a.description,
         created_at: a.created_at,
@@ -225,10 +243,11 @@ Be concise and actionable. Return ONLY valid JSON array, no markdown or explanat
     }
 
     // Validate and clean suggestions
-    suggestions = suggestions
-      .filter((s: any) => s.title && s.description && s.type && s.priority)
+    suggestions = (suggestions as Array<Partial<DealSuggestion>>)
+      .filter((s): s is Partial<DealSuggestion> & { title: string; description: string; type: string; priority: string } =>
+        !!(s.title && s.description && s.type && s.priority))
       .slice(0, 5) // Limit to 5 suggestions
-      .map((s: any) => ({
+      .map((s) => ({
         type: s.type || "info",
         priority: s.priority || "medium",
         title: s.title.substring(0, 60),
@@ -251,14 +270,15 @@ Be concise and actionable. Return ONLY valid JSON array, no markdown or explanat
 });
 
 // Fallback suggestions if AI parsing fails
-function generateFallbackSuggestions(deal: any, context: any): DealSuggestion[] {
+function generateFallbackSuggestions(deal: Record<string, unknown>, context: DealContext): DealSuggestion[] {
   const suggestions: DealSuggestion[] = [];
   const now = new Date();
 
   // Check for stalled deals
-  const daysSinceUpdate = Math.floor(
-    (now.getTime() - new Date(deal.updated_at).getTime()) / (1000 * 60 * 60 * 24)
-  );
+  const updatedAt = deal.updated_at as string | undefined;
+  const daysSinceUpdate = updatedAt ? Math.floor(
+    (now.getTime() - new Date(updatedAt).getTime()) / (1000 * 60 * 60 * 24)
+  ) : 0;
   if (daysSinceUpdate > 7 && deal.stage !== "closed" && deal.stage !== "lost") {
     suggestions.push({
       type: "warning",
@@ -273,7 +293,7 @@ function generateFallbackSuggestions(deal: any, context: any): DealSuggestion[] 
   }
 
   // Check for overdue milestones
-  const overdueMilestones = context.milestones.filter((m: any) => m.is_overdue);
+  const overdueMilestones = context.milestones.filter((m) => m.is_overdue);
   if (overdueMilestones.length > 0) {
     suggestions.push({
       type: "warning",

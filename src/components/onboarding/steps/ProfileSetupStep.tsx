@@ -51,10 +51,8 @@ export function ProfileSetupStep({ data, updateData, onNext, onBack }: ProfileSe
 
 
         if (error) throw error;
-      } else {
       }
 
-      
       updateData({ fullName, title, phone });
       onNext();
       

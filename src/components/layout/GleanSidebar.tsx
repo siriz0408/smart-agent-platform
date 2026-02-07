@@ -14,8 +14,8 @@ import {
   Calculator,
   HelpCircle,
   ListTodo,
-  Plug2,
   LucideIcon,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -68,7 +68,6 @@ export function GleanSidebar() {
       { icon: Home, label: 'Home', href: '/dashboard' },
       { icon: MessageSquare, label: 'Chat', href: '/chat' },
       { icon: Calculator, label: 'Tools', href: '/tools' },
-      { icon: Plug2, label: 'Integrations', href: '/integrations' },
     ];
 
     const roleSpecificItems: Record<string, NavItem[]> = {
@@ -128,22 +127,28 @@ export function GleanSidebar() {
 
   const navItems = getNavItems();
 
-  // Bottom navigation items (always shown)
-  const bottomItems: NavItem[] = [
-    { icon: HelpCircle, label: 'Help', href: '/help' },
-    { icon: Settings, label: 'Settings', href: '/settings' },
-  ];
+  // Build "More" dropdown menu items
+  const moreMenuItems: NavItem[] = [];
 
-  // Add admin link ONLY for super_admin (Sam's email)
-  // This hides the admin panel from all other users
+  // Add Admin only for super_admin
   if (isSuperAdmin) {
-    bottomItems.unshift({ icon: Shield, label: 'Admin', href: '/admin' });
+    moreMenuItems.push({ icon: Shield, label: 'Admin', href: '/admin' });
   }
+
+  // Always include Settings and Help
+  moreMenuItems.push(
+    { icon: Settings, label: 'Settings', href: '/settings' },
+    { icon: HelpCircle, label: 'Help', href: '/help' }
+  );
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate("/login");
   };
+
+  const isMoreMenuActive = moreMenuItems.some(
+    (item) => location.pathname === item.href || location.pathname.startsWith(item.href + '/')
+  );
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-[72px] bg-glean-purple text-white h-full">
@@ -211,45 +216,50 @@ export function GleanSidebar() {
         </ul>
       </nav>
 
-      {/* Bottom Navigation */}
+      {/* Bottom Navigation - "More" dropdown */}
       <div className="border-t border-white/10 py-2">
         <ul className="space-y-1 px-2">
-          {bottomItems.map((item) => {
-            const isActive =
-              location.pathname === item.href ||
-              location.pathname.startsWith(item.href + '/');
-
-            return (
-              <li key={item.href}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Link
-                      to={item.href}
-                      aria-label={item.label}
-                      aria-current={isActive ? 'page' : undefined}
+          <li>
+            <DropdownMenu>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      aria-label="More options"
                       className={cn(
-                        "flex flex-col items-center justify-center py-2 gap-1",
+                        "w-full flex flex-col items-center justify-center py-2 gap-1",
                         "transition-all duration-200 rounded-lg",
                         "min-h-[56px]",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-glean-purple",
-                        isActive
+                        isMoreMenuActive
                           ? "bg-white/20 text-white"
                           : "text-white/70 hover:bg-white/10 hover:text-white"
                       )}
                     >
-                      <item.icon className="h-5 w-5" aria-hidden="true" />
+                      <MoreVertical className="h-5 w-5" aria-hidden="true" />
                       <span className="text-[10px] font-medium text-center leading-tight px-1">
-                        {item.label}
+                        More
                       </span>
-                    </Link>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">
-                    {item.label}
-                  </TooltipContent>
-                </Tooltip>
-              </li>
-            );
-          })}
+                    </button>
+                  </DropdownMenuTrigger>
+                </TooltipTrigger>
+                <TooltipContent side="right">
+                  More options
+                </TooltipContent>
+              </Tooltip>
+              <DropdownMenuContent align="end" side="right" className="w-48">
+                {moreMenuItems.map((item, index) => (
+                  <div key={item.href}>
+                    {index > 0 && item.label === 'Settings' && <DropdownMenuSeparator />}
+                    <DropdownMenuItem onClick={() => navigate(item.href)}>
+                      <item.icon className="h-4 w-4 mr-2" />
+                      {item.label}
+                    </DropdownMenuItem>
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </li>
         </ul>
       </div>
 

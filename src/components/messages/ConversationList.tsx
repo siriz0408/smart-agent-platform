@@ -113,7 +113,7 @@ export function ConversationList({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 sm:p-6 border-b border-border">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Messages</h2>
           <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export function ConversationList({
       </div>
 
       <ScrollArea className="flex-1">
-        <div className="p-2">
+        <div className="p-4 sm:p-6">
           {isLoading ? (
             Array.from({ length: 5 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 p-3">

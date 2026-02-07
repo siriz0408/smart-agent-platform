@@ -1,0 +1,1217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Agent — Product Roadmap & Review</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #181b24;
+    --surface2: #1f2330;
+    --border: #2a2e3a;
+    --text: #e4e6eb;
+    --text-muted: #8b8fa3;
+    --accent: #6c63ff;
+    --accent-light: #8b84ff;
+    --green: #34d399;
+    --green-bg: rgba(52,211,153,0.12);
+    --yellow: #fbbf24;
+    --yellow-bg: rgba(251,191,36,0.12);
+    --red: #f87171;
+    --red-bg: rgba(248,113,113,0.12);
+    --blue: #60a5fa;
+    --blue-bg: rgba(96,165,250,0.12);
+    --orange: #fb923c;
+    --orange-bg: rgba(251,146,60,0.12);
+    --purple: #a78bfa;
+    --purple-bg: rgba(167,139,250,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
+
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header-left h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .header-left h1 span { color: var(--accent); }
+  .header-left p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .header-right {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .stat-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .stat-chip .dot.green { background: var(--green); }
+  .stat-chip .dot.yellow { background: var(--yellow); }
+  .stat-chip .dot.red { background: var(--red); }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 28px;
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .tab:hover { color: var(--text); background: var(--surface2); }
+  .tab.active { background: var(--accent); color: #fff; }
+
+  /* Tab Content */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* Roadmap Columns */
+  .roadmap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  @media (max-width: 900px) { .roadmap-grid { grid-template-columns: 1fr; } }
+
+  .roadmap-column {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .col-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .col-header h2 {
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .col-header .count {
+    background: var(--surface2);
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .col-body { padding: 12px; }
+
+  /* Cards */
+  .card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .card:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  .card:last-child { margin-bottom: 0; }
+  .card-title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .card-title .icon { flex-shrink: 0; }
+  .card-desc {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+  .card-meta {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .tag {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .tag.p0 { background: var(--red-bg); color: var(--red); }
+  .tag.p1 { background: var(--orange-bg); color: var(--orange); }
+  .tag.p2 { background: var(--blue-bg); color: var(--blue); }
+  .tag.p3 { background: var(--purple-bg); color: var(--purple); }
+  .tag.owner { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+  .tag.status-done { background: var(--green-bg); color: var(--green); }
+  .tag.status-progress { background: var(--yellow-bg); color: var(--yellow); }
+  .tag.status-blocked { background: var(--red-bg); color: var(--red); }
+  .tag.effort { background: var(--purple-bg); color: var(--purple); }
+
+  .priority-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    border-radius: 10px 0 0 10px;
+  }
+  .priority-bar.p0 { background: var(--red); }
+  .priority-bar.p1 { background: var(--orange); }
+  .priority-bar.p2 { background: var(--blue); }
+  .priority-bar.p3 { background: var(--purple); }
+
+  /* Review Section */
+  .review-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+  .review-section h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .review-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 16px;
+  }
+  .review-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .review-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .review-card p, .review-card ul {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .review-card ul { padding-left: 16px; margin-top: 6px; }
+  .review-card li { margin-bottom: 4px; }
+
+  /* Phase Progress */
+  .phase-bar-wrap {
+    margin-bottom: 20px;
+  }
+  .phase-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .phase-bar-label span:last-child { color: var(--text-muted); }
+  .phase-bar {
+    height: 8px;
+    background: var(--surface2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .phase-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .phase-bar-fill.complete { background: var(--green); }
+  .phase-bar-fill.progress { background: var(--yellow); }
+  .phase-bar-fill.early { background: var(--blue); }
+  .phase-bar-fill.notstarted { background: var(--surface); border: 1px solid var(--border); }
+
+  /* PM Grid */
+  .pm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .pm-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .pm-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .pm-card .pm-status {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+  .pm-card .pm-items {
+    font-size: 12px;
+    display: flex;
+    gap: 12px;
+  }
+  .pm-card .pm-items span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  /* Recommendations */
+  .rec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .rec-table th {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .rec-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .rec-table tr:hover td { background: var(--surface2); }
+
+  /* Filters */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .filter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .filter-label { font-size: 12px; color: var(--text-muted); margin-right: 4px; }
+
+  /* Expandable */
+  .expand-trigger { cursor: pointer; user-select: none; }
+  .expand-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+  }
+  .expand-content.open { max-height: 2000px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1><span>Smart Agent</span> — Product Roadmap</h1>
+      <p>AI-Powered Real Estate Platform &middot; February 7, 2026 &middot; PRD v3.0</p>
+    </div>
+    <div class="header-right">
+      <div class="stat-chip"><span class="dot green"></span> Phase 1: 100%</div>
+      <div class="stat-chip"><span class="dot green"></span> Phase 2: 98%</div>
+      <div class="stat-chip"><span class="dot yellow"></span> Phase 3: 20%</div>
+      <div class="stat-chip"><span class="dot red"></span> 13 P0 Issues</div>
+      <div class="stat-chip">130+ Commits</div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" data-tab="roadmap">Now / Next / Later</button>
+    <button class="tab" data-tab="review">PRD Review</button>
+    <button class="tab" data-tab="agents">PM Agents (13)</button>
+    <button class="tab" data-tab="recs">Recommendations (26)</button>
+    <button class="tab" data-tab="risks">Risks & Gaps</button>
+  </div>
+
+  <!-- TAB: ROADMAP -->
+  <div class="tab-content active" id="tab-roadmap">
+    <div class="filter-bar">
+      <span class="filter-label">Filter by priority:</span>
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="p0">P0 Critical</button>
+      <button class="filter-btn" data-filter="p1">P1 High</button>
+      <button class="filter-btn" data-filter="p2">P2 Medium</button>
+      <button class="filter-btn" data-filter="p3">P3 Low</button>
+    </div>
+
+    <div class="roadmap-grid">
+      <!-- NOW Column -->
+      <div class="roadmap-column">
+        <div class="col-header">
+          <h2>🔴 Now <span style="font-weight:400;font-size:13px;color:var(--text-muted)">(This Week)</span></h2>
+          <span class="count">13 items</span>
+        </div>
+        <div class="col-body">
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🚨</span> Fix Numeric Search (DIS-014)</div>
+            <div class="card-desc">Global search returns no results for numbers (zip codes, IDs, "922"). Root cause: PostgreSQL websearch_to_tsquery filters out standalone numbers.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Discovery</span>
+              <span class="tag effort">2-4 hrs</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🚨</span> Fix AI Chat Buttons (INT-014/15/16)</div>
+            <div class="card-desc">"+" button broken (can't create conversations), thinking indicator missing, multiple buttons non-functional. Core AI feature unusable.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Intelligence</span>
+              <span class="tag effort">3-5 hrs</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🚨</span> Test All Search Types (DIS-015)</div>
+            <div class="card-desc">Comprehensive testing across documents, contacts, properties, deals, and agents to identify full scope of search failures.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Discovery</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🚨</span> Fix Search Input Matching (DIS-016)</div>
+            <div class="card-desc">Search doesn't match what user inputs — investigate query transformation pipeline.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Discovery</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🎨</span> Fix Navigation Clutter (EXP-011/12/13)</div>
+            <div class="card-desc">Sidebar cluttered (Help, Admin, Settings need dropdown), workspace not centered, chat history needs padding. Unprofessional appearance.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Experience</span>
+              <span class="tag effort">2-3 hrs</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🔌</span> Move Integrations to Settings (INT-015)</div>
+            <div class="card-desc">Integrations page is in main nav but should be under Settings. Information architecture issue.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Integration</span>
+              <span class="tag effort">M</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">🔐</span> Migrate Session Storage (SEC-012)</div>
+            <div class="card-desc">Move from localStorage to sessionStorage for security improvement. Handed off to PM-Experience.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Experience</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p0">
+            <div class="priority-bar p0"></div>
+            <div class="card-title"><span class="icon">📊</span> Deploy Pending Migrations</div>
+            <div class="card-desc">3 migrations ready: search click events, message reactions table, Google Calendar connector updates.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Infrastructure</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🔌</span> Fix Broken Integrations Page (INT-016)</div>
+            <div class="card-desc">Integrations page doesn't work at all. Duplicate data sources in admin console.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Integration</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">📄</span> Metadata Column Migration (CTX-005/10)</div>
+            <div class="card-desc">Add metadata column to document_chunks table for better document context.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Context</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🔐</span> Sanitize Error Messages (SEC-016)</div>
+            <div class="card-desc">Error messages may leak internal implementation details. Need sanitization pass.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Security</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🧪</span> Document Upload E2E Tests (QA-014)</div>
+            <div class="card-desc">Critical flow missing E2E test coverage: document upload and indexing.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-QA</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">💰</span> Deal Hooks Refactor (TRX-007)</div>
+            <div class="card-desc">Eliminate duplicate Supabase queries with useDeals & usePipeline hooks.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Transactions</span>
+              <span class="tag status-done">Done</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- NEXT Column -->
+      <div class="roadmap-column">
+        <div class="col-header">
+          <h2>🟡 Next <span style="font-weight:400;font-size:13px;color:var(--text-muted)">(1-3 Months)</span></h2>
+          <span class="count">14 items</span>
+        </div>
+        <div class="col-body">
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🔌</span> MCP-Style Connector UX (INT-017)</div>
+            <div class="card-desc">Design Claude-like settings experience for enabling connectors for AI chat. Core to horizontal integration vision.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Integration</span>
+              <span class="tag effort">L</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🤖</span> Pre-Built AI Agents (Phase 3)</div>
+            <div class="card-desc">7 agents: Listing Writer, CMA Analyst, Contract Reviewer, Follow-Up Assistant, Social Media Manager, Offer Analyzer, Market Reporter.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Intelligence</span>
+              <span class="tag effort">XL</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">📧</span> AI Chat + Data Sources (INT-018)</div>
+            <div class="card-desc">Plan how AI chat integrates with calendar, email, and notes. Strategic for tool integration platform.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Integration</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">📊</span> Growth Metrics Infrastructure</div>
+            <div class="card-desc">Build MRR aggregation, conversion funnel tracking, and churn analytics. Currently blocked — PM-Growth can't measure anything.</div>
+            <div class="card-meta">
+              <span class="tag p0">P0</span>
+              <span class="tag owner">PM-Growth</span>
+              <span class="tag status-blocked">Blocked</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🔔</span> Property Match Alerts</div>
+            <div class="card-desc">Automation for saved search notifications. Backend ready, needs trigger system for price changes, status updates, new matches.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Discovery</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">💬</span> Real-Time Messaging UI</div>
+            <div class="card-desc">Frontend for messaging system. Backend complete with Supabase Realtime. Direct messaging, group conversations, file sharing.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-Communication</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🧪</span> Playwright Browser Testing (QA-004)</div>
+            <div class="card-desc">Set up Playwright MCP for live debugging and visual regression testing.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">PM-QA</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p1">
+            <div class="priority-bar p1"></div>
+            <div class="card-title"><span class="icon">🔐</span> RLS Policy Audit & Fixes</div>
+            <div class="card-desc">Create missing RLS policies (SEC-017), standardize admin checks (SEC-018), add tenant_id filters to frontend (SEC-019).</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Security</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🔍</span> NLP Property Search</div>
+            <div class="card-desc">"3 bed house with pool under $500k near good schools" — natural language property queries.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Discovery</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🔑</span> OAuth Providers (Google, Apple)</div>
+            <div class="card-desc">Social login support for faster onboarding. Currently only email/password.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Security</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">📈</span> Search Analytics Feedback Loop (DIS-012)</div>
+            <div class="card-desc">Use click-through data to improve search ranking weights. CTR tracking already live.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Discovery</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">💰</span> Deal Activity Timeline (TRX-008)</div>
+            <div class="card-desc">Unified activity timeline in deal detail: notes, stage changes, milestone completions, document uploads.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Transactions</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">📄</span> Re-index Documents (CTX-011)</div>
+            <div class="card-desc">Re-index existing documents with improved PDF parser (multi-column, tables, section-aware).</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Context</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🔌</span> Microsoft Outlook Connector (INT-013)</div>
+            <div class="card-desc">Email + calendar integration for Office 365 users. Expand beyond Gmail/Google Calendar.</div>
+            <div class="card-meta">
+              <span class="tag p3">P3</span>
+              <span class="tag owner">PM-Integration</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- LATER Column -->
+      <div class="roadmap-column">
+        <div class="col-header">
+          <h2>🟢 Later <span style="font-weight:400;font-size:13px;color:var(--text-muted)">(3-6+ Months)</span></h2>
+          <span class="count">12 items</span>
+        </div>
+        <div class="col-body">
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🏪</span> AI Agent Marketplace</div>
+            <div class="card-desc">Browse, purchase, publish AI agents. Subscription + pay-per-run pricing. Creator dashboard with analytics and earnings.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">Phase 4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🏠</span> MLS/IDX Integration</div>
+            <div class="card-desc">Read-only MLS feeds via RESO Web API / Bridge Interactive. $49/month add-on.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">Phase 3-4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🧠</span> Multi-Model AI Support</div>
+            <div class="card-desc">Gemini for content creation, Perplexity for research, GPT-4 for fallback. Model router for cost optimization.</div>
+            <div class="card-meta">
+              <span class="tag p1">P1</span>
+              <span class="tag owner">Phase 3</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">📱</span> Mobile App (iOS & Android)</div>
+            <div class="card-desc">Native mobile apps for app store distribution. Push notifications, offline support.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">Phase 4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🏷️</span> White-Label / Enterprise</div>
+            <div class="card-desc">Custom branding for brokerages. API access for third-party integrations. SOC 2 compliance.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">Phase 4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">👤</span> Buyer/Seller Onboarding Flows</div>
+            <div class="card-desc">Dedicated portals for buyers and sellers. Agent matching, property search, transaction tracking.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">Phase 3</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">📊</span> Advanced Analytics & Reporting</div>
+            <div class="card-desc">AI-powered reporting, predictive deal outcomes, market intelligence dashboards.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">Phase 4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🔄</span> Direct MLS Posting</div>
+            <div class="card-desc">Two-way MLS sync. Create listings in Smart Agent → auto-post to MLS.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">Phase 4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p2">
+            <div class="priority-bar p2"></div>
+            <div class="card-title"><span class="icon">🛠️</span> Custom Agent Builder</div>
+            <div class="card-desc">Let users build custom AI agents with their own instructions and tool connections.</div>
+            <div class="card-meta">
+              <span class="tag p3">P3</span>
+              <span class="tag owner">Phase 4</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p3">
+            <div class="priority-bar p3"></div>
+            <div class="card-title"><span class="icon">📣</span> Social Media Campaign Engine</div>
+            <div class="card-desc">AI-generated property posts, market updates, engagement content. Multi-platform scheduling.</div>
+            <div class="card-meta">
+              <span class="tag p3">P3</span>
+              <span class="tag owner">Phase 3</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p3">
+            <div class="priority-bar p3"></div>
+            <div class="card-title"><span class="icon">🔗</span> Public API v1 (INT-011)</div>
+            <div class="card-desc">Enable external developers to build on Smart Agent. Full REST API with docs.</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">PM-Integration</span>
+            </div>
+          </div>
+
+          <div class="card" data-priority="p3">
+            <div class="priority-bar p3"></div>
+            <div class="card-title"><span class="icon">🤖</span> Autonomous & Scheduled Agents</div>
+            <div class="card-desc">Event-triggered agents (new lead → auto follow-up). Cron-based scheduling (Market Report every Monday).</div>
+            <div class="card-meta">
+              <span class="tag p2">P2</span>
+              <span class="tag owner">Phase 3-4</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PRD REVIEW -->
+  <div class="tab-content" id="tab-review">
+    <div class="review-section">
+      <h3>📊 Phase Progress</h3>
+      <div class="phase-bar-wrap">
+        <div class="phase-bar-label"><span>Phase 1: Foundation (MVP)</span><span>100% Complete</span></div>
+        <div class="phase-bar"><div class="phase-bar-fill complete" style="width:100%"></div></div>
+      </div>
+      <div class="phase-bar-wrap">
+        <div class="phase-bar-label"><span>Phase 2: Core Features</span><span>98% Complete</span></div>
+        <div class="phase-bar"><div class="phase-bar-fill complete" style="width:98%"></div></div>
+      </div>
+      <div class="phase-bar-wrap">
+        <div class="phase-bar-label"><span>Phase 3: AI Enhancement</span><span>20% Complete</span></div>
+        <div class="phase-bar"><div class="phase-bar-fill early" style="width:20%"></div></div>
+      </div>
+      <div class="phase-bar-wrap">
+        <div class="phase-bar-label"><span>Phase 4: Scale & Enterprise</span><span>0% — Not Started</span></div>
+        <div class="phase-bar"><div class="phase-bar-fill notstarted" style="width:2%"></div></div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h3>✅ PRD Strengths</h3>
+      <div class="review-grid">
+        <div class="review-card">
+          <h4>🎯 Clear Vision & Positioning</h4>
+          <p>"AI-first, not AI-bolted-on" is sharp competitive positioning. The data ownership angle (vs Zillow/FUB) is timely and resonant with agents post-acquisition.</p>
+        </div>
+        <div class="review-card">
+          <h4>💰 Well-Structured Pricing</h4>
+          <p>5-tier model ($0–$499) covers the full spectrum. Add-ons create upsell paths. Usage-based AI limits align cost with value delivered.</p>
+        </div>
+        <div class="review-card">
+          <h4>🏗️ Workspace Architecture</h4>
+          <p>Multi-workspace model is forward-looking. Supports individual agents, teams, and brokerages. RLS-enforced data isolation is the right approach.</p>
+        </div>
+        <div class="review-card">
+          <h4>🔌 Tool Integration Vision</h4>
+          <p>Horizontal AI integration across Gmail, Calendar, Zoom, CRMs is the right long-term play. Action-taking agents are a genuine differentiator vs competitors.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h3>⚠️ PRD Gaps & Recommendations</h3>
+      <div class="review-grid">
+        <div class="review-card">
+          <h4 style="color:var(--red)">🔴 PRD vs Reality Mismatch</h4>
+          <p>PRD says Phase 1 is 95% and Phase 2 is 80%, but STATE.md reports Phase 1 at 100% and Phase 2 at 98%. Update the PRD to match actual implementation status.</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--red)">🔴 No GTM Strategy</h4>
+          <p>PRD defines what to build but not how to get users. Missing: launch plan, acquisition channels, beta program details, pricing validation strategy.</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--orange)">🟠 Metrics Not Instrumented</h4>
+          <p>Section 13 defines great KPIs (MRR growth >15%, churn <5%, NPS >50) but PM-Growth reports these are blocked — no aggregation system exists yet.</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--orange)">🟠 Buyer/Seller Features Vague</h4>
+          <p>Agent features are well-spec'd. Buyer/seller portals are marked "Phase 2-3" but lack detailed requirements. These are important for the two-sided marketplace.</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--yellow)">🟡 AI Agent Pricing Untested</h4>
+          <p>Marketplace pricing ($19-199/month or $1-10/run) is speculative. Need to validate willingness to pay before building the full marketplace.</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--yellow)">🟡 Missing Success Criteria per Phase</h4>
+          <p>Phases defined by features, not outcomes. Add "Phase 2 is successful when..." criteria (e.g., 100 active users, $5K MRR, NPS >40).</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--yellow)">🟡 Security Compliance Timeline</h4>
+          <p>SOC 2, GDPR, CCPA mentioned as "planned" — no timeline. Enterprise customers will need these before signing. Need dates or triggers.</p>
+        </div>
+        <div class="review-card">
+          <h4 style="color:var(--yellow)">🟡 Onboarding / Time-to-Value</h4>
+          <p>PRD mentions "speed to value" as a principle but doesn't define the onboarding flow. What does first 5 minutes look like for a new agent?</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: PM AGENTS -->
+  <div class="tab-content" id="tab-agents">
+    <div class="review-section">
+      <h3>🤖 PM Agent System — 13 Agents Active</h3>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">8 development cycles completed. 87 backlog items done. 130+ commits since Feb 5.</p>
+      <div class="pm-grid">
+
+        <div class="pm-card" style="border-left:3px solid var(--red)">
+          <h4>🔴 PM-Orchestrator</h4>
+          <div class="pm-status">Coordinating critical fixes (Cycle 9)</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 1 done</span>
+            <span style="color:var(--yellow)">⏳ 1 active</span>
+            <span style="color:var(--text-muted)">📋 7 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--red)">
+          <h4>🔴 PM-Discovery</h4>
+          <div class="pm-status">CRITICAL: Numeric search broken (DIS-014/15/16)</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 10 done</span>
+            <span style="color:var(--text-muted)">📋 6 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--red)">
+          <h4>🔴 PM-Intelligence</h4>
+          <div class="pm-status">Fix AI chat buttons (INT-014/15/16)</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 12 done</span>
+            <span style="color:var(--text-muted)">📋 3 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--yellow)">
+          <h4>🟡 PM-Experience</h4>
+          <div class="pm-status">Fix navigation & layout (EXP-011/12/13)</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 7 done</span>
+            <span style="color:var(--yellow)">⏳ 1 active</span>
+            <span style="color:var(--text-muted)">📋 5 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--yellow)">
+          <h4>🟡 PM-Integration</h4>
+          <div class="pm-status">Architecture refactor + MCP redesign</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 8 done</span>
+            <span style="color:var(--text-muted)">📋 8 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Context</h4>
+          <div class="pm-status">Metadata column migration</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 9 done</span>
+            <span style="color:var(--text-muted)">📋 3 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Transactions</h4>
+          <div class="pm-status">Deal hooks refactor (complete)</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 7 done</span>
+            <span style="color:var(--text-muted)">📋 3 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Growth</h4>
+          <div class="pm-status">Subscription plan UI. MRR/funnel metrics BLOCKED</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 7 done</span>
+            <span style="color:var(--red)">🔴 2 blocked</span>
+            <span style="color:var(--text-muted)">📋 4 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Communication</h4>
+          <div class="pm-status">Message search + archive complete</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 8 done</span>
+            <span style="color:var(--text-muted)">📋 4 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Infrastructure</h4>
+          <div class="pm-status">Pending migrations deployment</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 12 done</span>
+            <span style="color:var(--text-muted)">📋 3 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Security</h4>
+          <div class="pm-status">RLS tightening, error sanitization</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 6 done</span>
+            <span style="color:var(--yellow)">⏳ 2 handoff</span>
+            <span style="color:var(--text-muted)">📋 5 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-Research</h4>
+          <div class="pm-status">6 research reports complete. 26 recs submitted</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 6 done</span>
+            <span style="color:var(--text-muted)">📋 4 ready</span>
+          </div>
+        </div>
+
+        <div class="pm-card" style="border-left:3px solid var(--green)">
+          <h4>🟢 PM-QA</h4>
+          <div class="pm-status">205 E2E tests. Baseline documented</div>
+          <div class="pm-items">
+            <span style="color:var(--green)">✅ 8 done</span>
+            <span style="color:var(--text-muted)">📋 8 ready</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: RECOMMENDATIONS -->
+  <div class="tab-content" id="tab-recs">
+    <div class="review-section">
+      <h3>💡 PM-Research Recommendations (26 Total — Pending Orchestrator Review)</h3>
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">From 6 completed research reports. These need triage and prioritization.</p>
+      <div style="overflow-x:auto;">
+        <table class="rec-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Recommendation</th>
+              <th>Priority</th>
+              <th>Source</th>
+              <th>My Take</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>REC-001</td><td>Accelerate AI Agent Marketplace</td><td><span class="tag p0">P0</span></td><td>RES-001 (Competitive)</td><td style="color:var(--text-muted)">Agree — but fix P0 bugs first. Marketplace is the moat.</td></tr>
+            <tr><td>REC-002</td><td>Enhance Document Intelligence Marketing</td><td><span class="tag p0">P0</span></td><td>RES-001</td><td style="color:var(--text-muted)">Good idea. RAG + semantic search is your strongest differentiator today.</td></tr>
+            <tr><td>REC-006</td><td>Implement Multi-Model Cost Optimization</td><td><span class="tag p0">P0</span></td><td>RES-002 (AI Models)</td><td style="color:var(--text-muted)">Use cheaper models for simple tasks. Direct margin impact.</td></tr>
+            <tr><td>REC-007</td><td>Add Gemini 2.0 Flash for Content Generation</td><td><span class="tag p0">P0</span></td><td>RES-002</td><td style="color:var(--text-muted)">Fast + cheap for listing descriptions, social posts. Good first multi-model step.</td></tr>
+            <tr><td>REC-018</td><td>Deal Milestone Auto-Reminders</td><td><span class="tag p0">P0</span></td><td>RES-005 (Pain Points)</td><td style="color:var(--text-muted)">High-value, low-effort. Agents fear missing deadlines. Ship this soon.</td></tr>
+            <tr><td>REC-021</td><td>Automated Follow-Up Sequences</td><td><span class="tag p0">P0</span></td><td>RES-005</td><td style="color:var(--text-muted)">Agents' #1 pain point. Drip campaigns save hours/week.</td></tr>
+            <tr><td>REC-023</td><td>Transaction Coordination Engine</td><td><span class="tag p0">P0</span></td><td>RES-005</td><td style="color:var(--text-muted)">Complex but high-value. Could be a Phase 3 flagship feature.</td></tr>
+            <tr><td>REC-003</td><td>Prioritize Tool Integration Platform</td><td><span class="tag p1">P1</span></td><td>RES-001</td><td style="color:var(--text-muted)">Already in progress. Fix the broken integration page first.</td></tr>
+            <tr><td>REC-004</td><td>Develop Competitive GTM Messaging</td><td><span class="tag p1">P1</span></td><td>RES-001</td><td style="color:var(--text-muted)">Needed soon. Data ownership angle is your strongest GTM hook.</td></tr>
+            <tr><td>REC-008</td><td>Evaluate GPT-4 Turbo as Fallback</td><td><span class="tag p1">P1</span></td><td>RES-002</td><td style="color:var(--text-muted)">Good for reliability. Don't over-invest — Claude is working well.</td></tr>
+            <tr><td>REC-009</td><td>Prioritize Bridge Interactive for Phase 3 IDX</td><td><span class="tag p1">P1</span></td><td>RES-003 (MLS/IDX)</td><td style="color:var(--text-muted)">Connector already built (INT-012). Good foundation for Phase 3.</td></tr>
+            <tr><td>REC-010</td><td>Implement MLS Compliance Framework</td><td><span class="tag p1">P1</span></td><td>RES-003</td><td style="color:var(--text-muted)">Needed before any MLS data goes live. Legal requirement.</td></tr>
+            <tr><td>REC-017</td><td>AI-Powered Content Generation</td><td><span class="tag p1">P1</span></td><td>RES-005</td><td style="color:var(--text-muted)">Listing descriptions, social posts. Pairs well with Gemini (REC-007).</td></tr>
+            <tr><td>REC-019</td><td>Communication Templates Library</td><td><span class="tag p1">P1</span></td><td>RES-005</td><td style="color:var(--text-muted)">Low-hanging fruit. Pre-built email/text templates save agents time.</td></tr>
+            <tr><td>REC-020</td><td>Smart Daily Action Plan</td><td><span class="tag p1">P1</span></td><td>RES-005</td><td style="color:var(--text-muted)">AI-generated daily priorities. High perceived value, moderate effort.</td></tr>
+            <tr><td>REC-022</td><td>Unified Communication Hub</td><td><span class="tag p1">P1</span></td><td>RES-005</td><td style="color:var(--text-muted)">Aligns with "data unification" principle. Big scope though.</td></tr>
+            <tr><td>REC-024</td><td>AI Lead Scoring & Routing</td><td><span class="tag p1">P1</span></td><td>RES-005</td><td style="color:var(--text-muted)">Valuable for teams. Needs enough usage data to be accurate.</td></tr>
+            <tr><td>REC-005</td><td>Evaluate IDX Website Builder</td><td><span class="tag p2">P2</span></td><td>RES-004 (Competitors)</td><td style="color:var(--text-muted)">Nice-to-have. Most agents already have websites. Deprioritize.</td></tr>
+            <tr><td>REC-011</td><td>Evaluate Direct RESO Web API</td><td><span class="tag p2">P2</span></td><td>RES-003</td><td style="color:var(--text-muted)">Only for high-value markets. Bridge Interactive handles most cases.</td></tr>
+            <tr><td>REC-025</td><td>Automated CMA Generation</td><td><span class="tag p2">P2</span></td><td>RES-005</td><td style="color:var(--text-muted)">Killer feature but needs MLS data (Phase 3-4 dependency).</td></tr>
+            <tr><td>REC-026</td><td>Integrated Marketing Suite</td><td><span class="tag p2">P2</span></td><td>RES-005</td><td style="color:var(--text-muted)">Later. Focus on core AI + CRM first.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: RISKS -->
+  <div class="tab-content" id="tab-risks">
+    <div class="review-section">
+      <h3>🚨 Critical Risks (Action Required)</h3>
+      <div class="review-grid">
+        <div class="review-card" style="border-left:3px solid var(--red)">
+          <h4 style="color:var(--red)">Search is Broken</h4>
+          <p>Numeric searches (zip codes, property IDs, MLS numbers) return zero results. For a real estate platform, this is a showstopper. Root cause identified — needs immediate fix.</p>
+          <p style="margin-top:8px;color:var(--text)"><strong>Action:</strong> Fix search_all_entities RPC function (2-4 hrs)</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--red)">
+          <h4 style="color:var(--red)">AI Chat Core Interactions Broken</h4>
+          <p>Can't create new conversations, no thinking indicator, multiple buttons non-functional. This is the #1 feature — it has to work.</p>
+          <p style="margin-top:8px;color:var(--text)"><strong>Action:</strong> Full audit of chat page interactions (3-5 hrs)</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--red)">
+          <h4 style="color:var(--red)">No Growth Metrics</h4>
+          <p>PM-Growth is blocked on MRR tracking, conversion funnels, and churn analytics. You can't improve what you can't measure — and launch without metrics is flying blind.</p>
+          <p style="margin-top:8px;color:var(--text)"><strong>Action:</strong> Prioritize metrics infrastructure in next sprint</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h3>⚠️ Strategic Risks</h3>
+      <div class="review-grid">
+        <div class="review-card" style="border-left:3px solid var(--orange)">
+          <h4 style="color:var(--orange)">Integration Architecture Debt</h4>
+          <p>Integrations page broken, wrong location in nav, duplicate data sources. This is supposed to be the horizontal integration differentiator but the UX is unusable. 8-12 hrs to fix properly.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--orange)">
+          <h4 style="color:var(--orange)">26 Research Recs Untriaged</h4>
+          <p>PM-Research has submitted 26 recommendations across 6 reports. Several are P0 (auto follow-ups, deal reminders, marketplace acceleration). These need Orchestrator review before they stale.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--yellow)">
+          <h4 style="color:var(--yellow)">Phase 3 Scope is Large</h4>
+          <p>Phase 3 includes: 7 pre-built agents, multi-model AI, NLP search, MLS integration, social media, CMA automation, buyer/seller flows, agent matching. That's a lot. Needs tighter scoping or sub-phasing.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--yellow)">
+          <h4 style="color:var(--yellow)">No GTM / Launch Plan</h4>
+          <p>Product is approaching feature-complete for Phase 2 (98%) but there's no documented go-to-market strategy, beta plan, or launch timeline. Build velocity is great — now need user acquisition strategy.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--yellow)">
+          <h4 style="color:var(--yellow)">Pipeline Stages Misaligned</h4>
+          <p>TRX-010 notes current 6 pipeline stages don't match PRD's 8 buyer / 7 seller stages. Missing: Active Buyer, Property Search, Making Offers, Closing, Closed Lost.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--blue)">
+          <h4 style="color:var(--blue)">Compliance Timeline Undefined</h4>
+          <p>SOC 2 Type II, GDPR, CCPA all mentioned as "planned" with no dates. Enterprise tier ($499/mo) will require SOC 2 minimum. Need a compliance roadmap.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="review-section">
+      <h3>✅ What's Going Well</h3>
+      <div class="review-grid">
+        <div class="review-card" style="border-left:3px solid var(--green)">
+          <h4 style="color:var(--green)">Development Velocity</h4>
+          <p>130+ commits, 445+ files, 47K+ lines of code across 8 cycles. All 12 PMs delivering consistently. QA gate passing. This is exceptional output.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--green)">
+          <h4 style="color:var(--green)">Security Posture</h4>
+          <p>CORS locked down (38 functions), tenant isolation hardened (HO-009), RLS tightened on 9 tables, JWT verification enabled. Zero security incidents.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--green)">
+          <h4 style="color:var(--green)">Testing Infrastructure</h4>
+          <p>205 E2E tests, 29 reusable test helpers, full WCAG 2.1 AA accessibility audit. Solid foundation for reliability as the product grows.</p>
+        </div>
+        <div class="review-card" style="border-left:3px solid var(--green)">
+          <h4 style="color:var(--green)">AI / Document Intelligence</h4>
+          <p>RAG pipeline working with semantic search, multi-column PDF parsing, citation support, confidence indicators. This is genuinely differentiated.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Tab switching
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+    });
+  });
+
+  // Priority filter
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+      document.querySelectorAll('.card').forEach(card => {
+        if (filter === 'all') {
+          card.style.display = '';
+        } else {
+          card.style.display = card.dataset.priority === filter ? '' : 'none';
+        }
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

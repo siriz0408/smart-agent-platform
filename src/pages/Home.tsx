@@ -117,7 +117,7 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <main className="flex h-full flex-col">
+      <main className="flex h-full flex-col max-w-[1920px] mx-auto w-full">
         {/* Chat Area - responsive padding */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           {messages.length === 0 ? (

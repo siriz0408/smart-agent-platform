@@ -13,11 +13,6 @@ export function UsageLimitBanner() {
   const { usage, isAtLimit, isNearLimit, plan, isLoading } = useUsageLimits();
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Don't show for unlimited plans
-  if (plan === "team" || plan === "brokerage") {
-    return null;
-  }
-
   // Determine which limit is being hit
   const getLimitStatus = () => {
     const limits = [
@@ -62,6 +57,11 @@ export function UsageLimitBanner() {
       setIsDismissed(true);
     }
   }, [limitStatus]);
+
+  // Don't show for unlimited plans
+  if (plan === "team" || plan === "brokerage") {
+    return null;
+  }
 
   const handleDismiss = () => {
     if (!limitStatus) return;
