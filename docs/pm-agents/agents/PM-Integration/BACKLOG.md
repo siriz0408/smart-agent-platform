@@ -12,7 +12,6 @@
 
 | ID | Item | Priority | Effort | Notes |
 |----|------|----------|--------|-------|
-| INT-004 | Plan email sync | P2 | L | Framework complete, ready to plan |
 | INT-005 | Create API docs | P2 | M | Blocked until public API exists |
 | INT-009 | Add integration usage analytics | P2 | S | Track adoption metrics |
 | INT-011 | Design public API v1 | P2 | L | Enable external developers |
@@ -32,3 +31,4 @@
 | INT-008 | Build integration management UI | 2026-02-06 | ✅ OAuth connection flow implemented - users can connect/disconnect integrations |
 | INT-010 | Implement Google Calendar connector | 2026-02-07 | ✅ Full connector with 5 actions: create_event, list_events, update_event, delete_event, get_availability (FreeBusy API). Migration to activate + updated OAuth scopes |
 | INT-012 | Implement Bridge Interactive MLS connector | 2026-02-06 | ✅ Connector class implemented with RESO Web API support - search_listings, get_listing_details, get_listing_photos, sync_listings actions |
+| INT-004 | Plan email sync | 2026-02-07 | ✅ Comprehensive implementation plan created. 4-phase approach: Gmail read-only sync (MVP), Gmail write ops, Outlook support, advanced features. Database schema, edge functions, UI components, and testing strategy defined. Report: `docs/pm-agents/reports/2026-02-07/pm-integration-int004-email-sync-plan.md` |
