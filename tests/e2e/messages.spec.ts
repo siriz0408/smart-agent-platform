@@ -203,8 +203,10 @@ test.describe('Message Flow', () => {
       const hasTime = await page.locator('text=/\\d{1,2}:\\d{2}\\s*(AM|PM)/i').count() > 0;
       
       // Timestamps may or may not be visible depending on UI state
-      // This is a soft check - we just verify the page rendered
-      expect(true).toBeTruthy();
+      // Verify the page rendered correctly and message thread is functional
+      const msgInput = page.getByPlaceholder(/type a message/i);
+      const inputVisible = await msgInput.isVisible().catch(() => false);
+      expect(inputVisible || hasTime).toBeTruthy();
     });
   });
 

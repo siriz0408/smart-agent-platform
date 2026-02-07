@@ -1,6 +1,6 @@
 # PM-Research Backlog
 
-> **Last Updated:** 2026-02-07 (RES-005 completed, Dev Cycle #8)
+> **Last Updated:** 2026-02-07 (RES-006 completed, Dev Cycle #9)
 
 ## In Progress
 
@@ -10,7 +10,6 @@ _None_
 
 | ID | Item | Priority | Effort | Owner |
 |----|------|----------|--------|-------|
-| RES-006 | Evaluate email/calendar integration APIs (Gmail, Outlook, Google Calendar) | P1 | S | PM-Research |
 | RES-007 | Research GTM strategy for agent onboarding and acquisition | P2 | M | PM-Research |
 | RES-008 | Evaluate property data APIs (Zillow, Redfin, Realtor.com) for enrichment | P2 | M | PM-Research |
 | RES-009 | Research team/brokerage management features in competing products | P2 | M | PM-Research |
@@ -26,3 +25,4 @@ _None_
 | RES-003 | Research MLS/IDX integration options and capabilities | 2026-02-06 | Report, REC-009 to REC-011 |
 | RES-004 | Top 5 competitor deep dive: features, pricing, UX | 2026-02-06 | Report, REC-012 to REC-016 |
 | RES-005 | Research real estate agent pain points and workflow bottlenecks | 2026-02-07 | Report, REC-017 to REC-026 |
+| RES-006 | Evaluate email/calendar integration APIs (Gmail, Outlook, Google Calendar) | 2026-02-07 | Report, REC-027 to REC-032 |

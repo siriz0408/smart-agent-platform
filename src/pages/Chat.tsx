@@ -6,8 +6,9 @@ import { useAIStreaming, type UsageLimitInfo, type StatusUpdate } from "@/hooks/
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MentionInput, AISettingsPopover } from "@/components/ai-chat";
+import { MentionInput, AISettingsPopover, ConfidenceIndicator } from "@/components/ai-chat";
 import { parseMentions, parseCollectionMentions, fetchMentionData, type Mention, type CollectionType } from "@/hooks/useMentionSearch";
+import { computeConfidence, type ConfidenceMetadata } from "@/lib/confidenceScoring";
 import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
 import { useAIChatMetricsTracker } from "@/hooks/useAIChatMetrics";
 import { Card } from "@/components/ui/card";
@@ -48,6 +49,7 @@ interface Message {
   content: string;
   timestamp: Date;
   embeddedComponents?: EmbeddedComponents;
+  confidence?: ConfidenceMetadata;
   error?: boolean;
   errorMessage?: string;
 }
@@ -251,6 +253,8 @@ export default function Chat() {
 
     const assistantMessageId = (Date.now() + 1).toString();
     let currentEmbeddedComponents: EmbeddedComponents | undefined;
+    let ragSearchPerformed = false;
+    const hadMentions = mentionData.length > 0 || collectionRefs.length > 0;
 
     const result = await streamMessage({
       messages: [...messages, userMessage],
@@ -305,10 +309,21 @@ export default function Chat() {
       },
       onStatus: (status) => {
         setCurrentStatus(status);
+        if (status.step === "searching") {
+          ragSearchPerformed = true;
+        }
       },
       onComplete: async (fullContent, embeddedComps) => {
         setCurrentStatus(null); // Clear status when complete
         if (fullContent) {
+          // Compute confidence metadata for this response
+          const confidence = computeConfidence(fullContent, ragSearchPerformed, hadMentions);
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === assistantMessageId ? { ...m, confidence } : m,
+            ),
+          );
+
           await saveMessage(convId!, "assistant", fullContent, embeddedComps);
           await supabase
             .from("ai_conversations")
@@ -851,6 +866,12 @@ export default function Chat() {
                               <MortgageCalculator 
                                 propertyPrice={message.embeddedComponents.property_cards[0].price}
                               />
+                            </div>
+                          )}
+                          {/* Confidence indicator */}
+                          {message.confidence && (
+                            <div className="mt-3 pt-2 border-t border-border/40">
+                              <ConfidenceIndicator metadata={message.confidence} />
                             </div>
                           )}
                         </div>

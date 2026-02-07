@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Plus, BarChart3 } from "lucide-react";
+import { Search, Plus, BarChart3, Archive, Inbox } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ interface ConversationWithDetails {
   id: string;
   title: string | null;
   updated_at: string;
+  archived: boolean;
   participants: Participant[];
   lastMessage?: {
     content: string;
@@ -39,12 +40,15 @@ interface ConversationWithDetails {
   } | null;
 }
 
+type ConversationFilter = "inbox" | "archived";
+
 interface ConversationListProps {
   conversations: ConversationWithDetails[];
   isLoading: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onNewConversation?: () => void;
+  onOpenMessageSearch?: () => void;
 }
 
 export function ConversationList({
@@ -53,13 +57,17 @@ export function ConversationList({
   selectedId,
   onSelect,
   onNewConversation,
+  onOpenMessageSearch,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [filter, setFilter] = useState<ConversationFilter>("inbox");
   const navigate = useNavigate();
 
   // Get unread counts for all conversations
   const conversationIds = conversations.map((c) => c.id);
   const { data: unreadCounts = {} } = useUnreadCounts(conversationIds);
+
+  const archivedCount = conversations.filter((c) => c.archived).length;
 
   const getParticipantName = (p: Participant): string => {
     if (p.profile?.full_name) return p.profile.full_name;
@@ -69,6 +77,11 @@ export function ConversationList({
   };
 
   const filteredConversations = conversations.filter((conv) => {
+    // Filter by archived status
+    const isArchived = conv.archived ?? false;
+    if (filter === "inbox" && isArchived) return false;
+    if (filter === "archived" && !isArchived) return false;
+
     const participantNames = conv.participants
       .map(getParticipantName)
       .join(" ")
@@ -104,6 +117,17 @@ export function ConversationList({
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">Messages</h2>
           <div className="flex items-center gap-2">
+            {onOpenMessageSearch && (
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={onOpenMessageSearch}
+                className="gap-1"
+                title="Search messages"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
@@ -125,10 +149,38 @@ export function ConversationList({
             )}
           </div>
         </div>
+
+        {/* Inbox / Archived filter tabs */}
+        <div className="flex items-center gap-1 mb-3">
+          <Button
+            size="sm"
+            variant={filter === "inbox" ? "default" : "ghost"}
+            onClick={() => setFilter("inbox")}
+            className="gap-1.5 h-8 text-xs"
+          >
+            <Inbox className="h-3.5 w-3.5" />
+            Inbox
+          </Button>
+          <Button
+            size="sm"
+            variant={filter === "archived" ? "default" : "ghost"}
+            onClick={() => setFilter("archived")}
+            className="gap-1.5 h-8 text-xs"
+          >
+            <Archive className="h-3.5 w-3.5" />
+            Archived
+            {archivedCount > 0 && (
+              <Badge variant="secondary" className="h-4 min-w-[16px] px-1 text-[10px] ml-1">
+                {archivedCount}
+              </Badge>
+            )}
+          </Button>
+        </div>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder={filter === "archived" ? "Search archived..." : "Search conversations..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -150,7 +202,11 @@ export function ConversationList({
             ))
           ) : filteredConversations.length === 0 ? (
             <div className="p-4 text-center text-muted-foreground">
-              {searchQuery ? "No conversations match your search" : "No conversations yet"}
+              {searchQuery
+                ? "No conversations match your search"
+                : filter === "archived"
+                  ? "No archived conversations"
+                  : "No conversations yet"}
             </div>
           ) : (
             filteredConversations.map((conv) => (

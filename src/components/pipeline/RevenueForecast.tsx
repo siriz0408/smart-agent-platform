@@ -1,42 +1,13 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { format, addMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { DollarSign, TrendingUp, ChevronDown, Calendar, Target } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-
-// Stage-based probability weights for pipeline forecasting
-const STAGE_WEIGHTS: Record<string, { probability: number; label: string }> = {
-  lead: { probability: 0.1, label: "10%" },
-  contacted: { probability: 0.2, label: "20%" },
-  showing: { probability: 0.3, label: "30%" },
-  listing: { probability: 0.3, label: "30%" },
-  active: { probability: 0.4, label: "40%" },
-  offer: { probability: 0.5, label: "50%" },
-  under_contract: { probability: 0.8, label: "80%" },
-  closed: { probability: 1.0, label: "100%" },
-};
-
-interface DealForForecast {
-  id: string;
-  stage: string | null;
-  estimated_value: number | null;
-  commission_rate: number | null;
-  expected_close_date: string | null;
-}
-
-interface MonthlyForecast {
-  month: string; // "YYYY-MM"
-  label: string; // "Feb 2026"
-  dealCount: number;
-  totalCommission: number;
-  weightedCommission: number;
-}
+import { useRevenueForecast } from "@/hooks/usePipeline";
 
 interface RevenueForecastProps {
   dealType: "buyer" | "seller";
@@ -44,100 +15,27 @@ interface RevenueForecastProps {
 
 export function RevenueForecast({ dealType }: RevenueForecastProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const { data: forecast, isLoading } = useRevenueForecast(dealType);
 
-  const { data: deals = [], isLoading } = useQuery({
-    queryKey: ["deals-forecast", dealType],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("deals")
-        .select("id, stage, estimated_value, commission_rate, expected_close_date")
-        .eq("deal_type", dealType)
-        .neq("stage", "closed")
-        .order("expected_close_date", { ascending: true });
-
-      if (error) throw error;
-      return data as DealForForecast[];
-    },
-  });
-
-  // Also fetch closed deals for YTD earnings
-  const { data: closedDeals = [] } = useQuery({
-    queryKey: ["deals-closed", dealType],
-    queryFn: async () => {
-      const yearStart = format(startOfMonth(new Date(new Date().getFullYear(), 0, 1)), "yyyy-MM-dd");
-      const { data, error } = await supabase
-        .from("deals")
-        .select("id, stage, estimated_value, commission_rate, expected_close_date, actual_close_date")
-        .eq("deal_type", dealType)
-        .eq("stage", "closed")
-        .gte("actual_close_date", yearStart);
-
-      if (error) throw error;
-      return data as (DealForForecast & { actual_close_date: string | null })[];
-    },
-  });
-
-  // Calculate commission for a deal
-  const calcCommission = (deal: DealForForecast): number => {
-    if (!deal.estimated_value) return 0;
-    const rate = deal.commission_rate || 3; // Default 3% if not set
-    return (deal.estimated_value * rate) / 100;
-  };
-
-  // Calculate weighted commission based on stage probability
-  const calcWeightedCommission = (deal: DealForForecast): number => {
-    const commission = calcCommission(deal);
-    const weight = STAGE_WEIGHTS[deal.stage || "lead"]?.probability || 0.1;
-    return commission * weight;
-  };
-
-  // Generate monthly forecast for the next 6 months
-  const now = new Date();
-  const monthlyForecasts: MonthlyForecast[] = [];
-
-  for (let i = 0; i < 6; i++) {
-    const monthStart = startOfMonth(addMonths(now, i));
-    const monthEnd = endOfMonth(addMonths(now, i));
-    const monthKey = format(monthStart, "yyyy-MM");
-    const monthLabel = format(monthStart, "MMM yyyy");
-
-    const dealsInMonth = deals.filter((deal) => {
-      if (!deal.expected_close_date) return false;
-      try {
-        const closeDate = parseISO(deal.expected_close_date);
-        return isWithinInterval(closeDate, { start: monthStart, end: monthEnd });
-      } catch {
-        return false;
-      }
-    });
-
-    const totalCommission = dealsInMonth.reduce((sum, deal) => sum + calcCommission(deal), 0);
-    const weightedCommission = dealsInMonth.reduce((sum, deal) => sum + calcWeightedCommission(deal), 0);
-
-    monthlyForecasts.push({
-      month: monthKey,
-      label: monthLabel,
-      dealCount: dealsInMonth.length,
-      totalCommission,
-      weightedCommission,
-    });
-  }
-
-  // Deals without expected close date
-  const unscheduledDeals = deals.filter((d) => !d.expected_close_date);
-  const unscheduledCommission = unscheduledDeals.reduce((sum, deal) => sum + calcCommission(deal), 0);
-  const unscheduledWeighted = unscheduledDeals.reduce((sum, deal) => sum + calcWeightedCommission(deal), 0);
-
-  // Summary stats
-  const totalPipelineCommission = deals.reduce((sum, deal) => sum + calcCommission(deal), 0);
-  const totalWeightedCommission = deals.reduce((sum, deal) => sum + calcWeightedCommission(deal), 0);
-  const ytdEarnings = closedDeals.reduce((sum, deal) => sum + calcCommission(deal), 0);
+  const {
+    activeDeals,
+    closedDealsYTD,
+    monthlyForecasts,
+    unscheduledDeals,
+    unscheduledCommission,
+    unscheduledWeighted,
+    totalPipelineCommission,
+    totalWeightedCommission,
+    ytdEarnings,
+  } = forecast;
 
   // Find max for bar chart scaling
   const maxMonthlyCommission = Math.max(
     ...monthlyForecasts.map((m) => m.totalCommission),
     1 // Prevent division by zero
   );
+
+  const now = new Date();
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
@@ -197,7 +95,7 @@ export function RevenueForecast({ dealType }: RevenueForecastProps) {
                     {formatCurrency(ytdEarnings)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {closedDeals.length} closed {closedDeals.length === 1 ? "deal" : "deals"} in {new Date().getFullYear()}
+                    {closedDealsYTD.length} closed {closedDealsYTD.length === 1 ? "deal" : "deals"} in {new Date().getFullYear()}
                   </p>
                 </CardContent>
               </Card>
@@ -212,7 +110,7 @@ export function RevenueForecast({ dealType }: RevenueForecastProps) {
                     {formatCurrency(totalPipelineCommission)}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {deals.length} active {deals.length === 1 ? "deal" : "deals"} total
+                    {activeDeals.length} active {activeDeals.length === 1 ? "deal" : "deals"} total
                   </p>
                 </CardContent>
               </Card>
@@ -261,22 +159,22 @@ export function RevenueForecast({ dealType }: RevenueForecastProps) {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {monthlyForecasts.map((forecast) => {
+                  {monthlyForecasts.map((fc) => {
                     const totalPercent = maxMonthlyCommission > 0
-                      ? (forecast.totalCommission / maxMonthlyCommission) * 100
+                      ? (fc.totalCommission / maxMonthlyCommission) * 100
                       : 0;
                     const weightedPercent = maxMonthlyCommission > 0
-                      ? (forecast.weightedCommission / maxMonthlyCommission) * 100
+                      ? (fc.weightedCommission / maxMonthlyCommission) * 100
                       : 0;
-                    const isCurrentMonth = forecast.month === format(now, "yyyy-MM");
+                    const isCurrentMonth = fc.month === format(now, "yyyy-MM");
 
                     return (
-                      <div key={forecast.month} className="space-y-1.5">
+                      <div key={fc.month} className="space-y-1.5">
                         <div className="flex items-center justify-between text-sm">
                           <div className="flex items-center gap-2">
                             <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
                             <span className={cn("font-medium", isCurrentMonth && "text-primary")}>
-                              {forecast.label}
+                              {fc.label}
                             </span>
                             {isCurrentMonth && (
                               <span className="text-[10px] px-1.5 py-0.5 bg-primary/10 text-primary rounded-full font-medium">
@@ -286,24 +184,24 @@ export function RevenueForecast({ dealType }: RevenueForecastProps) {
                           </div>
                           <div className="flex items-center gap-4">
                             <span className="text-muted-foreground text-xs">
-                              {forecast.dealCount} {forecast.dealCount === 1 ? "deal" : "deals"}
+                              {fc.dealCount} {fc.dealCount === 1 ? "deal" : "deals"}
                             </span>
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <span className="font-semibold min-w-[72px] text-right cursor-help">
-                                  {formatCurrency(forecast.weightedCommission)}
+                                  {formatCurrency(fc.weightedCommission)}
                                 </span>
                               </TooltipTrigger>
                               <TooltipContent>
-                                <p>Total: {formatCurrency(forecast.totalCommission)}</p>
-                                <p>Weighted: {formatCurrency(forecast.weightedCommission)}</p>
+                                <p>Total: {formatCurrency(fc.totalCommission)}</p>
+                                <p>Weighted: {formatCurrency(fc.weightedCommission)}</p>
                               </TooltipContent>
                             </Tooltip>
                           </div>
                         </div>
                         {/* Stacked bar chart */}
                         <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden">
-                          {forecast.totalCommission > 0 && (
+                          {fc.totalCommission > 0 && (
                             <>
                               <div
                                 className="absolute inset-y-0 left-0 bg-blue-200 dark:bg-blue-900 rounded-full transition-all duration-500"
@@ -355,7 +253,7 @@ export function RevenueForecast({ dealType }: RevenueForecastProps) {
                 </div>
 
                 {/* Empty state */}
-                {deals.length === 0 && (
+                {activeDeals.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <TrendingUp className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm">No active deals to forecast</p>

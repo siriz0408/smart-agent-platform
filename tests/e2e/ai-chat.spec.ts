@@ -290,12 +290,13 @@ test.describe('AI Chat', () => {
 
   test.describe('Chat Error Handling', () => {
     test('should handle network errors gracefully', async ({ page }) => {
-      // Simulate offline mode
-      await page.context().setOffline(true);
-      
+      // Navigate and load page FIRST while online
       await navigateTo(page, /home/i, '');
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
+
+      // Now go offline AFTER the page has loaded
+      await page.context().setOffline(true);
 
       const chatInput = page.getByPlaceholder(/explore a topic/i).or(
         page.getByPlaceholder(/type your message/i)
@@ -313,17 +314,19 @@ test.describe('AI Chat', () => {
         await chatInput.first().press('Enter');
       }
       
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(3000);
       
-      // Should show error message or handle gracefully
-      const errorMessage = page.getByText(/error|failed|offline/i);
+      // Should show error message or the app should not crash
+      const errorMessage = page.getByText(/error|failed|offline|unable|try again/i);
       const hasError = await errorMessage.count() > 0;
       
-      // Re-enable network
+      // Re-enable network before assertions
       await page.context().setOffline(false);
       
-      // Error handling should exist (may or may not show message)
-      expect(hasError || true).toBeTruthy(); // Accept either error shown or graceful handling
+      // The app should either show an error message OR remain functional (no crash)
+      // Verify the chat input is still accessible (app didn't crash)
+      const inputStillVisible = await chatInput.first().isVisible().catch(() => false);
+      expect(hasError || inputStillVisible).toBeTruthy();
     });
   });
 });

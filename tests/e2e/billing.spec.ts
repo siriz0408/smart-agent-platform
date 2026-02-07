@@ -149,10 +149,16 @@ test.describe('Billing Page', () => {
       const hasCurrentPlanButton = await currentPlanButton1.isVisible().catch(() => false) ||
                                    await currentPlanButton2.isVisible().catch(() => false);
       if (hasCurrentPlanButton) {
-        // Button should be disabled or show current state
+        // Button should be disabled or display a "current" state indicator
         const button = await currentPlanButton1.isVisible().catch(() => false) ? currentPlanButton1 : currentPlanButton2;
         const isDisabled = await button.isDisabled().catch(() => false);
-        expect(isDisabled || true).toBe(true); // Either disabled or shows current state
+        const buttonText = await button.textContent().catch(() => '');
+        // Either the button is disabled OR it shows "Current Plan" / "Active" text
+        expect(isDisabled || /current|active/i.test(buttonText || '')).toBe(true);
+      } else {
+        // If no current plan button found, billing page should still show plan info
+        const billingText = page.getByText(/billing/i).or(page.getByText(/subscription/i));
+        await expect(billingText.first()).toBeVisible();
       }
     });
   });

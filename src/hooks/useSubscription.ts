@@ -88,8 +88,9 @@ export function useSubscription() {
       };
     },
     enabled: !!workspaceId,
-    // Refetch when subscription data changes
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 60 * 1000, // Usage data is fresh for 1 minute
+    // Poll less aggressively - usage data rarely changes mid-session
+    refetchInterval: 5 * 60 * 1000, // Refresh every 5 minutes (was 30s)
   });
 
   const subscription = subscriptionQuery.data;

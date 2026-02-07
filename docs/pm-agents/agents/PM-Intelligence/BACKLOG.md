@@ -1,6 +1,6 @@
 # PM-Intelligence Backlog
 
-> **Last Updated:** 2026-02-07 01:00:00
+> **Last Updated:** 2026-02-07 12:00:00
 
 ---
 
@@ -12,23 +12,7 @@ _No tasks currently in progress_
 
 ## Ready
 
-These tasks are ready for autonomous execution:
-
-### INT-007: Add confidence indicators
-**Priority:** P2 | **Effort:** M | **Vision:** 6
-
-**Objective:** Add confidence scores/indicators to AI responses to help users understand AI certainty.
-
-**Deliverable:**
-- Confidence scoring logic in AI responses
-- UI indicators (visual badges, percentages)
-- Documentation of confidence calculation
-
-**Acceptance Criteria:**
-- [ ] Confidence scores calculated for responses
-- [ ] UI displays confidence indicators
-- [ ] Documentation explains scoring method
-- [ ] Tests verify confidence accuracy
+_No tasks currently ready_
 
 ---
 
@@ -56,6 +40,7 @@ These tasks are ready for autonomous execution:
 | INT-006 | Improve citation formatting in responses | 2026-02-06 | Standardized to [Source: filename, page X], RAG_IMPROVEMENT_PROPOSAL.md created |
 | INT-011 | Create AgentDetail.tsx page | 2026-02-06 | Created missing AgentDetail.tsx page with full agent details view, added route, linked from Agents.tsx |
 | HO-009 | Fix tenant isolation in action executors | 2026-02-07 | Critical security fix: hardened add_note contact/deal/property validation, hardened assign_tags with UUID validation + tenant warning logs, added callerTenantId defense-in-depth to execute-actions, forwarded tenant_id to MCP gateway, added tenant_id filter to action approval, added validateTenantAccess/validateUserInTenant helpers, added executeAction UUID gate |
+| INT-007 | Add confidence indicators to AI responses | 2026-02-07 | Frontend confidence scoring: `confidenceScoring.ts` utility (extracts citations, computes High/Medium/Low), `ConfidenceIndicator.tsx` component (color-coded badge + tooltip), integrated into Chat.tsx streaming pipeline |
 
 ---
 

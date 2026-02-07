@@ -1,110 +1,21 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { differenceInDays } from "date-fns";
 import { BarChart3, DollarSign, Clock, AlertCircle, TrendingUp, ChevronDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
-
-interface DealWithTimestamps {
-  id: string;
-  stage: string | null;
-  estimated_value: number | null;
-  created_at: string;
-  updated_at: string;
-  is_stalled?: boolean;
-}
-
-interface Stage {
-  id: string;
-  label: string;
-  color: string;
-}
+import { usePipelineMetrics } from "@/hooks/usePipeline";
+import type { StageDefinition } from "@/hooks/useDeals";
 
 interface PipelineAnalyticsProps {
   dealType: "buyer" | "seller";
-  stages: Stage[];
-}
-
-interface StageStats {
-  count: number;
-  totalValue: number;
-  avgDaysInStage: number;
+  stages: StageDefinition[];
 }
 
 export function PipelineAnalytics({ dealType, stages }: PipelineAnalyticsProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: deals = [], isLoading } = useQuery({
-    queryKey: ["deals-analytics", dealType],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("deals")
-        .select("id, stage, estimated_value, created_at, updated_at")
-        .eq("deal_type", dealType)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-
-      // Batch check stalled status for all deals
-      const dealIds = (data as DealWithTimestamps[]).map((d) => d.id);
-      const stalledMap = new Map<string, boolean>();
-
-      if (dealIds.length > 0) {
-        const { data: stalledData, error: stalledError } = await supabase.rpc("get_stalled_deals", {
-          p_deal_ids: dealIds,
-        });
-
-        if (!stalledError && stalledData) {
-          stalledData.forEach((item: { deal_id: string; is_stalled: boolean }) => {
-            stalledMap.set(item.deal_id, item.is_stalled);
-          });
-        }
-      }
-
-      // Add stalled status to each deal
-      return (data as DealWithTimestamps[]).map((deal) => ({
-        ...deal,
-        is_stalled: stalledMap.get(deal.id) || false,
-      }));
-    },
-  });
-
-  // Calculate analytics
-  const totalDeals = deals.length;
-  const totalPipelineValue = deals.reduce((acc, deal) => acc + (deal.estimated_value || 0), 0);
-  const stalledDeals = deals.filter((d) => d.is_stalled === true).length;
-  const closedDeals = deals.filter((d) => d.stage === "closed").length;
-  const winRate = totalDeals > 0 ? (closedDeals / totalDeals) * 100 : 0;
-
-  // Calculate stats by stage
-  const stageStats: Record<string, StageStats> = {};
-  stages.forEach((stage) => {
-    const dealsInStage = deals.filter((d) => d.stage === stage.id);
-    const totalValue = dealsInStage.reduce((acc, d) => acc + (d.estimated_value || 0), 0);
-
-    // Calculate average time in stage
-    // Use updated_at as proxy for when deal entered this stage
-    // For more accurate calculation, we'd need stage transition history
-    let avgDaysInStage = 0;
-    if (dealsInStage.length > 0) {
-      const now = new Date();
-      const totalDays = dealsInStage.reduce((acc, deal) => {
-        const updatedAt = new Date(deal.updated_at);
-        const daysInStage = differenceInDays(now, updatedAt);
-        return acc + Math.max(0, daysInStage); // Ensure non-negative
-      }, 0);
-      avgDaysInStage = Math.round(totalDays / dealsInStage.length);
-    }
-
-    stageStats[stage.id] = {
-      count: dealsInStage.length,
-      totalValue,
-      avgDaysInStage,
-    };
-  });
+  const { data: metrics, isLoading } = usePipelineMetrics(dealType);
 
   const formatCurrency = (value: number) => {
     if (value >= 1000000) {
@@ -162,7 +73,7 @@ export function PipelineAnalytics({ dealType, stages }: PipelineAnalyticsProps) 
                   <BarChart3 className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{totalDeals}</div>
+                  <div className="text-2xl font-bold">{metrics.totalDeals}</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Across all stages
                   </p>
@@ -175,7 +86,7 @@ export function PipelineAnalytics({ dealType, stages }: PipelineAnalyticsProps) 
                   <DollarSign className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(totalPipelineValue)}</div>
+                  <div className="text-2xl font-bold">{formatCurrency(metrics.totalValue)}</div>
                   <p className="text-xs text-muted-foreground mt-1">
                     Total estimated value
                   </p>
@@ -188,9 +99,9 @@ export function PipelineAnalytics({ dealType, stages }: PipelineAnalyticsProps) 
                   <AlertCircle className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{stalledDeals}</div>
+                  <div className="text-2xl font-bold">{metrics.stalledCount}</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {stalledDeals > 0 ? "Need attention" : "All active"}
+                    {metrics.stalledCount > 0 ? "Need attention" : "All active"}
                   </p>
                 </CardContent>
               </Card>
@@ -201,9 +112,9 @@ export function PipelineAnalytics({ dealType, stages }: PipelineAnalyticsProps) 
                   <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{winRate.toFixed(1)}%</div>
+                  <div className="text-2xl font-bold">{metrics.winRate.toFixed(1)}%</div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {closedDeals} closed / {totalDeals} total
+                    {metrics.closedCount} closed / {metrics.totalDeals} total
                   </p>
                 </CardContent>
               </Card>
@@ -216,43 +127,38 @@ export function PipelineAnalytics({ dealType, stages }: PipelineAnalyticsProps) 
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {stages.map((stage) => {
-                    const stats = stageStats[stage.id];
-                    const percentage = totalDeals > 0 ? (stats.count / totalDeals) * 100 : 0;
-
-                    return (
-                      <div key={stage.id} className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={cn("h-3 w-3 rounded-full", stage.color)} />
-                            <span className="text-sm font-medium">{stage.label}</span>
-                          </div>
-                          <div className="flex items-center gap-4 text-sm">
-                            <span className="text-muted-foreground">
-                              {stats.count} {stats.count === 1 ? "deal" : "deals"}
-                            </span>
-                            <span className="font-semibold">
-                              {formatCurrency(stats.totalValue)}
-                            </span>
-                            {stats.avgDaysInStage > 0 && (
-                              <div className="flex items-center gap-1 text-muted-foreground">
-                                <Clock className="h-3 w-3" />
-                                <span className="text-xs">{formatDays(stats.avgDaysInStage)}</span>
-                              </div>
-                            )}
-                          </div>
+                  {metrics.stageMetrics.map((sm) => (
+                    <div key={sm.stage.id} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("h-3 w-3 rounded-full", sm.stage.color)} />
+                          <span className="text-sm font-medium">{sm.stage.label}</span>
                         </div>
-                        {totalDeals > 0 && (
-                          <div className="w-full bg-muted rounded-full h-2">
-                            <div
-                              className={cn("h-2 rounded-full transition-all", stage.color)}
-                              style={{ width: `${percentage}%` }}
-                            />
-                          </div>
-                        )}
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-muted-foreground">
+                            {sm.count} {sm.count === 1 ? "deal" : "deals"}
+                          </span>
+                          <span className="font-semibold">
+                            {formatCurrency(sm.totalValue)}
+                          </span>
+                          {sm.avgDaysInStage > 0 && (
+                            <div className="flex items-center gap-1 text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span className="text-xs">{formatDays(sm.avgDaysInStage)}</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    );
-                  })}
+                      {metrics.totalDeals > 0 && (
+                        <div className="w-full bg-muted rounded-full h-2">
+                          <div
+                            className={cn("h-2 rounded-full transition-all", sm.stage.color)}
+                            style={{ width: `${sm.percentage}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>

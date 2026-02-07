@@ -7,29 +7,33 @@
  * Run: npx playwright test comprehensive-feature-tests.spec.ts
  * 
  * Prerequisites:
- *   - Dev server running at localhost:8080
- *   - Test account: siriz04081@gmail.com / Test1234
+ *   - Dev server running (Playwright config starts it automatically on port 8081)
+ *   - Test account: configured via TEST_USER_EMAIL / TEST_USER_PASSWORD env vars
+ *     or defaults to siriz04081@gmail.com / Test1234
  */
 
 import { test, expect, type Page } from '@playwright/test';
+import { login as sharedLogin } from './fixtures/helpers';
 
 // ============================================================================
 // SETUP & HELPERS
 // ============================================================================
 
-const BASE_URL = 'http://localhost:8080';
-const TEST_EMAIL = 'siriz04081@gmail.com';
-const TEST_PASSWORD = 'Test1234';
+// Use environment variables with fallback (matches fixtures/helpers pattern)
+const TEST_EMAIL = process.env.TEST_USER_EMAIL || 'siriz04081@gmail.com';
 
+/**
+ * Login wrapper — delegates to the shared helper from fixtures/helpers.
+ * Uses Playwright config baseURL (no hardcoded port).
+ */
 async function login(page: Page) {
-  await page.goto(`${BASE_URL}/login`);
-  await page.getByRole('textbox', { name: 'Email' }).fill(TEST_EMAIL);
-  await page.getByRole('textbox', { name: 'Password' }).fill(TEST_PASSWORD);
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.waitForURL('**/dashboard', { timeout: 10000 });
-  await expect(page.getByRole('heading', { level: 1 })).toContainText('Good');
+  await sharedLogin(page);
 }
 
+/**
+ * Navigate to a page by clicking a sidebar link.
+ * Uses waitForLoadState for reliability.
+ */
 async function navigateTo(page: Page, linkName: string) {
   await page.getByRole('link', { name: linkName }).first().click();
   await page.waitForLoadState('networkidle');
@@ -42,18 +46,19 @@ async function navigateTo(page: Page, linkName: string) {
 test.describe('Authentication & Onboarding', () => {
   test('1.1 Login and reach dashboard', async ({ page }) => {
     await login(page);
-    await expect(page.getByText('Good')).toBeVisible();
-    await expect(page.getByText('Sam Irizarry')).toBeVisible();
+    // After login, the shared helper waits for the contacts link — 
+    // additionally check for dashboard content
+    await expect(page.getByText('Good')).toBeVisible({ timeout: 10000 });
   });
 
   test('1.2 Landing page has trial signup CTA', async ({ page }) => {
-    await page.goto(BASE_URL);
+    await page.goto('/');
     await expect(page.getByRole('link', { name: 'Start Free Trial' }).first()).toBeVisible();
     await expect(page.getByText('14-day free trial')).toBeVisible();
   });
 
   test('1.3 Signup page loads with OAuth options', async ({ page }) => {
-    await page.goto(`${BASE_URL}/signup`);
+    await page.goto('/signup');
     await expect(page.getByRole('button', { name: /Continue with Google/ })).toBeVisible();
     await expect(page.getByRole('button', { name: /Continue with Apple/ })).toBeVisible();
   });
@@ -233,7 +238,7 @@ test.describe('Contacts & CRM', () => {
 
   test('4.4 Skeleton loading states show while fetching', async ({ page }) => {
     // Navigate fresh to catch loading state
-    await page.goto(`${BASE_URL}/contacts`);
+    await page.goto('/contacts');
     // Loading skeletons should briefly appear (may be too fast to catch)
     await page.waitForLoadState('networkidle');
   });
@@ -598,7 +603,7 @@ test.describe('Dashboard Widgets', () => {
 test.describe('Billing', () => {
   test('16.1 Billing page accessible', async ({ page }) => {
     await login(page);
-    await page.goto(`${BASE_URL}/settings/billing`);
+    await page.goto('/settings/billing');
     await page.waitForLoadState('networkidle');
     // Should show billing/subscription info
     await expect(page.getByText(/Billing|Plan|Subscription/i).first()).toBeVisible();
@@ -620,7 +625,7 @@ test.describe('Help Center', () => {
 // ============================================================================
 // TEST SUMMARY
 // ============================================================================
-// Total: 55+ test cases covering:
+// Total: 70 test cases across 17 describe blocks covering:
 //
 // Cycles 1-2: Auth, onboarding, trial signup, accessibility
 // Cycle 3: Search, integrations, pipeline, usage limits

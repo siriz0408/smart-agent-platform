@@ -1,7 +1,7 @@
 # PM-Research Recommendations Tracker
 
 > **Last Updated:** 2026-02-07  
-> **Status:** 26 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003, 5 from RES-004, 10 from RES-005)
+> **Status:** 32 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003, 5 from RES-004, 10 from RES-005, 6 from RES-006)
 
 ---
 
@@ -932,6 +932,242 @@ Built-in marketing tools including listing flyer templates, social media post ge
 
 ---
 
+### REC-027: Enhance Gmail Connector with Push Notifications & Delta Sync
+**Source:** RES-006 Email/Calendar API Evaluation  
+**Priority:** P0 - Critical  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Add Gmail push notifications (via `users.watch` + Cloud Pub/Sub) and incremental delta sync (via `history.list`) to the existing Gmail connector. Eliminates polling, enables near-real-time email awareness, and reduces API quota consumption.
+
+**Rationale:**
+- Gmail connector already built (low incremental effort)
+- Push notifications prevent expensive polling loops
+- Delta sync enables unified inbox feature (supports REC-022)
+- Email is the #1 communication channel for real estate agents (73% of buyers prioritize responsiveness)
+- Prerequisite for after-hours AI auto-responder capability
+
+**Impact:**
+- **User Impact:** 5/5 (real-time email in CRM is transformative)
+- **Vision Alignment:** 5/5 (horizontal tool integration vision)
+- **Effort:** Medium (M) — ~1 week incremental on existing connector
+- **Owner:** PM-Integration
+- **Timeline:** Q1-Q2 2026
+
+**Implementation:**
+1. Set up Cloud Pub/Sub topic for Gmail notifications
+2. Implement `users.watch` call on connector activation
+3. Build webhook handler edge function for Pub/Sub push
+4. Implement `history.list` delta sync on notification receipt
+5. Auto-renew watch subscription (7-day expiry)
+6. Fallback polling every 5 minutes as safety net
+
+**API Details:**
+- Gmail push uses Cloud Pub/Sub (~$0/mo at CRM scale, first 10GB free)
+- `users.watch` costs 100 quota units per call (once per 7 days per user)
+- `history.list` costs 5 quota units per call (efficient incremental fetch)
+
+---
+
+### REC-028: Enhance Google Calendar Connector with Push Notifications & Sync Tokens
+**Source:** RES-006 Email/Calendar API Evaluation  
+**Priority:** P0 - Critical  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Add push notifications (via `events.watch` webhooks) and incremental sync (via `syncToken`) to the existing Google Calendar connector. Enables real-time schedule awareness and deal milestone ↔ calendar integration.
+
+**Rationale:**
+- Google Calendar connector already built (low incremental effort)
+- Push notifications enable real-time schedule awareness in CRM
+- Sync tokens reduce redundant full-fetch operations
+- Supports deal milestone auto-reminders (REC-018) via calendar events
+- Enables smart scheduling features (find available times for showings)
+
+**Impact:**
+- **User Impact:** 4/5 (real-time calendar sync improves scheduling)
+- **Vision Alignment:** 5/5 (horizontal integration + deal pipeline)
+- **Effort:** Small (S) — ~3-5 days on existing connector
+- **Owner:** PM-Integration
+- **Timeline:** Q1-Q2 2026
+
+**Implementation:**
+1. Implement `events.watch` on primary calendar at connector activation
+2. Build HTTPS webhook handler for calendar change notifications
+3. On notification: use `syncToken` to fetch only changed events
+4. Auto-renew watch channels before expiry
+5. Bidirectional sync: deal milestones → calendar events
+6. Surface calendar conflicts in deal timeline UI
+
+**API Details:**
+- Calendar webhooks are free (direct HTTPS callbacks, no Pub/Sub needed)
+- `syncToken` approach fetches only changes since last sync (very efficient)
+- Default quota of 1,000,000 queries/day is more than sufficient
+
+---
+
+### REC-029: Build Microsoft Graph Outlook Mail Connector
+**Source:** RES-006 Email/Calendar API Evaluation  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Implement a new `OutlookMailConnector` using Microsoft Graph API to support the ~30% of real estate professionals who use Outlook/Microsoft 365. Follow existing `BaseConnector` pattern for consistency.
+
+**Rationale:**
+- ~30% of real estate professionals use Outlook/Microsoft 365
+- Enterprise brokerages heavily favor Microsoft ecosystem
+- Existing `BaseConnector` abstraction makes implementation straightforward
+- Microsoft Graph provides Mail + Calendar in one integration (shared auth)
+- Microsoft Graph API is free with no per-call charges
+- Enables unified inbox across Gmail + Outlook (REC-022)
+
+**Impact:**
+- **User Impact:** 4/5 (captures 30% more of addressable market)
+- **Vision Alignment:** 5/5 (horizontal tool integration)
+- **Effort:** Medium (M) — ~2 weeks for full connector
+- **Owner:** PM-Integration
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Register app in Azure Portal (Microsoft Identity Platform)
+2. Implement Microsoft OAuth 2.0 flow with PKCE
+3. Build `OutlookMailConnector extends BaseConnector`
+4. Support: send, read, search, drafts, threads (conversationId)
+5. Implement change notifications (webhooks) for real-time sync
+6. Implement delta queries for incremental sync
+7. Add to `ConnectorRegistry`
+
+**API Details:**
+- Microsoft Graph base: `https://graph.microsoft.com/v1.0/me/`
+- Scopes: `Mail.Read`, `Mail.Send`, `Mail.ReadWrite`, `offline_access`
+- Rate limit: 10,000 requests/10 min per mailbox (generous)
+- Change notifications: max 3-day subscription lifetime (auto-renew)
+- No admin consent needed for delegated user-level access
+
+---
+
+### REC-030: Build Microsoft Graph Outlook Calendar Connector
+**Source:** RES-006 Email/Calendar API Evaluation  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Implement `OutlookCalendarConnector` using Microsoft Graph API. Shares auth with Outlook Mail connector — marginal incremental effort once REC-029 is complete.
+
+**Rationale:**
+- Shares Microsoft Graph app registration and OAuth with Outlook Mail
+- Marginal effort once Outlook Mail connector exists
+- Microsoft Calendar has unique `findMeetingTimes` API for smart scheduling
+- Enables unified calendar view across Google + Microsoft
+- Enterprise brokerages often use Microsoft 365 calendars exclusively
+
+**Impact:**
+- **User Impact:** 3/5 (valuable for Microsoft-ecosystem users)
+- **Vision Alignment:** 5/5 (horizontal integration)
+- **Effort:** Small (S) — ~1 week (shares auth infrastructure with REC-029)
+- **Owner:** PM-Integration
+- **Timeline:** Q2 2026 (after REC-029)
+
+**Implementation:**
+1. Build `OutlookCalendarConnector extends BaseConnector`
+2. Support: create, list, update, delete events, availability
+3. Implement `findMeetingTimes` for smart scheduling (unique MS feature)
+4. Implement change notifications for calendar events
+5. Implement delta queries for incremental sync
+6. Add to `ConnectorRegistry`
+
+**API Details:**
+- Scopes: `Calendars.ReadWrite`, `Calendars.Read.Shared`, `offline_access`
+- `findMeetingTimes` — AI-assisted meeting time suggestions (unique to Microsoft)
+- `getSchedule` — free/busy query across multiple users
+- Change notification subscription: max 3-day lifetime
+
+---
+
+### REC-031: Implement Unified Communication Layer
+**Source:** RES-006 Email/Calendar API Evaluation  
+**Priority:** P1 - High  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Build an abstraction layer above individual email/calendar connectors that provides a unified inbox and unified calendar view regardless of provider. Supports REC-022 (Unified Communication Hub).
+
+**Rationale:**
+- Users may have Gmail + Outlook accounts simultaneously
+- Unified view eliminates context-switching between providers
+- Abstract layer enables future provider additions (Yahoo, iCloud, etc.)
+- Aligns with Smart Agent's horizontal integration vision
+- CRM contact activity timeline should show all communication regardless of source
+- Directly enables REC-022 (Unified Communication Hub)
+
+**Impact:**
+- **User Impact:** 5/5 (transformative — single pane of glass for all communication)
+- **Vision Alignment:** 5/5 (core horizontal integration principle)
+- **Effort:** Medium (M) — ~2 weeks
+- **Owner:** PM-Integration + PM-Communication
+- **Timeline:** Q2-Q3 2026
+
+**Implementation:**
+1. Define `UnifiedEmailService` interface (provider-agnostic)
+2. Define `UnifiedCalendarService` interface (provider-agnostic)
+3. Cross-provider email search (fan-out to all connected email accounts)
+4. Merged calendar view (overlay events from all connected calendars)
+5. Contact ↔ email matching (map incoming emails to CRM contacts)
+6. Activity timeline integration (all emails/events on contact profile)
+7. Sync status dashboard (per-provider health indicators)
+
+**Dependencies:**
+- REC-027 (Gmail push/sync) and REC-028 (Calendar push/sync)
+- REC-029 (Outlook Mail) and REC-030 (Outlook Calendar)
+
+---
+
+### REC-032: Start Google OAuth Restricted Scope Verification Process
+**Source:** RES-006 Email/Calendar API Evaluation  
+**Priority:** P0 - Critical  
+**Status:** Pending PM-Orchestrator Review  
+**Date:** 2026-02-07
+
+**Recommendation:**
+Immediately begin the Google OAuth verification process for restricted Gmail scopes (`gmail.readonly`, `gmail.compose`, `gmail.modify`). This process takes 4-6 weeks and requires a CASA Tier 2 security assessment.
+
+**Rationale:**
+- Google requires third-party security audit for restricted scopes
+- Process takes 4-6 weeks — starting now unblocks future features
+- `gmail.readonly` is restricted (required for email reading/search)
+- `gmail.compose` is restricted (required for draft management)
+- Without verification, app is limited to 100 users in "testing" mode
+- Blocking dependency for production Gmail integration at scale
+
+**Impact:**
+- **User Impact:** 5/5 (blocks production launch of Gmail features)
+- **Vision Alignment:** 5/5 (required for integration platform)
+- **Effort:** Small (S) — administrative + security audit coordination
+- **Owner:** PM-Infrastructure + PM-Security
+- **Timeline:** Start immediately; 4-6 week process
+
+**Implementation:**
+1. Prepare privacy policy and terms of service (required)
+2. Set up authorized domain verification in Google Cloud Console
+3. Submit OAuth consent screen for Google review
+4. Engage CASA-certified assessor for Tier 2 security audit ($15K-$75K)
+5. Remediate any findings from security audit
+6. Receive verification approval from Google
+7. Move app from "testing" to "production" OAuth status
+
+**Risk Mitigation:**
+- Use `gmail.send` (sensitive scope, no audit needed) for MVP send-only features
+- Implement read features behind feature flag, enable after verification
+- Budget $15K-$30K for security audit (varies by assessor)
+
+---
+
 ## Recommendation Status Legend
 
 - **Pending Review:** Awaiting PM-Orchestrator evaluation
@@ -946,11 +1182,12 @@ Built-in marketing tools including listing flyer templates, social media post ge
 | Metric | Target | Current |
 |--------|--------|---------|
 | **Recommendation Adoption Rate** | >40% | TBD (pending review) |
-| **Research Cycle Time** | <1 week | ✅ 1 day avg (RES-001 through RES-005) |
+| **Research Cycle Time** | <1 week | ✅ 1 day avg (RES-001 through RES-006) |
 | **Roadmap Influence** | >30% | TBD (pending review) |
-| **Total Recommendations** | — | 26 (16 prior + 10 from RES-005) |
+| **Total Recommendations** | — | 32 (16 from RES-001–004, 10 from RES-005, 6 from RES-006) |
 | **Pain Points Mapped** | — | 10 identified, 7 partially+ addressed by SA |
+| **Integration APIs Evaluated** | — | 4 (Gmail, Google Calendar, Outlook Mail, Outlook Calendar) |
 
 ---
 
-*Last Updated: 2026-02-07 by PM-Research (Dev Cycle #8)*
+*Last Updated: 2026-02-07 by PM-Research (Dev Cycle #9)*

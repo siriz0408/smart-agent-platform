@@ -31,9 +31,32 @@ export interface ImportProgress {
   status: "idle" | "validating" | "importing" | "complete" | "error";
 }
 
-const REQUIRED_FIELDS = ["first_name", "last_name"];
-const OPTIONAL_FIELDS = ["email", "phone", "contact_type", "company", "notes", "address", "city", "state", "zip_code"];
-const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
+/** Raw parsed CSV result before column mapping */
+export interface RawCSVData {
+  rawHeaders: string[];
+  rawRows: string[][];
+}
+
+/** Column mapping: CSV column index → contact field name (or null to skip) */
+export type ColumnMapping = Record<number, string | null>;
+
+export const REQUIRED_FIELDS = ["first_name", "last_name"];
+export const OPTIONAL_FIELDS = ["email", "phone", "contact_type", "company", "notes", "address", "city", "state", "zip_code"];
+export const ALL_FIELDS = [...REQUIRED_FIELDS, ...OPTIONAL_FIELDS];
+
+export const FIELD_LABELS: Record<string, string> = {
+  first_name: "First Name",
+  last_name: "Last Name",
+  email: "Email",
+  phone: "Phone",
+  contact_type: "Contact Type",
+  company: "Company",
+  notes: "Notes",
+  address: "Address",
+  city: "City",
+  state: "State",
+  zip_code: "Zip Code",
+};
 
 // Common CSV column name mappings
 const COLUMN_MAPPINGS: Record<string, string> = {
@@ -58,37 +81,6 @@ const COLUMN_MAPPINGS: Record<string, string> = {
   "postal": "zip_code",
   "postal code": "zip_code",
 };
-
-function normalizeColumnName(name: string): string {
-  const lower = name.toLowerCase().trim();
-  return COLUMN_MAPPINGS[lower] || lower.replace(/\s+/g, "_");
-}
-
-function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
-  const lines = text.split(/\r?\n/).filter((line) => line.trim());
-  if (lines.length === 0) {
-    return { headers: [], rows: [] };
-  }
-
-  // Parse header row
-  const rawHeaders = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
-  const headers = rawHeaders.map(normalizeColumnName);
-
-  // Parse data rows
-  const rows: Record<string, string>[] = [];
-  for (let i = 1; i < lines.length; i++) {
-    const values = parseCSVLine(lines[i]);
-    if (values.length === 0 || values.every((v) => !v.trim())) continue;
-
-    const row: Record<string, string> = {};
-    headers.forEach((header, idx) => {
-      row[header] = values[idx]?.trim().replace(/^"|"$/g, "") || "";
-    });
-    rows.push(row);
-  }
-
-  return { headers, rows };
-}
 
 function parseCSVLine(line: string): string[] {
   const values: string[] = [];
@@ -126,6 +118,153 @@ function validatePhone(phone: string): boolean {
   // Allow various phone formats, strip non-digits and check length
   const digits = phone.replace(/\D/g, "");
   return digits.length >= 10 && digits.length <= 15;
+}
+
+/**
+ * Parse a CSV file into raw headers and row arrays (no column mapping applied).
+ * Use this for the column mapping UI step.
+ */
+export function parseCSVRaw(text: string): RawCSVData {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length === 0) {
+    return { rawHeaders: [], rawRows: [] };
+  }
+
+  const rawHeaders = parseCSVLine(lines[0]).map((h) => h.trim().replace(/^"|"$/g, ""));
+
+  const rawRows: string[][] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length === 0 || values.every((v) => !v.trim())) continue;
+    rawRows.push(values.map((v) => v.trim().replace(/^"|"$/g, "")));
+  }
+
+  return { rawHeaders, rawRows };
+}
+
+/**
+ * Auto-detect column mappings from raw CSV headers.
+ * Returns a mapping from column index to contact field name.
+ */
+export function autoDetectMappings(rawHeaders: string[]): ColumnMapping {
+  const mapping: ColumnMapping = {};
+  const usedFields = new Set<string>();
+
+  for (let i = 0; i < rawHeaders.length; i++) {
+    const lower = rawHeaders[i].toLowerCase().trim();
+    const normalized = COLUMN_MAPPINGS[lower] || lower.replace(/\s+/g, "_");
+
+    if (ALL_FIELDS.includes(normalized) && !usedFields.has(normalized)) {
+      mapping[i] = normalized;
+      usedFields.add(normalized);
+    } else {
+      mapping[i] = null; // Skip unmapped columns
+    }
+  }
+
+  return mapping;
+}
+
+/**
+ * Apply column mappings to raw CSV rows and validate the result.
+ */
+export function validateMappedRows(
+  rawRows: string[][],
+  mapping: ColumnMapping
+): ImportValidationResult {
+  const valid: ContactImportRow[] = [];
+  const invalid: ImportValidationResult["invalid"] = [];
+  const duplicates: ImportValidationResult["duplicates"] = [];
+  const seenEmails = new Set<string>();
+
+  for (let i = 0; i < rawRows.length; i++) {
+    const rawRow = rawRows[i];
+    const row: Record<string, string> = {};
+
+    // Apply column mapping
+    for (const [colIdxStr, fieldName] of Object.entries(mapping)) {
+      const colIdx = parseInt(colIdxStr, 10);
+      if (fieldName && rawRow[colIdx] !== undefined) {
+        row[fieldName] = rawRow[colIdx];
+      }
+    }
+
+    const errors: string[] = [];
+
+    // Check required fields
+    if (!row.first_name?.trim()) errors.push("First name is required");
+    if (!row.last_name?.trim()) errors.push("Last name is required");
+
+    // Validate email
+    if (row.email && !validateEmail(row.email)) {
+      errors.push("Invalid email format");
+    }
+
+    // Validate phone
+    if (row.phone && !validatePhone(row.phone)) {
+      errors.push("Invalid phone format");
+    }
+
+    // Check for duplicate emails within the file
+    if (row.email) {
+      const emailLower = row.email.toLowerCase();
+      if (seenEmails.has(emailLower)) {
+        duplicates.push({ row: i + 2, email: row.email }); // +2 for 1-indexed and header row
+      } else {
+        seenEmails.add(emailLower);
+      }
+    }
+
+    if (errors.length > 0) {
+      invalid.push({ row: i + 2, errors, data: row });
+    } else {
+      valid.push({
+        first_name: row.first_name.trim(),
+        last_name: row.last_name.trim(),
+        email: row.email?.trim() || undefined,
+        phone: row.phone?.trim() || undefined,
+        contact_type: row.contact_type?.trim() || "lead",
+        company: row.company?.trim() || undefined,
+        notes: row.notes?.trim() || undefined,
+        address: row.address?.trim() || undefined,
+        city: row.city?.trim() || undefined,
+        state: row.state?.trim() || undefined,
+        zip_code: row.zip_code?.trim() || undefined,
+      });
+    }
+  }
+
+  return { valid, invalid, duplicates };
+}
+
+// Legacy parseCSV function used by validateCSV (kept for backward compatibility)
+function normalizeColumnName(name: string): string {
+  const lower = name.toLowerCase().trim();
+  return COLUMN_MAPPINGS[lower] || lower.replace(/\s+/g, "_");
+}
+
+function parseCSV(text: string): { headers: string[]; rows: Record<string, string>[] } {
+  const lines = text.split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length === 0) {
+    return { headers: [], rows: [] };
+  }
+
+  const rawHeaders = lines[0].split(",").map((h) => h.trim().replace(/^"|"$/g, ""));
+  const headers = rawHeaders.map(normalizeColumnName);
+
+  const rows: Record<string, string>[] = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = parseCSVLine(lines[i]);
+    if (values.length === 0 || values.every((v) => !v.trim())) continue;
+
+    const row: Record<string, string> = {};
+    headers.forEach((header, idx) => {
+      row[header] = values[idx]?.trim().replace(/^"|"$/g, "") || "";
+    });
+    rows.push(row);
+  }
+
+  return { headers, rows };
 }
 
 export function useContactImport() {

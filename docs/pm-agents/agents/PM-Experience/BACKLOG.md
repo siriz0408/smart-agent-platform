@@ -18,6 +18,7 @@
 | EXP-002 | Document UI Component Inventory | 2026-02-06 | Created comprehensive inventory with 50+ UI components and 7 layout components, including props, interfaces, and usage examples |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 | Already implemented in Contacts.tsx and Properties.tsx |
 | EXP-006 | Full accessibility audit | 2026-02-06 | Added aria-live regions for dynamic content (chat messages), aria-busy for loading states, aria-hidden for decorative skeletons. Enhanced WCAG 2.1 AA compliance across Home, Contacts, Properties, and Documents pages |
+| EXP-009 | Dark mode contrast audit | 2026-02-07 | Comprehensive WCAG AA contrast audit for dark mode. Fixed `--muted-foreground` from 3.2:1 to 4.6:1. All color combinations now meet WCAG 2.1 AA standards. Report: `docs/pm-agents/reports/2026-02-07/pm-experience-exp009-dark-contrast-audit.md` |
 
 ---
 
@@ -88,7 +89,6 @@ These tasks are ready for autonomous execution:
 | ID | Item | Priority | Notes |
 |----|------|----------|-------|
 | EXP-008 | Animation polish | P3 | Delight |
-| EXP-009 | Dark mode contrast audit | P2 | Verify WCAG AA contrast ratios in dark mode across all pages |
 | EXP-010 | Remove unused next-themes dependency | P3 | Package.json still lists next-themes but it's no longer imported |
 
 ---

@@ -10,7 +10,6 @@
 
 | ID | Item | Priority | Notes |
 |----|------|----------|-------|
-| DIS-010 | Search query expansion suggestions | P2 | Suggest related queries when zero results occur |
 | DIS-011 | Search analytics alerts | P2 | Alert when success rate drops below 95% threshold |
 | DIS-012 | CTR-based ranking feedback loop | P2 | Use click-through data to improve search ranking weights |
 | DIS-013 | Search analytics dashboard widget | P3 | Surface CTR/MRR metrics in admin settings |
@@ -29,3 +28,4 @@
 | DIS-007 | Add search suggestions/autocomplete | 2026-02-06 |
 | DIS-008 | Comprehensive search metrics tracking | 2026-02-07 | Tracks all searches, calculates success rate, latency metrics |
 | DIS-009 | Search result click-through tracking | 2026-02-07 | DB table, RLS, CTR analytics RPC, hook, integrated in GlobalSearch dropdown + SearchResults page |
+| DIS-010 | Search query expansion suggestions | 2026-02-07 | Typo correction (Levenshtein), RE synonym expansion, partial match, recent queries, entity type suggestions |

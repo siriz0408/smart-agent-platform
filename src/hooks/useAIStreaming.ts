@@ -200,29 +200,21 @@ export function useAIStreaming(): UseAIStreamingReturn {
           if (!line.startsWith("data: ")) continue;
 
           const jsonStr = line.slice(6).trim();
-          console.log("[useAIStreaming] Raw SSE data:", jsonStr.slice(0, 150));
 
           // Handle stream end
           if (jsonStr === "[DONE]") continue;
 
           try {
             const parsed = JSON.parse(jsonStr);
-            console.log("[useAIStreaming] Parsed SSE event:", JSON.stringify(parsed).slice(0, 200));
             
             // Handle status event
             if (parsed.status) {
-              console.log("[useAIStreaming] 📊 STATUS UPDATE:", parsed.status);
               onStatus?.(parsed.status);
               continue;
             }
             
             // Handle embedded components event
             if (parsed.embedded_components) {
-              console.log("[useAIStreaming] 🎯 EMBEDDED COMPONENTS DETECTED:", {
-                hasPropertyCards: !!parsed.embedded_components.property_cards,
-                propertyCardsCount: parsed.embedded_components.property_cards?.length,
-                keys: Object.keys(parsed.embedded_components),
-              });
               embeddedComponents = parsed.embedded_components;
               onEmbeddedComponents?.(parsed.embedded_components);
               continue;

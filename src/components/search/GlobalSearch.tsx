@@ -150,6 +150,13 @@ export const GlobalSearch = memo(function GlobalSearch() {
     inputRef.current?.focus();
   }, []);
 
+  // Handle zero-results suggestion click — update query and re-search
+  const handleSuggestionClick = useCallback((suggestedQuery: string) => {
+    setQuery(suggestedQuery);
+    setIsOpen(suggestedQuery.length >= 1);
+    inputRef.current?.focus();
+  }, []);
+
   // client-passive-event-listeners: Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -232,6 +239,7 @@ export const GlobalSearch = memo(function GlobalSearch() {
           onResultClick={handleResultClick}
           onViewAllResults={handleViewAllResults}
           query={query}
+          onSuggestionClick={handleSuggestionClick}
         />
       )}
     </div>

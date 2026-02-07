@@ -10,6 +10,7 @@ import { DealResultCard } from "@/components/search/DealResultCard";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchClickTracking, type SearchResultType } from "@/hooks/useSearchClickTracking";
+import { ZeroResultsSuggestions } from "@/components/search/ZeroResultsSuggestions";
 
 export default function SearchResults() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -138,18 +139,25 @@ export default function SearchResults() {
         </div>
       )}
 
-      {/* Empty State - No Results */}
+      {/* Empty State - No Results → Show Query Expansion Suggestions */}
       {query && !isLoading && totalResults === 0 && (
-        <div className="flex flex-col items-center justify-center py-12 space-y-3">
-          <div className="p-4 bg-muted rounded-full">
-            <SearchIcon className="h-8 w-8 text-muted-foreground" />
-          </div>
-          <div className="text-center space-y-1">
-            <h3 className="text-lg font-semibold">No results found</h3>
-            <p className="text-sm text-muted-foreground">
-              Try adjusting your search terms or filters
-            </p>
-          </div>
+        <div className="max-w-lg mx-auto">
+          <ZeroResultsSuggestions
+            query={query}
+            onSuggestionClick={(suggestedQuery) => handleSearch(suggestedQuery)}
+            onEntityTypeClick={(entityType) => {
+              const filterMap: Record<string, string> = {
+                Contacts: "contact",
+                Properties: "property",
+                Documents: "document",
+                Deals: "deal",
+              };
+              const filterKey = filterMap[entityType];
+              if (filterKey) {
+                setSearchParams({ q: query, filters: filterKey });
+              }
+            }}
+          />
         </div>
       )}
 

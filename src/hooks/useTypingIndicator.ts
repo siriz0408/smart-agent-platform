@@ -33,7 +33,7 @@ export function useTypingIndicator(conversationId: string | null) {
       return data as TypingIndicator[];
     },
     enabled: !!conversationId && !!user?.id,
-    refetchInterval: 2000, // Poll every 2 seconds
+    refetchInterval: 3000, // Poll every 3 seconds (realtime channel handles immediate updates)
   });
 
   // Start typing mutation

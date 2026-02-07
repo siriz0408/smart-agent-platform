@@ -44,7 +44,8 @@ export function useUnreadCounts(conversationIds: string[]) {
       return unreadMap;
     },
     enabled: !!user?.id && conversationIds.length > 0,
-    refetchInterval: 10000, // Refresh every 10 seconds
+    staleTime: 15000, // Consider fresh for 15 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds (was 10s)
   });
 }
 
@@ -86,6 +87,7 @@ export function useTotalUnreadCount() {
       return totalUnread;
     },
     enabled: !!user?.id,
-    refetchInterval: 10000, // Refresh every 10 seconds
+    staleTime: 15000, // Consider fresh for 15 seconds
+    refetchInterval: 30000, // Refresh every 30 seconds (was 10s)
   });
 }

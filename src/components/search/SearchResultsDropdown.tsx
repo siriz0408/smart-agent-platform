@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SearchResult } from "@/hooks/useGlobalSearch";
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
+import { ZeroResultsSuggestions } from "./ZeroResultsSuggestions";
 
 interface SearchResultsDropdownProps {
   results: SearchResult[];
@@ -13,6 +14,8 @@ interface SearchResultsDropdownProps {
   onResultClick: (entityType: string, entityId: string) => void;
   onViewAllResults?: () => void;
   query: string;
+  /** Called when user clicks a suggested query from zero-results suggestions */
+  onSuggestionClick?: (suggestedQuery: string) => void;
 }
 
 // Maximum results to show per entity type in dropdown
@@ -60,6 +63,7 @@ export function SearchResultsDropdown({
   onResultClick,
   onViewAllResults,
   query,
+  onSuggestionClick,
 }: SearchResultsDropdownProps) {
   console.log('🔍 SearchResultsDropdown render:', {
     resultsCount: results.length,
@@ -163,11 +167,27 @@ export function SearchResultsDropdown({
               <span>Searching...</span>
             </div>
           ) : results.length === 0 ? (
-            // Empty state
-            <div className="text-center py-8 text-muted-foreground">
-              <p>No results found for &quot;{query}&quot;</p>
-              <p className="text-sm mt-1">Try a different search term</p>
-            </div>
+            // Zero results — show query expansion suggestions
+            <ZeroResultsSuggestions
+              query={query}
+              onSuggestionClick={onSuggestionClick ?? (() => {})}
+              onEntityTypeClick={
+                onSuggestionClick
+                  ? (entityType) => {
+                      // Map entity label to filter key
+                      const filterMap: Record<string, string> = {
+                        Contacts: "contact",
+                        Properties: "property",
+                        Documents: "document",
+                        Deals: "deal",
+                      };
+                      const filterKey = filterMap[entityType];
+                      if (filterKey) onFilterChange(filterKey);
+                    }
+                  : undefined
+              }
+              compact
+            />
           ) : (
             // Results grouped by entity type (limited)
             <div className="space-y-1">

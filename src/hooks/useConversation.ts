@@ -24,6 +24,7 @@ interface ConversationWithDetails {
   id: string;
   title: string | null;
   updated_at: string;
+  archived: boolean;
   participants: Participant[];
   lastMessage?: {
     content: string;
@@ -73,7 +74,7 @@ export function useConversation(conversationId: string | null) {
       // Get conversation details
       const { data: convos, error: convoError } = await supabase
         .from("conversations")
-        .select("id, title, updated_at")
+        .select("id, title, updated_at, archived")
         .in("id", conversationIds)
         .order("updated_at", { ascending: false });
 
