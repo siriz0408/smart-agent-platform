@@ -22,6 +22,30 @@ vi.mock('@/contexts/RoleContext', () => ({
   }),
 }));
 
+vi.mock('@/contexts/WorkspaceContext', () => ({
+  useWorkspace: () => ({
+    activeWorkspace: { id: 'workspace-1', name: 'Test Workspace' },
+    workspaces: [],
+    loading: false,
+    isSuperAdmin: false,
+    switchWorkspace: vi.fn(),
+    createWorkspace: vi.fn(),
+    inviteToWorkspace: vi.fn(),
+    refreshWorkspaces: vi.fn(),
+    isWorkspaceAdmin: false,
+    isWorkspaceOwner: false,
+    currentMembership: null,
+  }),
+}));
+
+vi.mock('@/contexts/ThemeContext', () => ({
+  useTheme: () => ({
+    theme: 'light' as const,
+    setTheme: vi.fn(),
+    resolvedTheme: 'light' as const,
+  }),
+}));
+
 vi.mock('@/components/layout/NotificationBell', () => ({
   NotificationBell: () => <div data-testid="notification-bell" />,
 }));

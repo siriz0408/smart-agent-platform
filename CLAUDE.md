@@ -542,6 +542,9 @@ An autonomous Product Manager agent system with 13 AI agents (1 orchestrator + 1
 
 # Single PM deep dive
 "Run PM-Intelligence investigate [issue]"
+
+# Development cycle (PMs actually implement features)
+"Run PM development cycle"
 ```
 
 ### Agent Overview
@@ -569,9 +572,57 @@ An autonomous Product Manager agent system with 13 AI agents (1 orchestrator + 1
 | `docs/pm-agents/VISION.md` | Product vision (owned by PM-Orchestrator) |
 | `docs/pm-agents/OWNERSHIP.md` | Feature-to-PM mapping |
 | `docs/pm-agents/DECISIONS.md` | Human approval workflow |
-| `docs/pm-agents/STATE.md` | Current system state |
+| `docs/pm-agents/STATE.md` | Current system state (includes PM performance metrics) |
 | `docs/pm-agents/RUN-PM.md` | Full invocation guide |
+| `docs/pm-agents/SKILLS.md` | Skills reference for all PMs |
+| `docs/pm-agents/WORK_STATUS.md` | Ready to Test / In Progress / Blocked tracker |
+| `docs/pm-agents/PERFORMANCE.md` | PM performance metrics framework |
+| `docs/pm-agents/CROSS_PM_AWARENESS.md` | Cross-PM coordination tracker |
+| `docs/pm-agents/PRE_DEPLOYMENT_CHECKLIST.md` | Deployment readiness checklist |
+| `docs/pm-agents/API_GUARDRAILS.md` | Light API cost guardrails |
+| `docs/pm-agents/FEEDBACK.md` | Human feedback intake (cleared after each cycle) |
+| `docs/pm-agents/HOW_TO_READ_REPORTS.md` | Guide for interpreting PM reports |
 | `docs/pm-agents/agents/PM-*/AGENT.md` | Individual PM definitions |
+| `docs/pm-agents/agents/PM-*/MEMORY.md` | PM memory files (learnings & context) |
+| `smart-agent-roadmap.html` | Product roadmap with feedback system & cycle recaps |
+
+### Enhanced Features (2026-02-07)
+
+**Enhanced Reporting:**
+- Clear distinction between "🟢 Ready to Test", "🟡 In Progress", "🔴 Blocked"
+- Feature completion percentages
+- Progress tracking toward larger goals
+- "What's Ready to Test" vs "What Still Needs Work" sections
+
+**Memory System:**
+- Each PM has a `MEMORY.md` file that retains learnings across cycles
+- Updated after each development cycle
+- Includes: Key Learnings, Recent Work Context, Preferences & Patterns
+
+**Cross-PM Coordination:**
+- `CROSS_PM_AWARENESS.md` tracks active work across all PMs
+- Reduces silos by sharing context
+- Weekly cross-PM sync facilitated by PM-Orchestrator
+
+**Development Method Selection:**
+- PMs have discretion: `/feature-dev` for big features, `smart-agent-brainstorming` for small updates
+- Decision framework based on complexity (3+ files, architectural impact)
+- Pre-work validation: Vision alignment, API cost estimate, big picture context
+
+**Pre-Deployment Checklist:**
+- Complementary to feature-dev plugin
+- Integration checks, user impact assessment, cross-PM impact
+- Ensures deployment readiness
+
+**Roadmap Integration:**
+- `smart-agent-roadmap.html` includes:
+  - **Feedback & Tasks tab**: Submit strategic feedback, bug reports, task delegation, research assignments, feature requests, decision responses, testing feedback (with image attachments)
+  - **Cycle Recaps tab**: Detailed cycle summaries with progress toward goals, ready to test items, bugs/issues, considerations
+- PM-Orchestrator reads feedback before each cycle and updates roadmap after each cycle
+
+**Performance Tracking:**
+- `PERFORMANCE.md` tracks: Completion Rate, Quality Score, Velocity, Vision Alignment, API Costs, Method Selection, Blocked Time
+- Updated weekly by PM-Orchestrator
 
 ### Run Tiers
 
@@ -581,12 +632,16 @@ An autonomous Product Manager agent system with 13 AI agents (1 orchestrator + 1
 | Core | "Run PM midday check" | 7 | 12pm EST |
 | Quick | "Run PM health check" | 1 | Quick status |
 | Single | "Run PM-[Name] deep dive" | 1 | Investigation |
+| Development | "Run PM development cycle" | All 12 | Feature implementation |
 
 ### Human Workflow
 
-1. PMs report → Check `docs/pm-agents/reports/YYYY-MM-DD/`
-2. Decisions needed → Review `docs/pm-agents/DECISIONS.md`
-3. Add your decision → PMs pick up in next run
+1. **Review Reports**: Check `docs/pm-agents/reports/YYYY-MM-DD/` or `smart-agent-roadmap.html` → Cycle Recaps tab
+2. **Read Reports Guide**: See `docs/pm-agents/HOW_TO_READ_REPORTS.md` for interpreting status indicators
+3. **Provide Feedback**: Use `smart-agent-roadmap.html` → Feedback & Tasks tab (submit feedback with images)
+4. **Decisions Needed**: Review `docs/pm-agents/DECISIONS.md` and respond via roadmap feedback
+5. **Track Work Status**: Check `docs/pm-agents/WORK_STATUS.md` for what's ready to test vs in progress
+6. **Review Performance**: Check `docs/pm-agents/PERFORMANCE.md` for PM effectiveness metrics
 
 See [`docs/pm-agents/RUN-PM.md`](./docs/pm-agents/RUN-PM.md) for complete documentation.
 
@@ -636,25 +691,41 @@ python3 -m pm_core.pm_orchestrator
 | Branch isolation | All work on `pm-agents/YYYY-MM-DD` |
 | Test requirement | Changes only commit if tests pass |
 
-#### Daily Flow
+#### Daily Flow (Enhanced)
 
 ```
 8:00 AM - launchd triggers orchestrator
     │
+    ├─ Read roadmap HTML (`smart-agent-roadmap.html`)
+    │   └─ Process submitted feedback (if any)
+    │   └─ Write to FEEDBACK.md, process, clear
+    │
     ├─ Create branch: pm-agents/2026-02-05
     ├─ Run PM-Intelligence
-    │   └─ Executes task from BACKLOG.md
+    │   ├─ Read MEMORY.md for context
+    │   ├─ Check CROSS_PM_AWARENESS.md
+    │   ├─ Pre-work validation (vision, API cost, context)
+    │   ├─ Execute task from BACKLOG.md
+    │   ├─ Update MEMORY.md with learnings
     │   └─ Commits changes
     ├─ Run PM-Experience
-    │   └─ Executes task from BACKLOG.md
+    │   ├─ Read MEMORY.md for context
+    │   ├─ Check CROSS_PM_AWARENESS.md
+    │   ├─ Pre-work validation
+    │   ├─ Execute task from BACKLOG.md
+    │   ├─ Update MEMORY.md with learnings
     │   └─ Commits changes
     ├─ ... (all 12 domain PMs)
     │
     ├─ Verify backlog sync (all PMs updated BACKLOG.md)
+    ├─ Verify memory updates (all PMs updated MEMORY.md)
     ├─ Run PM-QA post-cycle gate (browser tests)
-    ├─ Generate daily report
+    ├─ Generate daily report (with Ready to Test / In Progress sections)
+    ├─ Update roadmap HTML (add cycle recap, update statuses)
+    ├─ Update WORK_STATUS.md
+    ├─ Update CROSS_PM_AWARENESS.md
     ├─ Save to ~/Desktop/PM-Report-YYYY-MM-DD.md
-    └─ Update STATE.md
+    └─ Update STATE.md (with PM performance metrics)
 ```
 
 #### Key Files
@@ -711,6 +782,15 @@ python3 -m pm_core.pm_orchestrator
 - Update `.lovable/plan.md` after completing tasks
 - Follow TypeScript strict mode
 - Follow existing code patterns
+
+### PM System Integration
+
+When working with PM agents:
+- **Check WORK_STATUS.md** to see what's ready to test vs in progress
+- **Submit feedback** via `smart-agent-roadmap.html` → Feedback & Tasks tab
+- **Review cycle recaps** in roadmap → Cycle Recaps tab
+- **Check PERFORMANCE.md** for PM effectiveness metrics
+- **Read HOW_TO_READ_REPORTS.md** to interpret PM reports correctly
 
 ### Do Not
 - Modify files in `node_modules/` or `.git/`

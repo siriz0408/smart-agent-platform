@@ -97,7 +97,7 @@ serve(async (req) => {
     }
 
     // Create checkout session with 14-day trial
-    const origin = req.headers.get("origin") || "https://lovable.dev";
+    const origin = req.headers.get("origin") || "https://smart-agent-platform.vercel.app";
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],

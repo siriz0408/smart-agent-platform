@@ -407,25 +407,100 @@ Reviewer submits a brief report:
 
 ## 13.7. Roadmap Integration
 
-**Read Roadmap Before Each Cycle:**
-1. Read `smart-agent-roadmap.html`
-2. Check "Feedback & Tasks" tab for human input
-3. Process:
-   - Strategic feedback → Update VISION.md or priorities
-   - Bug reports → Route to appropriate PM
-   - Task delegation → Add to PM backlogs
-   - Research assignments → Assign to PM-Research
-   - Feature requests → Score and route
-   - Decision responses → Update DECISIONS.md
+### Reading Feedback from Roadmap HTML
 
-**Update Roadmap After Each Cycle:**
-1. Update task statuses from STATE.md
-2. Update phase progress bars
-3. Update PM agent statuses
-4. Update "Last Updated" timestamp
-5. Preserve human feedback section
+**Before Each Cycle:**
 
-**Script:** Use `docs/pm-agents/scripts/update-roadmap.sh` for automated updates
+1. **Read `smart-agent-roadmap.html` file**
+   - Use `read_file` tool to read the HTML file
+   - Search for the "Feedback & Tasks" tab content (`id="tab-feedback"`)
+
+2. **Check for Submitted Feedback**
+   - Look for element with `id="submitted-feedback-section"`
+   - Check if `style="display: block"` (feedback exists) or `style="display: none"` (no feedback)
+   - If feedback exists, proceed to step 3
+
+3. **Extract Feedback Content**
+   - Find element with `id="submitted-feedback-markdown"` - this contains the markdown text
+   - Find element with `id="submitted-feedback-images"` - this contains any attached images
+   - Extract both markdown text and image data (base64 data URLs)
+
+4. **Write Feedback to FEEDBACK.md**
+   - Write extracted markdown to `docs/pm-agents/FEEDBACK.md`
+   - Include images as markdown image syntax: `![Description](data:image/...)`
+   - Preserve the header/instructions section, replace "Current Feedback" section
+
+5. **Process Feedback**
+   - Read `docs/pm-agents/FEEDBACK.md`
+   - Process each section:
+     - **Strategic feedback** → Update VISION.md or priorities
+     - **Bug reports** → Route to appropriate PM (add to their BACKLOG.md)
+     - **Task delegation** → Add to PM backlogs (format: PM-[Name]: [Task])
+     - **Research assignments** → Assign to PM-Research (add to their BACKLOG.md)
+     - **Feature requests** → Score using prioritization framework, route to appropriate PM
+     - **Decision responses** → Update DECISIONS.md with human responses
+     - **Testing feedback** → Route to PM-QA and relevant domain PMs
+
+6. **Clear Feedback After Processing**
+   - Clear `docs/pm-agents/FEEDBACK.md` (keep only header/instructions)
+   - Update roadmap HTML: Set `#submitted-feedback-section` to `display: none`
+   - Clear `#submitted-feedback-markdown` and `#submitted-feedback-images` content
+
+### Updating Roadmap After Each Cycle
+
+**After Each Development Cycle:**
+
+1. **Update Cycle Recaps Tab**
+   - Read `docs/pm-agents/STATE.md` for cycle summary
+   - Read `docs/pm-agents/WORK_STATUS.md` for ready to test / in progress items
+   - Add new cycle recap entry in "Cycle Recaps" tab (`id="tab-cycles"`)
+   - Format:
+     ```html
+     <div class="card" style="border-left: 4px solid var(--accent);">
+       <div class="card-header">
+         <h2>Cycle [N] - [Date]</h2>
+         <p>Development Cycle #[N] • [X] PMs Active • QA Gate: [Status]</p>
+       </div>
+       <div style="padding: 20px;">
+         <!-- Executive Summary -->
+         <!-- Progress Toward Goals -->
+         <!-- Ready to Test 🟢 -->
+         <!-- In Progress 🟡 -->
+         <!-- Bugs & Issues -->
+         <!-- Considerations -->
+         <!-- Key Metrics -->
+       </div>
+     </div>
+     ```
+   - Insert at the top of the cycle recaps list (before existing cycles)
+
+2. **Update Task Statuses**
+   - Read `docs/pm-agents/STATE.md` for completed tasks
+   - Update task statuses in roadmap "Now / Next / Later" tab
+   - Move completed items from "Now" to appropriate sections
+
+3. **Update Phase Progress Bars**
+   - Calculate phase completion from STATE.md
+   - Update progress bar widths in roadmap HTML
+   - Update percentage displays
+
+4. **Update PM Agent Statuses**
+   - Read `docs/pm-agents/PERFORMANCE.md` for PM statuses
+   - Update PM agent cards in "PM Agents" tab
+   - Update status indicators (🟢/🟡/🔴)
+
+5. **Update Timestamps**
+   - Update `id="last-updated"` in Feedback & Tasks tab
+   - Format: `YYYY-MM-DD HH:MM EST`
+   - Use current date/time
+
+6. **Clear Processed Feedback**
+   - If feedback was processed, clear submitted feedback section:
+     - Set `#submitted-feedback-section` style to `display: none`
+     - Clear `#submitted-feedback-markdown` innerHTML
+     - Clear `#submitted-feedback-images` innerHTML
+
+**Note:** When updating HTML, use `search_replace` tool to modify specific sections. Be careful to preserve HTML structure and styling.
 
 ---
 
@@ -632,8 +707,27 @@ The PM-Orchestrator is invoked by the Python orchestrator (`pm_core/pm_orchestra
   ├─ Load system state (STATE.md)
   │
   ├─ Read roadmap HTML (`smart-agent-roadmap.html`)
-  │   └─ Check "Feedback & Tasks" tab for human input
-  │   └─ Process: strategic feedback, bug reports, task delegation, research assignments
+  │   ├─ Read file using `read_file` tool
+  │   ├─ Search for `id="submitted-feedback-section"` element
+  │   ├─ Check if `style="display: block"` (feedback exists)
+  │   ├─ If submitted feedback exists:
+  │   │   ├─ Extract markdown from `id="submitted-feedback-markdown"` element
+  │   │   ├─ Extract images from `id="submitted-feedback-images"` element (if present)
+  │   │   ├─ Write feedback to `docs/pm-agents/FEEDBACK.md`
+  │   │   │   └─ Include markdown text and images (base64 data URLs)
+  │   │   ├─ Process feedback (read FEEDBACK.md):
+  │   │   │   ├─ Strategic feedback → Update VISION.md or priorities
+  │   │   │   ├─ Bug reports → Route to appropriate PM (add to BACKLOG.md)
+  │   │   │   ├─ Task delegation → Add to PM backlogs (format: PM-[Name]: [Task])
+  │   │   │   ├─ Research assignments → Assign to PM-Research (add to BACKLOG.md)
+  │   │   │   ├─ Feature requests → Score using prioritization framework, route to PM
+  │   │   │   ├─ Decision responses → Update DECISIONS.md
+  │   │   │   └─ Testing feedback → Route to PM-QA and relevant domain PMs
+  │   │   ├─ Clear `docs/pm-agents/FEEDBACK.md` after processing (keep only header)
+  │   │   └─ Clear submitted feedback in roadmap HTML:
+  │   │       ├─ Set `#submitted-feedback-section` to `display: none`
+  │   │       ├─ Clear `#submitted-feedback-markdown` innerHTML
+  │   │       └─ Clear `#submitted-feedback-images` innerHTML
   │
   ├─ Review yesterday's commits
   │   └─ What was accomplished?
@@ -694,9 +788,27 @@ The PM-Orchestrator is invoked by the Python orchestrator (`pm_core/pm_orchestra
   │
   ├─ Update CROSS_PM_AWARENESS.md
   │
-  ├─ Update roadmap HTML
-  │   └─ Update task statuses, phase progress, PM statuses
-  │   └─ Preserve human feedback section
+  ├─ Update roadmap HTML (`smart-agent-roadmap.html`)
+  │   ├─ Add new cycle recap entry:
+  │   │   ├─ Read STATE.md and WORK_STATUS.md for cycle data
+  │   │   ├─ Create cycle recap card with:
+  │   │   │   ├─ Executive Summary
+  │   │   │   ├─ Progress Toward Goals (with progress bars)
+  │   │   │   ├─ Ready to Test 🟢 section
+  │   │   │   ├─ In Progress 🟡 section
+  │   │   │   ├─ Bugs & Issues section
+  │   │   │   ├─ Considerations section
+  │   │   │   └─ Key Metrics
+  │   │   └─ Insert at top of cycle recaps list (before existing cycles)
+  │   ├─ Update task statuses (from STATE.md):
+  │   │   └─ Move completed items, update "Now / Next / Later" columns
+  │   ├─ Update phase progress bars:
+  │   │   └─ Calculate completion %, update progress bar widths
+  │   ├─ Update PM agent statuses (from PERFORMANCE.md):
+  │   │   └─ Update status indicators (🟢/🟡/🔴) in PM Agents tab
+  │   ├─ Update timestamp:
+  │   │   └─ Update `id="last-updated"` to current date/time (format: YYYY-MM-DD HH:MM EST)
+  │   └─ If feedback was processed: Already cleared in earlier step
   │
   └─ Update PERFORMANCE.md (weekly)
 ```

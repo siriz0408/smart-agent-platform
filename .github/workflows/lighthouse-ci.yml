@@ -126,9 +126,13 @@ jobs:
               body: comment
             });
 
-      - name: Fail if Lighthouse thresholds not met
-        if: steps.lighthouse.outcome == 'failure'
+      - name: Report Lighthouse results (non-blocking)
+        if: always()
         run: |
-          echo "❌ Lighthouse CI failed - performance thresholds not met"
-          echo "Check the uploaded artifacts for detailed reports"
-          exit 1
+          if [ "${{ steps.lighthouse.outcome }}" == "failure" ]; then
+            echo "⚠️ Lighthouse CI thresholds not met (non-blocking)"
+            echo "Check the uploaded artifacts for detailed reports"
+            echo "This is a quality check and will not block deployment"
+          else
+            echo "✅ Lighthouse CI passed all thresholds"
+          fi

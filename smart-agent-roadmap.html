@@ -402,6 +402,7 @@
     <button class="tab" data-tab="agents">PM Agents (13)</button>
     <button class="tab" data-tab="recs">Recommendations (26)</button>
     <button class="tab" data-tab="risks">Risks & Gaps</button>
+    <button class="tab" data-tab="cycles">Cycle Recaps</button>
     <button class="tab" data-tab="feedback">Feedback & Tasks</button>
   </div>
 
@@ -1178,82 +1179,176 @@
       <div style="padding: 20px; display: flex; flex-direction: column; gap: 24px;">
         
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
-            Strategic Feedback
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Strategic Feedback
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="strategic-feedback-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'strategic-feedback-preview', 'strategic-feedback-image-data')">
+            </label>
+          </div>
+          <div id="strategic-feedback-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="strategic-feedback"
             placeholder="Provide strategic direction, vision feedback, priority changes, or high-level guidance for PM-Orchestrator..."
             style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
+          <input type="hidden" id="strategic-feedback-image-data">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
-            Bug Reports
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Bug Reports
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="bug-reports-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'bug-reports-preview', 'bug-reports-image-data')">
+            </label>
+          </div>
+          <div id="bug-reports-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="bug-reports"
             placeholder="Report bugs you've found. Include: description, steps to reproduce, expected vs actual behavior, severity (P0/P1/P2)..."
             style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
+          <input type="hidden" id="bug-reports-image-data">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
-            Task Delegation
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Task Delegation
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="task-delegation-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'task-delegation-preview', 'task-delegation-image-data')">
+            </label>
+          </div>
+          <div id="task-delegation-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="task-delegation"
             placeholder="Delegate specific tasks to PMs. Format: PM-[Name]: [Task description]..."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
+          <input type="hidden" id="task-delegation-image-data">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
-            Research Assignments
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Research Assignments
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="research-assignments-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'research-assignments-preview', 'research-assignments-image-data')">
+            </label>
+          </div>
+          <div id="research-assignments-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="research-assignments"
             placeholder="Assign research tasks to PM-Research. Include: topic, scope, deadline (if any)..."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
+          <input type="hidden" id="research-assignments-image-data">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
-            Feature Requests
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Feature Requests
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="feature-requests-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'feature-requests-preview', 'feature-requests-image-data')">
+            </label>
+          </div>
+          <div id="feature-requests-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="feature-requests"
             placeholder="Request new features or enhancements. Include: description, user benefit, priority..."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
+          <input type="hidden" id="feature-requests-image-data">
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--text);">
-            Decision Responses
-          </label>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Decision Responses
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="decision-responses-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'decision-responses-preview', 'decision-responses-image-data')">
+            </label>
+          </div>
+          <div id="decision-responses-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="decision-responses"
             placeholder="Respond to decisions in DECISIONS.md. Format: Decision ID: [Approve/Reject/Modify] - [Reasoning]..."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
+          <input type="hidden" id="decision-responses-image-data">
+        </div>
+
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <label style="font-weight: 600; color: var(--text);">
+              Testing Feedback
+            </label>
+            <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+              📎 Attach Image
+              <input type="file" id="testing-feedback-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'testing-feedback-preview', 'testing-feedback-image-data')">
+            </label>
+          </div>
+          <div id="testing-feedback-preview" style="margin-bottom: 8px; display: none;"></div>
+          <textarea 
+            id="testing-feedback"
+            placeholder="Provide feedback on features you've tested. Include: feature name, what worked well, issues found, suggestions for improvement, test scenarios tried..."
+            style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
+          ></textarea>
+          <input type="hidden" id="testing-feedback-image-data">
         </div>
 
         <div style="padding-top: 16px; border-top: 1px solid var(--border);">
-          <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6;">
+          <button 
+            id="submit-feedback-btn"
+            onclick="submitFeedback()"
+            style="width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 16px;"
+            onmouseover="this.style.background='var(--accent-light)'"
+            onmouseout="this.style.background='var(--accent)'"
+          >
+            📤 Submit Feedback
+          </button>
+          
+          <div id="submitted-feedback-section" style="display: none; margin-top: 24px; padding-top: 24px; border-top: 2px solid var(--border);">
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text);">
+              ✅ Submitted Feedback (Waiting for PM-Orchestrator Processing)
+            </h3>
+            <div id="submitted-feedback-content" style="background: var(--surface2); border-radius: 8px; padding: 16px; font-family: 'Monaco', 'Courier New', monospace; font-size: 13px; color: var(--text); white-space: pre-wrap; max-height: 600px; overflow-y: auto; overflow-x: auto;">
+              <div id="submitted-feedback-markdown" style="white-space: pre-wrap;"></div>
+              <div id="submitted-feedback-images" style="margin-top: 16px;"></div>
+            </div>
+            <p style="color: var(--text-muted); font-size: 12px; margin-top: 12px;">
+              <strong>Next Steps:</strong> PM-Orchestrator will read this feedback before the next cycle, process it, 
+              write it to <code style="background: var(--surface); padding: 2px 6px; border-radius: 4px;">docs/pm-agents/FEEDBACK.md</code>, 
+              and clear this section after processing.
+            </p>
+          </div>
+
+          <p style="color: var(--text-muted); font-size: 13px; line-height: 1.6; margin-top: 16px;">
             <strong>How PM-Orchestrator processes this:</strong><br>
-            • Reads this section before each cycle (8am, 12pm, 8pm EST)<br>
+            • Reads submitted feedback before each cycle (8am, 12pm, 8pm EST)<br>
+            • Writes feedback to <code style="background: var(--surface); padding: 2px 6px; border-radius: 4px;">docs/pm-agents/FEEDBACK.md</code><br>
             • Strategic feedback → Updates VISION.md or priorities<br>
             • Bug reports → Routes to appropriate PM<br>
             • Task delegation → Adds to PM backlogs<br>
             • Research assignments → Assigns to PM-Research<br>
             • Feature requests → Scores and routes using prioritization framework<br>
-            • Decision responses → Updates DECISIONS.md<br><br>
-            <strong>Note:</strong> PM-Orchestrator preserves your input but may clear fields after processing to keep this section manageable.
+            • Decision responses → Updates DECISIONS.md<br>
+            • Testing feedback → Routes to PM-QA and relevant domain PMs<br>
+            • Clears submitted feedback section after processing
           </p>
         </div>
 
@@ -1283,9 +1378,282 @@
       </div>
     </div>
   </div>
-</div>
+  </div>
 
-<script>
+  <!-- TAB: CYCLE RECAPS -->
+  <div class="tab-content" id="tab-cycles">
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      
+      <!-- Cycle 9 Example -->
+      <div class="card" style="border-left: 4px solid var(--accent);">
+        <div class="card-header">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 style="margin: 0; font-size: 20px;">Cycle 9 - 2026-02-07</h2>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+                Development Cycle #9 • 13 PMs Active • QA Gate: ✅ CONDITIONAL PASS
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="stat-chip" style="background: var(--green-bg); border-color: var(--green);">
+                <span class="dot green"></span>
+                <span>13 Complete</span>
+              </span>
+              <span class="stat-chip" style="background: var(--yellow-bg); border-color: var(--yellow);">
+                <span class="dot yellow"></span>
+                <span>0 In Progress</span>
+              </span>
+              <span class="stat-chip" style="background: var(--red-bg); border-color: var(--red);">
+                <span class="dot red"></span>
+                <span>0 Blocked</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+          
+          <!-- Executive Summary -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Executive Summary</h3>
+            <p style="color: var(--text-muted); line-height: 1.6;">
+              Cycle 9 focused on resolving 13 critical issues identified from user testing. All PMs delivered fixes, 
+              with PM-Discovery completing numeric search fix, PM-Experience improving navigation, and PM-Integration 
+              planning architecture refactor. QA gate passed conditionally (3 migrations ready for deployment).
+            </p>
+          </div>
+
+          <!-- Bigger Initiative Progress -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Progress Toward Goals</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              
+              <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0;">MCP-Style Connector Experience</h4>
+                  <span style="font-size: 12px; color: var(--text-muted);">40% Complete</span>
+                </div>
+                <div style="background: var(--surface); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                  <div style="background: var(--accent); height: 100%; width: 40%; transition: width 0.3s;"></div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  ✅ INT-015: Moved integrations to Settings • ✅ INT-016: Fixed broken UI • 
+                  🟡 INT-017: MCP connector design (30%) • 🟡 INT-018: AI chat integration plan (pending)
+                </p>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0;">Fix Critical Search Issues</h4>
+                  <span style="font-size: 12px; color: var(--text-muted);">50% Complete</span>
+                </div>
+                <div style="background: var(--surface); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                  <div style="background: var(--accent); height: 100%; width: 50%; transition: width 0.3s;"></div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  ✅ Root cause identified (PostgreSQL full-text search) • 
+                  🟡 DIS-014: Fix implementation (50%) • 🔴 DIS-015: Comprehensive testing (pending) • 
+                  🔴 DIS-016: Input matching investigation (pending)
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Ready to Test -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--green);">
+              🟢 Ready to Test
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                  <div>
+                    <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                      EXP-007: Dark Mode Toggle
+                    </h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                      PM-Experience • 100% Complete
+                    </p>
+                  </div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 8px 0;">
+                  <strong>Test Instructions:</strong> Toggle in Settings > Appearance, verify theme changes persist across page reloads.
+                </p>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                  <strong>Part of Initiative:</strong> UI/UX Polish
+                </p>
+              </div>
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                  <div>
+                    <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                      COM-005: Message Reactions
+                    </h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                      PM-Communication • 100% Complete
+                    </p>
+                  </div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 8px 0;">
+                  <strong>Test Instructions:</strong> Click emoji reactions on messages, verify real-time updates across users.
+                </p>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                  <strong>Part of Initiative:</strong> Real-Time Messaging Enhancement
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- In Progress -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--yellow);">
+              🟡 In Progress
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              
+              <div style="background: var(--yellow-bg); border: 1px solid var(--yellow); border-radius: 8px; padding: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                  <div>
+                    <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                      INT-017: MCP Connector Design
+                    </h4>
+                    <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                      PM-Integration • 30% Complete • ETA: 2 cycles
+                    </p>
+                  </div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 8px 0;">
+                  <strong>What's Done:</strong> Initial design started
+                </p>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0 0 8px 0;">
+                  <strong>What's Left:</strong> Design completion, AI integration plan
+                </p>
+                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+                  <strong>Part of Initiative:</strong> MCP-Style Connector Experience (40% complete)
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bugs & Issues -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">
+              🐛 Bugs & Issues Encountered
+            </h3>
+            <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+              <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                <strong>INT-014/15/16:</strong> AI chat buttons investigation revealed no bugs - working as designed. 
+                Visual feedback improvements recommended (INT-017).
+              </p>
+            </div>
+          </div>
+
+          <!-- Considerations -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">
+              💭 Considerations for Review
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              
+              <div style="background: var(--blue-bg); border-left: 3px solid var(--blue); padding: 12px; border-radius: 4px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--blue); margin: 0 0 8px 0;">
+                  Deployment: 3 Migrations Ready
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  QA gate passed conditionally. Three migrations ready for deployment: fix_numeric_search.sql, 
+                  ctx010_add_metadata.sql, sec006_security_monitoring.sql. Review before deploying.
+                </p>
+              </div>
+
+              <div style="background: var(--orange-bg); border-left: 3px solid var(--orange); padding: 12px; border-radius: 4px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--orange); margin: 0 0 8px 0;">
+                  PM-Growth Blocked on Metrics Infrastructure
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  GRW-006 (MRR metrics) blocked. Needs PM-Infrastructure to build metrics system. 
+                  Consider prioritizing metrics infrastructure to unblock growth features.
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Key Metrics -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">
+              📊 Key Metrics
+            </h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent);">13</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">PMs Completed</div>
+              </div>
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent);">3</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Migrations Ready</div>
+              </div>
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent);">13</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Critical Issues Resolved</div>
+              </div>
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent);">100%</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Backlog Sync</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Cycle 8 Example -->
+      <div class="card" style="border-left: 4px solid var(--accent); opacity: 0.8;">
+        <div class="card-header">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 style="margin: 0; font-size: 20px;">Cycle 8 - 2026-02-06</h2>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+                Development Cycle #8 • 12 PMs Active • QA Gate: ✅ PASS
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="stat-chip" style="background: var(--green-bg); border-color: var(--green);">
+                <span class="dot green"></span>
+                <span>12 Complete</span>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div style="padding: 20px;">
+          <p style="color: var(--text-muted); font-size: 13px; margin: 0;">
+            Focus: Security Hardening, UX Polish, Analytics, and Revenue Features. 
+            75 files changed, 1,788 lines added. Key outcomes: Tenant isolation (HO-009), CORS hardened (38 functions), 
+            Dark mode shipped, Message reactions, Onboarding optimized, Revenue forecasting, PDF parsing enhanced.
+          </p>
+        </div>
+      </div>
+
+      <!-- Placeholder for future cycles -->
+      <div style="text-align: center; padding: 40px; color: var(--text-muted);">
+        <p style="font-size: 14px; margin: 0;">
+          PM-Orchestrator will update this section after each development cycle.
+        </p>
+        <p style="font-size: 12px; margin-top: 8px; opacity: 0.7;">
+          Each cycle recap includes: executive summary, progress toward goals, ready to test items, 
+          in-progress work, bugs/issues, considerations, and key metrics.
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
   // Tab switching
   document.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
@@ -1310,6 +1678,203 @@
         }
       });
     });
+  });
+
+  // Image upload handler
+  function handleImageUpload(input, previewId, dataId) {
+    const file = input.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file.');
+      input.value = '';
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const base64Data = e.target.result;
+      document.getElementById(dataId).value = base64Data;
+      
+      // Show preview
+      const preview = document.getElementById(previewId);
+      preview.innerHTML = `
+        <div style="position: relative; display: inline-block;">
+          <img src="${base64Data}" style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 1px solid var(--border);" alt="Preview">
+          <button onclick="removeImage('${previewId}', '${dataId}', '${input.id}')" style="position: absolute; top: 4px; right: 4px; background: var(--red); color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+        <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${file.name} (${(file.size / 1024).toFixed(1)} KB)</p>
+      `;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // Remove image
+  function removeImage(previewId, dataId, inputId) {
+    document.getElementById(previewId).style.display = 'none';
+    document.getElementById(previewId).innerHTML = '';
+    document.getElementById(dataId).value = '';
+    document.getElementById(inputId).value = '';
+  }
+
+  // Feedback submission
+  function submitFeedback() {
+    const strategicFeedback = document.getElementById('strategic-feedback').value.trim();
+    const bugReports = document.getElementById('bug-reports').value.trim();
+    const taskDelegation = document.getElementById('task-delegation').value.trim();
+    const researchAssignments = document.getElementById('research-assignments').value.trim();
+    const featureRequests = document.getElementById('feature-requests').value.trim();
+    const decisionResponses = document.getElementById('decision-responses').value.trim();
+    const testingFeedback = document.getElementById('testing-feedback').value.trim();
+    
+    const strategicFeedbackImage = document.getElementById('strategic-feedback-image-data').value;
+    const bugReportsImage = document.getElementById('bug-reports-image-data').value;
+    const taskDelegationImage = document.getElementById('task-delegation-image-data').value;
+    const researchAssignmentsImage = document.getElementById('research-assignments-image-data').value;
+    const featureRequestsImage = document.getElementById('feature-requests-image-data').value;
+    const decisionResponsesImage = document.getElementById('decision-responses-image-data').value;
+    const testingFeedbackImage = document.getElementById('testing-feedback-image-data').value;
+
+    // Check if any feedback was provided
+    if (!strategicFeedback && !bugReports && !taskDelegation && !researchAssignments && !featureRequests && !decisionResponses && !testingFeedback &&
+        !strategicFeedbackImage && !bugReportsImage && !taskDelegationImage && !researchAssignmentsImage && !featureRequestsImage && !decisionResponsesImage && !testingFeedbackImage) {
+      alert('Please provide at least one piece of feedback or attach an image before submitting.');
+      return;
+    }
+
+    // Get current timestamp
+    const now = new Date();
+    const timestamp = now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+
+    // Format feedback as markdown
+    let markdown = `# Feedback Submission\n\n`;
+    markdown += `**Submitted:** ${timestamp}\n\n`;
+    markdown += `---\n\n`;
+
+    if (strategicFeedback || strategicFeedbackImage) {
+      markdown += `## Strategic Feedback\n\n`;
+      if (strategicFeedback) markdown += `${strategicFeedback}\n\n`;
+      if (strategicFeedbackImage) markdown += `![Strategic Feedback Image](${strategicFeedbackImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    if (bugReports || bugReportsImage) {
+      markdown += `## Bug Reports\n\n`;
+      if (bugReports) markdown += `${bugReports}\n\n`;
+      if (bugReportsImage) markdown += `![Bug Report Image](${bugReportsImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    if (taskDelegation || taskDelegationImage) {
+      markdown += `## Task Delegation\n\n`;
+      if (taskDelegation) markdown += `${taskDelegation}\n\n`;
+      if (taskDelegationImage) markdown += `![Task Delegation Image](${taskDelegationImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    if (researchAssignments || researchAssignmentsImage) {
+      markdown += `## Research Assignments\n\n`;
+      if (researchAssignments) markdown += `${researchAssignments}\n\n`;
+      if (researchAssignmentsImage) markdown += `![Research Assignment Image](${researchAssignmentsImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    if (featureRequests || featureRequestsImage) {
+      markdown += `## Feature Requests\n\n`;
+      if (featureRequests) markdown += `${featureRequests}\n\n`;
+      if (featureRequestsImage) markdown += `![Feature Request Image](${featureRequestsImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    if (decisionResponses || decisionResponsesImage) {
+      markdown += `## Decision Responses\n\n`;
+      if (decisionResponses) markdown += `${decisionResponses}\n\n`;
+      if (decisionResponsesImage) markdown += `![Decision Response Image](${decisionResponsesImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    if (testingFeedback || testingFeedbackImage) {
+      markdown += `## Testing Feedback\n\n`;
+      if (testingFeedback) markdown += `${testingFeedback}\n\n`;
+      if (testingFeedbackImage) markdown += `![Testing Feedback Image](${testingFeedbackImage})\n\n`;
+      markdown += `---\n\n`;
+    }
+
+    markdown += `\n*This feedback will be processed by PM-Orchestrator before the next cycle.*\n`;
+
+    // Display submitted feedback
+    const submittedSection = document.getElementById('submitted-feedback-section');
+    const submittedMarkdown = document.getElementById('submitted-feedback-markdown');
+    const submittedImages = document.getElementById('submitted-feedback-images');
+    
+    // Extract images from markdown and display separately
+    const images = [
+      { section: 'Strategic Feedback', data: strategicFeedbackImage },
+      { section: 'Bug Reports', data: bugReportsImage },
+      { section: 'Task Delegation', data: taskDelegationImage },
+      { section: 'Research Assignments', data: researchAssignmentsImage },
+      { section: 'Feature Requests', data: featureRequestsImage },
+      { section: 'Decision Responses', data: decisionResponsesImage },
+      { section: 'Testing Feedback', data: testingFeedbackImage }
+    ].filter(img => img.data);
+    
+    submittedMarkdown.textContent = markdown;
+    
+    if (images.length > 0) {
+      let imagesHtml = '<div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;"><h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Attached Images:</h4>';
+      images.forEach(img => {
+        imagesHtml += `<div style="margin-bottom: 16px;"><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">${img.section}:</p><img src="${img.data}" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border);" alt="${img.section}"></div>`;
+      });
+      imagesHtml += '</div>';
+      submittedImages.innerHTML = imagesHtml;
+    } else {
+      submittedImages.innerHTML = '';
+    }
+    
+    submittedSection.style.display = 'block';
+
+    // Scroll to submitted section
+    submittedSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+    // Clear form fields
+    document.getElementById('strategic-feedback').value = '';
+    document.getElementById('bug-reports').value = '';
+    document.getElementById('task-delegation').value = '';
+    document.getElementById('research-assignments').value = '';
+    document.getElementById('feature-requests').value = '';
+    document.getElementById('decision-responses').value = '';
+    document.getElementById('testing-feedback').value = '';
+    
+    // Clear images
+    removeImage('strategic-feedback-preview', 'strategic-feedback-image-data', 'strategic-feedback-image');
+    removeImage('bug-reports-preview', 'bug-reports-image-data', 'bug-reports-image');
+    removeImage('task-delegation-preview', 'task-delegation-image-data', 'task-delegation-image');
+    removeImage('research-assignments-preview', 'research-assignments-image-data', 'research-assignments-image');
+    removeImage('feature-requests-preview', 'feature-requests-image-data', 'feature-requests-image');
+    removeImage('decision-responses-preview', 'decision-responses-image-data', 'decision-responses-image');
+    removeImage('testing-feedback-preview', 'testing-feedback-image-data', 'testing-feedback-image');
+
+    // Update button text
+    const submitBtn = document.getElementById('submit-feedback-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '✅ Feedback Submitted';
+    submitBtn.style.background = 'var(--green)';
+    submitBtn.disabled = true;
+
+    setTimeout(() => {
+      submitBtn.innerHTML = originalText;
+      submitBtn.style.background = 'var(--accent)';
+      submitBtn.disabled = false;
+    }, 2000);
+  }
+
+  // Load existing submitted feedback if present (for page refresh)
+  window.addEventListener('DOMContentLoaded', () => {
+    const submittedContent = document.getElementById('submitted-feedback-content');
+    if (submittedContent && submittedContent.textContent.trim()) {
+      document.getElementById('submitted-feedback-section').style.display = 'block';
+    }
   });
 </script>
 

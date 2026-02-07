@@ -1,6 +1,8 @@
 # Running the PM System
 
-> **Purpose:** How to invoke and operate the PM Agent System
+> **Purpose:** How to invoke and operate the PM Agent System  
+> **Last Updated:** 2026-02-07  
+> **See Also:** [README.md](./README.md) for system overview, [HOW_TO_READ_REPORTS.md](./HOW_TO_READ_REPORTS.md) for report interpretation
 
 ---
 
@@ -95,6 +97,79 @@ Different run types for different needs:
 
 ---
 
+## Enhanced PM System Features
+
+### Enhanced Reporting (2026-02-07)
+
+PM reports now clearly distinguish:
+- **🟢 Ready to Test**: Features/components ready for human UI testing
+- **🟡 In Progress**: Work that's not ready for testing yet
+- **🔴 Blocked**: Work that cannot proceed
+
+Reports include:
+- Feature completion percentages
+- "What's Ready to Test" vs "What Still Needs Work"
+- Progress toward larger goals/initiatives
+- Vision alignment scores
+- API cost estimates
+
+**See `docs/pm-agents/HOW_TO_READ_REPORTS.md` for complete guide.**
+
+### Memory System
+
+Each PM maintains a `MEMORY.md` file that:
+- Retains learnings across cycles
+- Documents architecture patterns discovered
+- Tracks common issues & solutions
+- Records cross-PM coordination patterns
+
+**Location**: `docs/pm-agents/agents/PM-*/MEMORY.md`
+
+### Cross-PM Coordination
+
+`CROSS_PM_AWARENESS.md` tracks:
+- Active work across all PMs
+- Cross-PM initiatives and dependencies
+- Shared context (architecture changes, patterns)
+
+PMs check this before starting work to reduce silos.
+
+### Roadmap Integration
+
+`smart-agent-roadmap.html` provides:
+- **Feedback & Tasks tab**: Submit feedback with image attachments
+- **Cycle Recaps tab**: Detailed cycle summaries with progress tracking
+- PM-Orchestrator reads feedback before cycles and updates roadmap after cycles
+
+### Development Method Selection
+
+PMs have discretion to choose:
+- `/feature-dev` for big features (3+ files, architectural)
+- `smart-agent-brainstorming` for small updates (single component)
+- Direct implementation for bug fixes
+
+**Reference**: `docs/pm-agents/SKILLS.md`
+
+### Pre-Work Validation
+
+Before starting work, PMs must:
+1. Check vision alignment (score ≥7)
+2. Estimate API costs
+3. Review big picture context (`CROSS_PM_AWARENESS.md`)
+4. Read their memory (`MEMORY.md`)
+
+### Pre-Deployment Checklist
+
+Before marking work complete:
+- Integration checks
+- User impact assessment
+- Cross-PM impact verification
+- Rollback plan (if applicable)
+
+**Reference**: `docs/pm-agents/PRE_DEPLOYMENT_CHECKLIST.md`
+
+---
+
 ## What Happens During a Run
 
 ### 1. Context Loading
@@ -183,32 +258,34 @@ docs/pm-agents/reports/
 
 ### Report Structure
 
-```markdown
-# PM Report - [Date] [Time]
+**Enhanced Report Format (2026-02-07):**
 
-## Status: 🟢/🟡/🔴
+```markdown
+# PM Development Report - [Date] [Time] EST
 
 ## Executive Summary
-[2-3 sentences]
+[Strategic overview with trends and patterns]
 
-## PM Highlights
-### PM-Intelligence
-[Status, key findings]
+## Ready to Test 🟢
+[Features/components ready for human UI testing]
+- Task ID, PM, Feature, Test Instructions, Completion %
 
-### PM-Context
-[Status, key findings]
-...
+## In Progress 🟡
+[Work that's not ready for testing yet]
+- Task ID, PM, Feature, Completion %, What's Done, What's Left, ETA
 
-## Decisions Needing Approval
-[List from DECISIONS.md]
+## Blocked 🔴
+[Work that cannot proceed]
+- Task ID, PM, Feature, Blocker, Needs
 
-## Active Handoffs
-[List from HANDOFFS.md]
+## Progress Toward Goals
+[Larger initiatives with progress tracking]
 
-## Tomorrow's Priorities
-1. [Priority]
-2. [Priority]
+## Key Metrics
+- Commits, Files Changed, Tests, PMs Completed
 ```
+
+**See `docs/pm-agents/HOW_TO_READ_REPORTS.md` for complete guide on interpreting reports.**
 
 ---
 
@@ -226,10 +303,31 @@ Next PM run will pick up your response.
 
 ### How to Give Feedback
 
-Options:
+**Primary Method: Roadmap Feedback System** ⭐ RECOMMENDED
+1. Open `smart-agent-roadmap.html` in browser
+2. Navigate to "Feedback & Tasks" tab
+3. Fill out relevant sections:
+   - Strategic Feedback
+   - Bug Reports (with images/screenshots)
+   - Task Delegation
+   - Research Assignments
+   - Feature Requests
+   - Decision Responses
+   - Testing Feedback
+4. Attach images if needed (📎 button next to each section)
+5. Click "Submit Feedback"
+6. PM-Orchestrator processes feedback before next cycle
+
+**Alternative Methods:**
 1. **Direct message:** "PM-Orchestrator, regarding [X]..."
 2. **Update DECISIONS.md:** Add notes to pending items
 3. **Create new request:** "PM-[X], please investigate [Y]"
+
+**Feedback Processing:**
+- PM-Orchestrator reads submitted feedback before each cycle
+- Writes to `docs/pm-agents/FEEDBACK.md`
+- Processes and routes feedback appropriately
+- Clears feedback after processing
 
 ---
 
@@ -299,16 +397,24 @@ PMs can spawn their own sub-agents:
 - Review resolved decisions
 - Archive old reports (>30 days)
 - Check PM backlog health
+- Review `PERFORMANCE.md` for PM effectiveness
+- Update `CROSS_PM_AWARENESS.md` with latest work
+- Review cycle recaps in `smart-agent-roadmap.html`
 
 ### Monthly
-- Review PM effectiveness
+- Review PM effectiveness (check `PERFORMANCE.md`)
 - Update OWNERSHIP.md if needed
 - Refine PM instructions based on learnings
+- Cross-PM coordination review (`CROSS_PM_AWARENESS.md`)
+- Roadmap review and update (`smart-agent-roadmap.html`)
 
 ### Quarterly
 - Vision review
 - PM scope adjustments
 - OKR setting
+- Skills review (`SKILLS.md`)
+- API cost analysis (`API_GUARDRAILS.md`)
+- Memory system review (check PM `MEMORY.md` files for patterns)
 
 ---
 

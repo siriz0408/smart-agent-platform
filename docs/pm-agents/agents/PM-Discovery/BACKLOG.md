@@ -6,7 +6,7 @@
 
 | ID | Item | Priority | Notes |
 |----|------|----------|-------|
-| **DIS-015** | **Test all search types comprehensively** | **P0** | **Next task: Test documents, contacts, properties, deals, agents - verify DIS-014 fix** |
+| - | None | - | DIS-015 blocked until migration deployed |
 
 ## Ready
 
@@ -149,9 +149,10 @@ PostgreSQL's `websearch_to_tsquery('english', p_query)` filters out pure numeric
 
 ## Completed
 
-| ID | Item | Completed |
-|----|------|-----------|
-| DIS-000 | PM-Discovery setup | 2026-02-05 |
+| ID | Item | Completed | Notes |
+|----|------|-----------|-------|
+| **DIS-015** | **Test plan creation for comprehensive search testing** | **2026-02-07** | **Created comprehensive test matrix with 30+ queries across 5 entity types. Report: pm-discovery-dis015-comprehensive-search-test.md. BLOCKED: Awaiting migration deployment** |
+| DIS-000 | PM-Discovery setup | 2026-02-05 | - |
 | DIS-001 | Initial domain audit | 2026-02-06 |
 | DIS-002 | Test 20 common searches | 2026-02-06 |
 | DIS-003 | Measure success rate | 2026-02-06 |
