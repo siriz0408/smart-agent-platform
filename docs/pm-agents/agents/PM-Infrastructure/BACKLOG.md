@@ -11,7 +11,6 @@
 
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
-| INF-005 | Optimize costs | P2 | L |
 | INF-012 | Track build times | P2 | S |
 | INF-013 | Add deployment rollback automation | P2 | M |
 | INF-014 | Configure GitHub repository variables for verification (PRODUCTION_URL, SUPABASE_PROJECT_REF) | P3 | S |
@@ -31,3 +30,4 @@
 | INF-004 | Audit deployment pipeline | 2026-02-06 |
 | INF-009 | Verify Sentry configuration | 2026-02-06 |
 | INF-011 | Add deployment verification | 2026-02-07 |
+| INF-005 | Optimize costs | 2026-02-07 | ✅ Comprehensive cost optimization analysis. Identified 15 optimization opportunities across edge functions (38 functions), database, storage, and API usage. 4-phase implementation plan with expected 30-50% cost savings ($32-135/month). Report: `docs/pm-agents/reports/2026-02-07/pm-infrastructure-inf005-cost-optimization.md` |
