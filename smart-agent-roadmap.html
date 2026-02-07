@@ -1184,17 +1184,16 @@
               Strategic Feedback
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="strategic-feedback-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'strategic-feedback-preview', 'strategic-feedback-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="strategic-feedback-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'strategic-feedback-preview', 'strategic-feedback')">
             </label>
           </div>
           <div id="strategic-feedback-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="strategic-feedback"
-            placeholder="Provide strategic direction, vision feedback, priority changes, or high-level guidance for PM-Orchestrator..."
+            placeholder="Provide strategic direction, vision feedback, priority changes, or high-level guidance for PM-Orchestrator...&#10;&#10;You can reference attached images as 'Image 1', 'Image 2', etc. in your text."
             style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="strategic-feedback-image-data">
         </div>
 
         <div>
@@ -1203,17 +1202,16 @@
               Bug Reports
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="bug-reports-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'bug-reports-preview', 'bug-reports-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="bug-reports-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'bug-reports-preview', 'bug-reports')">
             </label>
           </div>
           <div id="bug-reports-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="bug-reports"
-            placeholder="Report bugs you've found. Include: description, steps to reproduce, expected vs actual behavior, severity (P0/P1/P2)..."
+            placeholder="Report bugs you've found. Include: description, steps to reproduce, expected vs actual behavior, severity (P0/P1/P2)...&#10;&#10;Attach screenshots and reference them as 'Image 1', 'Image 2', etc. in your description."
             style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="bug-reports-image-data">
         </div>
 
         <div>
@@ -1222,17 +1220,16 @@
               Task Delegation
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="task-delegation-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'task-delegation-preview', 'task-delegation-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="task-delegation-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'task-delegation-preview', 'task-delegation')">
             </label>
           </div>
           <div id="task-delegation-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="task-delegation"
-            placeholder="Delegate specific tasks to PMs. Format: PM-[Name]: [Task description]..."
+            placeholder="Delegate specific tasks to PMs. Format: PM-[Name]: [Task description]...&#10;&#10;Reference attached images as 'Image 1', 'Image 2', etc. if needed."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="task-delegation-image-data">
         </div>
 
         <div>
@@ -1241,17 +1238,16 @@
               Research Assignments
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="research-assignments-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'research-assignments-preview', 'research-assignments-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="research-assignments-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'research-assignments-preview', 'research-assignments')">
             </label>
           </div>
           <div id="research-assignments-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="research-assignments"
-            placeholder="Assign research tasks to PM-Research. Include: topic, scope, deadline (if any)..."
+            placeholder="Assign research tasks to PM-Research. Include: topic, scope, deadline (if any)...&#10;&#10;Reference attached images as 'Image 1', 'Image 2', etc. if needed."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="research-assignments-image-data">
         </div>
 
         <div>
@@ -1260,17 +1256,16 @@
               Feature Requests
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="feature-requests-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'feature-requests-preview', 'feature-requests-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="feature-requests-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'feature-requests-preview', 'feature-requests')">
             </label>
           </div>
           <div id="feature-requests-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="feature-requests"
-            placeholder="Request new features or enhancements. Include: description, user benefit, priority..."
+            placeholder="Request new features or enhancements. Include: description, user benefit, priority...&#10;&#10;Attach mockups/wireframes and reference them as 'Image 1', 'Image 2', etc."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="feature-requests-image-data">
         </div>
 
         <div>
@@ -1279,17 +1274,16 @@
               Decision Responses
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="decision-responses-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'decision-responses-preview', 'decision-responses-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="decision-responses-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'decision-responses-preview', 'decision-responses')">
             </label>
           </div>
           <div id="decision-responses-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="decision-responses"
-            placeholder="Respond to decisions in DECISIONS.md. Format: Decision ID: [Approve/Reject/Modify] - [Reasoning]..."
+            placeholder="Respond to decisions in DECISIONS.md. Format: Decision ID: [Approve/Reject/Modify] - [Reasoning]...&#10;&#10;Reference attached images as 'Image 1', 'Image 2', etc. if needed."
             style="width: 100%; min-height: 100px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="decision-responses-image-data">
         </div>
 
         <div>
@@ -1298,17 +1292,16 @@
               Testing Feedback
             </label>
             <label style="font-size: 12px; color: var(--text-muted); cursor: pointer; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border); transition: all 0.2s;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
-              📎 Attach Image
-              <input type="file" id="testing-feedback-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'testing-feedback-preview', 'testing-feedback-image-data')">
+              📎 Attach Image(s)
+              <input type="file" id="testing-feedback-image" accept="image/*" style="display: none;" onchange="handleImageUpload(this, 'testing-feedback-preview', 'testing-feedback')">
             </label>
           </div>
           <div id="testing-feedback-preview" style="margin-bottom: 8px; display: none;"></div>
           <textarea 
             id="testing-feedback"
-            placeholder="Provide feedback on features you've tested. Include: feature name, what worked well, issues found, suggestions for improvement, test scenarios tried..."
+            placeholder="Provide feedback on features you've tested. Include: feature name, what worked well, issues found, suggestions for improvement, test scenarios tried...&#10;&#10;Attach screenshots and reference them as 'Image 1', 'Image 2', etc. in your description."
             style="width: 100%; min-height: 120px; padding: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-family: inherit; font-size: 14px; resize: vertical;"
           ></textarea>
-          <input type="hidden" id="testing-feedback-image-data">
         </div>
 
         <div style="padding-top: 16px; border-top: 1px solid var(--border);">
@@ -1383,6 +1376,225 @@
   <!-- TAB: CYCLE RECAPS -->
   <div class="tab-content" id="tab-cycles">
     <div style="display: flex; flex-direction: column; gap: 24px;">
+
+      <!-- Cycle 11 - Complete In-Progress Features + Unblock PM-Growth -->
+      <div class="card" style="border-left: 4px solid var(--accent);">
+        <div class="card-header">
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <h2 style="margin: 0; font-size: 20px;">Cycle 11 - 2026-02-07</h2>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">
+                Development Cycle #11 • 12 PMs Active • QA Gate: ✅ PASS
+              </p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <span class="stat-chip" style="background: var(--green-bg); border-color: var(--green);">
+                <span class="dot green"></span>
+                <span>6 Ready to Test</span>
+              </span>
+              <span class="stat-chip" style="background: var(--yellow-bg); border-color: var(--yellow);">
+                <span class="dot yellow"></span>
+                <span>2 In Progress</span>
+              </span>
+              <span class="stat-chip" style="background: var(--green-bg); border-color: var(--green);">
+                <span class="dot green"></span>
+                <span>0 Blocked</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 20px;">
+
+          <!-- Executive Summary -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Executive Summary</h3>
+            <p style="color: var(--text-muted); line-height: 1.6;">
+              All 12 PMs delivered successfully. 8 features completed to 100%, including critical search testing validation, stop generating button, document projects UI, activity feed mobile polish, read receipts, email alerting, animation polish, and Phase 3 roadmap. PM-Growth unblocked after PM-Infrastructure delivered metrics infrastructure. MCP connector progressed 60% → 80%. Added +18 E2E tests (total: 235).
+            </p>
+          </div>
+
+          <!-- Progress Toward Goals -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">Progress Toward Goals</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0;">MCP-Style Connector Experience</h4>
+                  <span style="font-size: 12px; color: var(--text-muted);">80% Complete (+20%)</span>
+                </div>
+                <div style="background: var(--surface); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                  <div style="background: var(--accent); height: 100%; width: 80%; transition: width 0.3s;"></div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  ✅ Connector framework operational • ✅ OAuth foundation built • ✅ Permission model designed • 🟡 UI implementation (80%)
+                </p>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0;">Fix Critical Search Issues</h4>
+                  <span style="font-size: 12px; color: var(--text-muted);">100% Complete ✅</span>
+                </div>
+                <div style="background: var(--surface); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                  <div style="background: var(--green); height: 100%; width: 100%; transition: width 0.3s;"></div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  ✅ DIS-015: Comprehensive testing complete • ✅ 95%+ search success rate validated • ✅ +45% improvement confirmed
+                </p>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0;">Unblock PM-Growth</h4>
+                  <span style="font-size: 12px; color: var(--text-muted);">100% Complete ✅ (NEW)</span>
+                </div>
+                <div style="background: var(--surface); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px;">
+                  <div style="background: var(--green); height: 100%; width: 100%; transition: width 0.3s;"></div>
+                </div>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  ✅ INF-017: Metrics infrastructure built • ✅ PM-Growth can now proceed with GRW-006 (MRR metrics dashboard) in Cycle 12
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Ready to Test -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--green);">
+              🟢 Ready to Test (6 Features)
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                  INT-020: Stop Generating Button
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  <strong>Test:</strong> Send AI message, click Stop button during stream, verify cancellation works
+                </p>
+              </div>
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                  CTX-011: Document Projects UI
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  <strong>Test:</strong> Create project, assign documents, verify UI polish
+                </p>
+              </div>
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                  TRX-009: Activity Feed (Mobile Polish)
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  <strong>Test:</strong> View on mobile, verify responsive layout and touch targets
+                </p>
+              </div>
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                  COM-007: Message Read Receipts
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  <strong>Test:</strong> Send/read messages, verify real-time read indicators
+                </p>
+              </div>
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                  SEC-017: Email Alerting
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  <strong>Test:</strong> Trigger security event, check email notification
+                </p>
+              </div>
+
+              <div style="background: var(--green-bg); border: 1px solid var(--green); border-radius: 8px; padding: 12px;">
+                <h4 style="font-size: 14px; font-weight: 600; color: var(--text); margin: 0 0 4px 0;">
+                  EXP-014: Animation Polish
+                </h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                  <strong>Test:</strong> Navigate pages, open/close modals, verify smooth transitions
+                </p>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- In Progress -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--yellow);">
+              🟡 In Progress (2 Features)
+            </h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              INT-017: MCP connector Phase 1 (80%, UI implementation remaining) •
+              GRW-012: Onboarding A/B testing (40%, implementation and tracking remaining)
+            </p>
+          </div>
+
+          <!-- Bugs & Issues -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--red);">
+              🐛 Bugs & Issues Encountered
+            </h3>
+            <div style="background: var(--surface2); border-radius: 8px; padding: 16px;">
+              <p style="font-size: 13px; color: var(--text-muted); margin: 0;">
+                <strong>None identified.</strong> All delivered features passed QA gate, no regressions found.
+              </p>
+            </div>
+          </div>
+
+          <!-- Key Metrics -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">📊 Key Metrics</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px;">
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--green);">92%</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Completion Rate</div>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--green);">100%</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Quality Score</div>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent);">8.1/10</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Vision Alignment</div>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--green);">$367</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">API Costs</div>
+              </div>
+
+              <div style="background: var(--surface2); border-radius: 8px; padding: 12px; text-align: center;">
+                <div style="font-size: 24px; font-weight: 700; color: var(--accent);">235</div>
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">E2E Tests (+18)</div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Considerations -->
+          <div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; color: var(--text);">💡 Considerations for Next Cycle</h3>
+            <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+              • <strong>Complete MCP Connector Phase 1:</strong> 80% → 100% in Cycle 12, then integrate with AI chat<br>
+              • <strong>PM-Growth Can Proceed:</strong> GRW-006 unblocked, MRR metrics dashboard ready to build<br>
+              • <strong>Test Ready Features:</strong> 6 features ready for human UI testing<br>
+              • <strong>Phase 3 Planning:</strong> RES-008 roadmap provides clear direction for next phase<br>
+              • <strong>Maintain High Performance:</strong> 2nd consecutive cycle with 92% completion, 100% quality
+            </p>
+          </div>
+
+        </div>
+      </div>
 
       <!-- Cycle 10 - Enhanced PM System Launch -->
       <div class="card" style="border-left: 4px solid var(--purple);">
@@ -1883,8 +2095,19 @@
     });
   });
 
-  // Image upload handler
-  function handleImageUpload(input, previewId, dataId) {
+  // Initialize image arrays for each feedback section
+  const imageArrays = {
+    'strategic-feedback': [],
+    'bug-reports': [],
+    'task-delegation': [],
+    'research-assignments': [],
+    'feature-requests': [],
+    'decision-responses': [],
+    'testing-feedback': []
+  };
+
+  // Image upload handler - supports multiple images
+  function handleImageUpload(input, previewId, sectionId) {
     const file = input.files[0];
     if (!file) return;
 
@@ -1897,28 +2120,76 @@
     const reader = new FileReader();
     reader.onload = function(e) {
       const base64Data = e.target.result;
-      document.getElementById(dataId).value = base64Data;
+      const imageIndex = imageArrays[sectionId].length;
       
-      // Show preview
-      const preview = document.getElementById(previewId);
-      preview.innerHTML = `
-        <div style="position: relative; display: inline-block;">
-          <img src="${base64Data}" style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 1px solid var(--border);" alt="Preview">
-          <button onclick="removeImage('${previewId}', '${dataId}', '${input.id}')" style="position: absolute; top: 4px; right: 4px; background: var(--red); color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;">×</button>
-        </div>
-        <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">${file.name} (${(file.size / 1024).toFixed(1)} KB)</p>
-      `;
-      preview.style.display = 'block';
+      // Add image to array with metadata
+      imageArrays[sectionId].push({
+        data: base64Data,
+        filename: file.name,
+        size: file.size,
+        index: imageIndex
+      });
+      
+      // Update preview
+      updateImagePreview(previewId, sectionId);
+      
+      // Reset input to allow selecting same file again
+      input.value = '';
     };
     reader.readAsDataURL(file);
   }
 
-  // Remove image
-  function removeImage(previewId, dataId, inputId) {
-    document.getElementById(previewId).style.display = 'none';
-    document.getElementById(previewId).innerHTML = '';
-    document.getElementById(dataId).value = '';
-    document.getElementById(inputId).value = '';
+  // Update image preview with numbered images
+  function updateImagePreview(previewId, sectionId) {
+    const preview = document.getElementById(previewId);
+    const images = imageArrays[sectionId];
+    
+    if (images.length === 0) {
+      preview.style.display = 'none';
+      preview.innerHTML = '';
+      return;
+    }
+    
+    let previewHtml = '<div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">';
+    images.forEach((img, idx) => {
+      const imageNumber = idx + 1;
+      previewHtml += `
+        <div style="position: relative; display: inline-block;">
+          <div style="position: absolute; top: 4px; left: 4px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; z-index: 10;">
+            Image ${imageNumber}
+          </div>
+          <img src="${img.data}" style="max-width: 200px; max-height: 150px; border-radius: 8px; border: 2px solid var(--accent);" alt="Image ${imageNumber}">
+          <button onclick="removeImage('${previewId}', '${sectionId}', ${idx})" style="position: absolute; top: 4px; right: 4px; background: var(--red); color: #fff; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; z-index: 10;">×</button>
+          <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px; text-align: center; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            ${img.filename} (${(img.size / 1024).toFixed(1)} KB)
+          </p>
+        </div>
+      `;
+    });
+    previewHtml += '</div>';
+    preview.innerHTML = previewHtml;
+    preview.style.display = 'block';
+  }
+
+  // Remove image from array
+  function removeImage(previewId, sectionId, index) {
+    imageArrays[sectionId].splice(index, 1);
+    // Re-index remaining images
+    imageArrays[sectionId].forEach((img, idx) => {
+      img.index = idx;
+    });
+    updateImagePreview(previewId, sectionId);
+  }
+
+  // Helper function to format images section in markdown
+  function formatImagesMarkdown(sectionName, images) {
+    if (!images || images.length === 0) return '';
+    let markdown = '';
+    images.forEach((img, idx) => {
+      const imageNumber = idx + 1;
+      markdown += `![${sectionName} - Image ${imageNumber}](${img.data})\n\n`;
+    });
+    return markdown;
   }
 
   // Feedback submission
@@ -1931,17 +2202,24 @@
     const decisionResponses = document.getElementById('decision-responses').value.trim();
     const testingFeedback = document.getElementById('testing-feedback').value.trim();
     
-    const strategicFeedbackImage = document.getElementById('strategic-feedback-image-data').value;
-    const bugReportsImage = document.getElementById('bug-reports-image-data').value;
-    const taskDelegationImage = document.getElementById('task-delegation-image-data').value;
-    const researchAssignmentsImage = document.getElementById('research-assignments-image-data').value;
-    const featureRequestsImage = document.getElementById('feature-requests-image-data').value;
-    const decisionResponsesImage = document.getElementById('decision-responses-image-data').value;
-    const testingFeedbackImage = document.getElementById('testing-feedback-image-data').value;
+    // Get images from arrays
+    const strategicFeedbackImages = imageArrays['strategic-feedback'];
+    const bugReportsImages = imageArrays['bug-reports'];
+    const taskDelegationImages = imageArrays['task-delegation'];
+    const researchAssignmentsImages = imageArrays['research-assignments'];
+    const featureRequestsImages = imageArrays['feature-requests'];
+    const decisionResponsesImages = imageArrays['decision-responses'];
+    const testingFeedbackImages = imageArrays['testing-feedback'];
 
     // Check if any feedback was provided
-    if (!strategicFeedback && !bugReports && !taskDelegation && !researchAssignments && !featureRequests && !decisionResponses && !testingFeedback &&
-        !strategicFeedbackImage && !bugReportsImage && !taskDelegationImage && !researchAssignmentsImage && !featureRequestsImage && !decisionResponsesImage && !testingFeedbackImage) {
+    const hasText = strategicFeedback || bugReports || taskDelegation || researchAssignments || 
+                    featureRequests || decisionResponses || testingFeedback;
+    const hasImages = strategicFeedbackImages.length > 0 || bugReportsImages.length > 0 || 
+                     taskDelegationImages.length > 0 || researchAssignmentsImages.length > 0 ||
+                     featureRequestsImages.length > 0 || decisionResponsesImages.length > 0 ||
+                     testingFeedbackImages.length > 0;
+    
+    if (!hasText && !hasImages) {
       alert('Please provide at least one piece of feedback or attach an image before submitting.');
       return;
     }
@@ -1955,79 +2233,113 @@
     markdown += `**Submitted:** ${timestamp}\n\n`;
     markdown += `---\n\n`;
 
-    if (strategicFeedback || strategicFeedbackImage) {
+    if (strategicFeedback || strategicFeedbackImages.length > 0) {
       markdown += `## Strategic Feedback\n\n`;
       if (strategicFeedback) markdown += `${strategicFeedback}\n\n`;
-      if (strategicFeedbackImage) markdown += `![Strategic Feedback Image](${strategicFeedbackImage})\n\n`;
+      if (strategicFeedbackImages.length > 0) {
+        markdown += `### Attached Images (${strategicFeedbackImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Strategic Feedback', strategicFeedbackImages);
+      }
       markdown += `---\n\n`;
     }
 
-    if (bugReports || bugReportsImage) {
+    if (bugReports || bugReportsImages.length > 0) {
       markdown += `## Bug Reports\n\n`;
       if (bugReports) markdown += `${bugReports}\n\n`;
-      if (bugReportsImage) markdown += `![Bug Report Image](${bugReportsImage})\n\n`;
+      if (bugReportsImages.length > 0) {
+        markdown += `### Attached Images (${bugReportsImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Bug Reports', bugReportsImages);
+      }
       markdown += `---\n\n`;
     }
 
-    if (taskDelegation || taskDelegationImage) {
+    if (taskDelegation || taskDelegationImages.length > 0) {
       markdown += `## Task Delegation\n\n`;
       if (taskDelegation) markdown += `${taskDelegation}\n\n`;
-      if (taskDelegationImage) markdown += `![Task Delegation Image](${taskDelegationImage})\n\n`;
+      if (taskDelegationImages.length > 0) {
+        markdown += `### Attached Images (${taskDelegationImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Task Delegation', taskDelegationImages);
+      }
       markdown += `---\n\n`;
     }
 
-    if (researchAssignments || researchAssignmentsImage) {
+    if (researchAssignments || researchAssignmentsImages.length > 0) {
       markdown += `## Research Assignments\n\n`;
       if (researchAssignments) markdown += `${researchAssignments}\n\n`;
-      if (researchAssignmentsImage) markdown += `![Research Assignment Image](${researchAssignmentsImage})\n\n`;
+      if (researchAssignmentsImages.length > 0) {
+        markdown += `### Attached Images (${researchAssignmentsImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Research Assignments', researchAssignmentsImages);
+      }
       markdown += `---\n\n`;
     }
 
-    if (featureRequests || featureRequestsImage) {
+    if (featureRequests || featureRequestsImages.length > 0) {
       markdown += `## Feature Requests\n\n`;
       if (featureRequests) markdown += `${featureRequests}\n\n`;
-      if (featureRequestsImage) markdown += `![Feature Request Image](${featureRequestsImage})\n\n`;
+      if (featureRequestsImages.length > 0) {
+        markdown += `### Attached Images (${featureRequestsImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Feature Requests', featureRequestsImages);
+      }
       markdown += `---\n\n`;
     }
 
-    if (decisionResponses || decisionResponsesImage) {
+    if (decisionResponses || decisionResponsesImages.length > 0) {
       markdown += `## Decision Responses\n\n`;
       if (decisionResponses) markdown += `${decisionResponses}\n\n`;
-      if (decisionResponsesImage) markdown += `![Decision Response Image](${decisionResponsesImage})\n\n`;
+      if (decisionResponsesImages.length > 0) {
+        markdown += `### Attached Images (${decisionResponsesImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Decision Responses', decisionResponsesImages);
+      }
       markdown += `---\n\n`;
     }
 
-    if (testingFeedback || testingFeedbackImage) {
+    if (testingFeedback || testingFeedbackImages.length > 0) {
       markdown += `## Testing Feedback\n\n`;
       if (testingFeedback) markdown += `${testingFeedback}\n\n`;
-      if (testingFeedbackImage) markdown += `![Testing Feedback Image](${testingFeedbackImage})\n\n`;
+      if (testingFeedbackImages.length > 0) {
+        markdown += `### Attached Images (${testingFeedbackImages.length})\n\n`;
+        markdown += formatImagesMarkdown('Testing Feedback', testingFeedbackImages);
+      }
       markdown += `---\n\n`;
     }
 
     markdown += `\n*This feedback will be processed by PM-Orchestrator before the next cycle.*\n`;
+    markdown += `\n**Note:** Images are numbered (Image 1, Image 2, etc.) and can be referenced in the text above.\n`;
 
     // Display submitted feedback
     const submittedSection = document.getElementById('submitted-feedback-section');
     const submittedMarkdown = document.getElementById('submitted-feedback-markdown');
     const submittedImages = document.getElementById('submitted-feedback-images');
     
-    // Extract images from markdown and display separately
-    const images = [
-      { section: 'Strategic Feedback', data: strategicFeedbackImage },
-      { section: 'Bug Reports', data: bugReportsImage },
-      { section: 'Task Delegation', data: taskDelegationImage },
-      { section: 'Research Assignments', data: researchAssignmentsImage },
-      { section: 'Feature Requests', data: featureRequestsImage },
-      { section: 'Decision Responses', data: decisionResponsesImage },
-      { section: 'Testing Feedback', data: testingFeedbackImage }
-    ].filter(img => img.data);
-    
     submittedMarkdown.textContent = markdown;
     
-    if (images.length > 0) {
+    // Display all images with numbered labels
+    const allImages = [
+      { section: 'Strategic Feedback', images: strategicFeedbackImages },
+      { section: 'Bug Reports', images: bugReportsImages },
+      { section: 'Task Delegation', images: taskDelegationImages },
+      { section: 'Research Assignments', images: researchAssignmentsImages },
+      { section: 'Feature Requests', images: featureRequestsImages },
+      { section: 'Decision Responses', images: decisionResponsesImages },
+      { section: 'Testing Feedback', images: testingFeedbackImages }
+    ].filter(item => item.images.length > 0);
+    
+    if (allImages.length > 0) {
       let imagesHtml = '<div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;"><h4 style="font-size: 14px; font-weight: 600; margin-bottom: 12px;">Attached Images:</h4>';
-      images.forEach(img => {
-        imagesHtml += `<div style="margin-bottom: 16px;"><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">${img.section}:</p><img src="${img.data}" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border);" alt="${img.section}"></div>`;
+      allImages.forEach(section => {
+        imagesHtml += `<div style="margin-bottom: 20px;"><p style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: 600;">${section.section}:</p><div style="display: flex; flex-wrap: wrap; gap: 12px;">`;
+        section.images.forEach((img, idx) => {
+          const imageNumber = idx + 1;
+          imagesHtml += `
+            <div style="position: relative;">
+              <div style="position: absolute; top: 4px; left: 4px; background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600; z-index: 10;">
+                Image ${imageNumber}
+              </div>
+              <img src="${img.data}" style="max-width: 300px; max-height: 200px; border-radius: 8px; border: 2px solid var(--accent);" alt="${section.section} - Image ${imageNumber}">
+            </div>
+          `;
+        });
+        imagesHtml += '</div></div>';
       });
       imagesHtml += '</div>';
       submittedImages.innerHTML = imagesHtml;
@@ -2049,14 +2361,12 @@
     document.getElementById('decision-responses').value = '';
     document.getElementById('testing-feedback').value = '';
     
-    // Clear images
-    removeImage('strategic-feedback-preview', 'strategic-feedback-image-data', 'strategic-feedback-image');
-    removeImage('bug-reports-preview', 'bug-reports-image-data', 'bug-reports-image');
-    removeImage('task-delegation-preview', 'task-delegation-image-data', 'task-delegation-image');
-    removeImage('research-assignments-preview', 'research-assignments-image-data', 'research-assignments-image');
-    removeImage('feature-requests-preview', 'feature-requests-image-data', 'feature-requests-image');
-    removeImage('decision-responses-preview', 'decision-responses-image-data', 'decision-responses-image');
-    removeImage('testing-feedback-preview', 'testing-feedback-image-data', 'testing-feedback-image');
+    // Clear image arrays and previews
+    Object.keys(imageArrays).forEach(sectionId => {
+      imageArrays[sectionId] = [];
+      const previewId = sectionId + '-preview';
+      updateImagePreview(previewId, sectionId);
+    });
 
     // Update button text
     const submitBtn = document.getElementById('submit-feedback-btn');
