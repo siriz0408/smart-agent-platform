@@ -1,7 +1,7 @@
 # Cross-PM Awareness
 
 > **Purpose:** Reduce silos by sharing context across all PMs
-> **Last Updated:** 2026-02-07 (Cycle 10 Complete)
+> **Last Updated:** 2026-02-07 (Cycle 11 Complete)
 > **Update Frequency:** After each development cycle
 
 ---
@@ -10,25 +10,25 @@
 
 | PM | Current Task | Dependencies | Blockers | Related PMs |
 |----|--------------|--------------|----------|-------------|
-| PM-Discovery | DIS-015: Execute comprehensive search test plan | INF-016 (deployed) | None (unblocked) | PM-Infrastructure |
-| PM-Intelligence | INT-018: Stop generating button | None | None | PM-Experience (UI) |
-| PM-Experience | EXP-014: Animation polish | None | None | PM-Intelligence (chat UI) |
-| PM-Integration | INT-017: MCP connector Phase 1 implementation | INT-017 design (complete) | None | PM-Intelligence (AI integration) |
-| PM-Context | CTX-011: Document projects UI polish | CTX-011 backend (complete) | None | None |
-| PM-Transactions | TRX-009: Activity feed mobile polish | TRX-009 component (complete) | None | None |
-| PM-Growth | GRW-006: MRR metrics dashboard | PM-Infrastructure (metrics system) | Metrics infrastructure | PM-Infrastructure |
-| PM-Communication | COM-007: Read receipts polish | COM-007 backend (complete) | None | None |
-| PM-Infrastructure | INF-017: Metrics infrastructure for PM-Growth | None | None | PM-Growth |
-| PM-Security | SEC-017: Email alerting | SEC-017 dashboard (complete) | None | None |
-| PM-Research | RES-008: Phase 3 feature roadmap | None | None | PM-Orchestrator |
-| PM-QA | QA-008: Expand E2E coverage for new features | None | None | All PMs |
+| PM-Discovery | DIS-016: Fix search input matching discrepancy | None | None | PM-Experience (UI) |
+| PM-Intelligence | INT-021: Copy/regenerate response buttons | INT-020 (complete) | None | PM-Experience (UI) |
+| PM-Experience | EXP-008: More animation polish | EXP-014 (complete) | None | All PMs (UI) |
+| PM-Integration | INT-017: MCP connector Phase 1 completion (80% → 100%) | None | None | PM-Intelligence (AI integration) |
+| PM-Context | CTX-012: Document re-indexing | CTX-011 (complete) | None | PM-Intelligence (RAG) |
+| PM-Transactions | TRX-010: Align pipeline stages with PRD | None | None | None |
+| PM-Growth | GRW-006: MRR metrics dashboard | INF-017 (UNBLOCKED!) | None (unblocked) | PM-Infrastructure |
+| PM-Communication | COM-008: Push notifications (mobile) | None | None | PM-Experience (mobile) |
+| PM-Infrastructure | INF-012: Track build times | None | None | PM-Orchestrator |
+| PM-Security | SEC-016: Sanitize error messages | None | None | PM-Infrastructure |
+| PM-Research | RES-009: Team/brokerage management research | None | None | PM-Orchestrator |
+| PM-QA | QA-014: Document upload E2E tests | None | None | PM-Context |
 
 ---
 
 ## Cross-PM Initiatives
 
 ### Initiative: MCP-Style Connector Experience
-**Status:** In Progress (60% complete) ⬆️ (+20% from Cycle 9)
+**Status:** In Progress (80% complete) ⬆️ (+20% from Cycle 10)
 **Goal:** Claude-like connector settings for AI chat
 
 **PMs Involved:**
@@ -40,20 +40,24 @@
 - ✅ INT-015: Moved integrations to Settings (complete)
 - ✅ INT-016: Fixed broken UI (complete)
 - ✅ INT-017: MCP connector design (complete - architecture + UI)
-- 🟡 INT-017: Phase 1 implementation (60%)
+- ✅ INT-017: Connector framework operational (Cycle 11)
+- ✅ INT-017: OAuth foundation built (Cycle 11)
+- ✅ INT-017: Permission model designed (Cycle 11)
+- 🟡 INT-017: UI implementation (80%)
 - 🟡 INT-018: AI chat integration plan (architecture designed)
 
-**Next Steps:**
-- Implement Phase 1: Connector framework + OAuth
+**Next Steps (Cycle 12):**
+- Complete Phase 1 (80% → 100%)
+- Implement enable/disable toggles
+- Build permission UI
 - Coordinate with PM-Intelligence for AI integration
-- Build permission system
 
-**Coordination:** Weekly sync recommended
+**Coordination:** Target completion in Cycle 12
 
 ---
 
 ### Initiative: Search Fix (Critical)
-**Status:** ✅ Complete (100%) ⬆️ (+50% from Cycle 9)
+**Status:** ✅ Complete (100%)
 **Goal:** Fix numeric search failures and expand test coverage
 
 **PMs Involved:**
@@ -66,42 +70,72 @@
 - ✅ INF-016: Migration deployed successfully (Cycle 10)
 - ✅ QA-007: 12 new E2E tests added
 - ✅ DIS-015: Test plan created (30+ queries)
-- 🟡 DIS-015: Test execution (now unblocked)
+- ✅ DIS-015: Test execution complete (Cycle 11)
+- ✅ 95%+ search success rate validated
 
 **Impact:**
-- Search success rate: 50% → 95%+ (+45% improvement)
-- Test coverage: 205 → 217 E2E tests
+- Search success rate: 50% → 95%+ (+45% improvement validated)
+- Test coverage: 205 → 235 E2E tests (+30 tests across Cycles 10-11)
 
 **Successful Handoff:**
 - PM-Discovery identified blocker (pending migration)
 - PM-Infrastructure deployed migration in Cycle 10
-- DIS-015 now unblocked for Cycle 11 execution
+- PM-Discovery executed tests successfully in Cycle 11
 
 **Coordination:** ✅ Excellent cross-PM coordination demonstrated
 
 ---
 
+### Initiative: Unblock PM-Growth
+**Status:** ✅ Complete (100%) - NEW in Cycle 11
+**Goal:** Build metrics infrastructure to unblock GRW-006
+
+**PMs Involved:**
+- **PM-Infrastructure**: Metrics infrastructure (INF-017)
+- **PM-Growth**: MRR metrics dashboard (GRW-006)
+
+**Progress:**
+- ✅ INF-017: Metrics infrastructure built (Cycle 11)
+- ✅ PM-Growth unblocked for Cycle 12
+
+**Impact:**
+- PM-Growth: Blocked (Cycle 10) → Unblocked (Cycle 11)
+- GRW-006 can now proceed in Cycle 12
+
+**Successful Handoff:**
+- PM-Growth flagged blocker in Cycle 10
+- PM-Infrastructure prioritized INF-017 in Cycle 11
+- PM-Growth can now proceed with MRR dashboard
+
+**Coordination:** ✅ Handoff pattern validated successfully
+
+---
+
 ## Shared Context
 
-### Architecture Changes (Cycle 10)
+### Architecture Changes (Cycle 11)
 
-**Deployed:**
-- ✅ Numeric search fix (PM-Discovery) - affects all search queries
-- ✅ Document metadata column (PM-Context) - affects document chunks
-- ✅ Security monitoring system (PM-Security) - new event logging tables
-- ✅ Document projects (PM-Context) - new table for project grouping
-- ✅ Message read receipts (PM-Communication) - new table for read tracking
+**Delivered:**
+- ✅ Metrics infrastructure (PM-Infrastructure) - new metrics collection system
+- ✅ Stop generating button (PM-Intelligence) - AI stream cancellation
+- ✅ Document projects UI (PM-Context) - polished to 100%
+- ✅ Activity feed mobile (PM-Transactions) - mobile responsive
+- ✅ Read receipts polish (PM-Communication) - real-time indicators
+- ✅ Email alerting (PM-Security) - notification system operational
+- ✅ Animation polish (PM-Experience) - smooth transitions across all pages
+- ✅ Phase 3 roadmap (PM-Research) - strategic planning document
 
-**Recent (Cycle 9):**
-- Dark mode system (PM-Experience) - affects all UI components
-- Message reactions (PM-Communication) - new table, affects messaging UI
-- Search click tracking (PM-Discovery) - new analytics table
-- Google Calendar connector (PM-Integration) - new connector pattern
+**Recent (Cycle 10):**
+- Numeric search fix (PM-Discovery) - affects all search queries
+- Document metadata column (PM-Context) - affects document chunks
+- Security monitoring system (PM-Security) - new event logging tables
+- Document projects (PM-Context) - new table for project grouping
+- Message read receipts (PM-Communication) - new table for read tracking
 
-**Upcoming (Cycle 11):**
-- MCP connector framework (PM-Integration) - new OAuth pattern
-- Metrics infrastructure (PM-Infrastructure) - for PM-Growth dashboard
-- Email alerting (PM-Security) - notification system
+**Upcoming (Cycle 12):**
+- MCP connector Phase 1 complete (PM-Integration) - new OAuth pattern
+- MRR metrics dashboard (PM-Growth) - now unblocked
+- Onboarding A/B testing (PM-Growth) - test variants
 
 ### Common Patterns
 
