@@ -15,3 +15,4 @@ export { ChatMarkdown } from "./ChatMarkdown";
 export { UserMessageContent } from "./UserMessageContent";
 export { AISettingsPopover } from "./AISettingsPopover";
 export { ConfidenceIndicator } from "./ConfidenceIndicator";
+export { MessageActions } from "./MessageActions";

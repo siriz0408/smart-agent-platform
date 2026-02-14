@@ -1,7 +1,7 @@
 # Work Status Tracker
 
 > **Purpose:** Track what's ready to test vs what's still in progress
-> **Last Updated:** 2026-02-07 (Cycle 11 Complete)
+> **Last Updated:** 2026-02-14 (Cycle 12 In Progress)
 > **Update Frequency:** After each development cycle
 
 ---
@@ -12,6 +12,9 @@
 
 | Task ID | PM | Feature | Test Instructions | Status | Date Ready |
 |---------|----|---------|-------------------|--------|------------|
+| TRX-010 | PM-Transactions | PRD-aligned pipeline stages | Go to Pipeline, verify Buyer has 8 stages, Seller has 7 stages per PRD Section 8 | 🟢 Ready | 2026-02-14 |
+| DIS-016 | PM-Discovery | Search query indicator | Search for anything, verify "Searching for: X" appears in dropdown | 🟢 Ready | 2026-02-14 |
+| INT-021 | PM-Intelligence | Copy/regenerate buttons | Chat with AI, verify Copy and Regenerate buttons on responses | 🟢 Ready | 2026-02-14 |
 | INT-020 | PM-Intelligence | Stop generating button | Click Stop button during AI stream, verify cancellation | 🟢 Ready | 2026-02-07 |
 | CTX-011 | PM-Context | Document projects (polished) | Create projects, assign documents, verify UI polish | 🟢 Ready | 2026-02-07 |
 | TRX-009 | PM-Transactions | Activity feed (mobile polish) | View on mobile, verify responsive layout | 🟢 Ready | 2026-02-07 |

@@ -65,12 +65,6 @@ export function SearchResultsDropdown({
   query,
   onSuggestionClick,
 }: SearchResultsDropdownProps) {
-  console.log('🔍 SearchResultsDropdown render:', {
-    resultsCount: results.length,
-    hasMoreResults: results.length > 5,
-    onViewAllResults: typeof onViewAllResults,
-    query
-  });
   // Count results per entity type
   const resultCounts = results.reduce(
     (acc, result) => {
@@ -123,8 +117,13 @@ export function SearchResultsDropdown({
       role="listbox"
       aria-label="Search results"
     >
+      {/* Search Query Indicator */}
+      <div className="px-3 pt-3 pb-1 text-xs text-muted-foreground">
+        Searching for: <span className="font-medium text-foreground">"{query}"</span>
+      </div>
+
       {/* Faceted Filters */}
-      <div className="flex items-center gap-2 p-3 border-b border-border overflow-x-auto">
+      <div className="flex items-center gap-2 px-3 pb-3 border-b border-border overflow-x-auto">
         <button
           onClick={() => onFilterChange("all")}
           className={cn(

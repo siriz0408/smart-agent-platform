@@ -198,8 +198,9 @@ export const GlobalSearch = memo(function GlobalSearch() {
           placeholder="Search documents, contacts, properties, deals... (⌘K)"
           value={query}
           onChange={(e) => {
-            setQuery(e.target.value);
-            setIsOpen(e.target.value.length >= 1);
+            const newValue = e.target.value;
+            setQuery(newValue);
+            setIsOpen(newValue.length >= 1);
           }}
           onFocus={() => setIsOpen(true)}
           className="w-full pl-10 pr-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary"

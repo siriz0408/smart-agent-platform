@@ -30,21 +30,26 @@ export interface StageDefinition {
 
 // Stage Constants (single source of truth)
 
+// PRD Section 8.1 - Buyer Pipeline Stages (8 stages)
 export const BUYER_STAGES: StageDefinition[] = [
-  { id: "lead", label: "New Lead", color: "bg-blue-500" },
-  { id: "contacted", label: "Contacted", color: "bg-yellow-500" },
-  { id: "showing", label: "Showing", color: "bg-purple-500" },
-  { id: "offer", label: "Offer Made", color: "bg-orange-500" },
-  { id: "under_contract", label: "Under Contract", color: "bg-green-500" },
-  { id: "closed", label: "Closed", color: "bg-emerald-600" },
+  { id: "lead", label: "Lead", color: "bg-blue-500" },
+  { id: "active_buyer", label: "Active Buyer", color: "bg-cyan-500" },
+  { id: "property_search", label: "Property Search", color: "bg-purple-500" },
+  { id: "making_offers", label: "Making Offers", color: "bg-yellow-500" },
+  { id: "under_contract", label: "Under Contract", color: "bg-orange-500" },
+  { id: "closing", label: "Closing", color: "bg-green-500" },
+  { id: "closed_won", label: "Closed Won", color: "bg-emerald-600" },
+  { id: "closed_lost", label: "Closed Lost", color: "bg-gray-500" },
 ];
 
+// PRD Section 8.2 - Seller Pipeline Stages (7 stages)
 export const SELLER_STAGES: StageDefinition[] = [
-  { id: "lead", label: "Prospect", color: "bg-blue-500" },
-  { id: "contacted", label: "Contacted", color: "bg-yellow-500" },
-  { id: "listing", label: "Listing Signed", color: "bg-purple-500" },
-  { id: "active", label: "Active", color: "bg-orange-500" },
-  { id: "under_contract", label: "Under Contract", color: "bg-green-500" },
+  { id: "prospect", label: "Prospect", color: "bg-blue-500" },
+  { id: "pre_listing", label: "Pre-Listing", color: "bg-cyan-500" },
+  { id: "active_listing", label: "Active Listing", color: "bg-purple-500" },
+  { id: "offer_review", label: "Offer Review", color: "bg-yellow-500" },
+  { id: "under_contract", label: "Under Contract", color: "bg-orange-500" },
+  { id: "closing_prep", label: "Closing Prep", color: "bg-green-500" },
   { id: "closed", label: "Closed", color: "bg-emerald-600" },
 ];
 

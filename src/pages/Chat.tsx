@@ -1,12 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft, Settings, Plus, SlidersHorizontal, Lightbulb, ArrowUp } from "lucide-react";
+import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft, Settings, Plus, SlidersHorizontal, Lightbulb, ArrowUp, X } from "lucide-react";
 import { useAIStreaming, type UsageLimitInfo, type StatusUpdate } from "@/hooks/useAIStreaming";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MentionInput, AISettingsPopover, ConfidenceIndicator } from "@/components/ai-chat";
+import { MentionInput, AISettingsPopover, ConfidenceIndicator, MessageActions } from "@/components/ai-chat";
 import { parseMentions, parseCollectionMentions, fetchMentionData, type Mention, type CollectionType } from "@/hooks/useMentionSearch";
 import { computeConfidence, type ConfidenceMetadata } from "@/lib/confidenceScoring";
 import { usePerformanceMonitoring } from "@/hooks/usePerformanceMonitoring";
@@ -59,7 +59,7 @@ export default function Chat() {
   const { refetchUsage } = useSubscription();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { streamMessage, isStreaming } = useAIStreaming();
+  const { streamMessage, isStreaming, abort } = useAIStreaming();
   const { preferences, updatePreference } = useUserPreferences();
   const { measureAsync } = usePerformanceMonitoring("Chat");
   const { startTracking, recordMetric } = useAIChatMetricsTracker();
@@ -373,6 +373,28 @@ export default function Chat() {
 
     // Remove the error message and re-submit
     setMessages((prev) => prev.filter((m) => !m.error));
+    setInput(lastUserMsg.content);
+    // Use setTimeout to let state settle before triggering submit
+    setTimeout(() => {
+      const form = document.querySelector<HTMLFormElement>("[data-chat-form]");
+      form?.requestSubmit();
+    }, 100);
+  };
+
+  const handleRegenerateLastMessage = () => {
+    if (isStreaming) return;
+    // Find the last assistant message
+    const lastAssistantIdx = messages.findLastIndex((m) => m.role === "assistant");
+    if (lastAssistantIdx === -1) return;
+
+    // Find the user message that prompted it
+    const lastUserMsg = messages
+      .slice(0, lastAssistantIdx)
+      .findLast((m) => m.role === "user");
+    if (!lastUserMsg) return;
+
+    // Remove the last assistant message and re-submit
+    setMessages((prev) => prev.slice(0, lastAssistantIdx));
     setInput(lastUserMsg.content);
     // Use setTimeout to let state settle before triggering submit
     setTimeout(() => {
@@ -874,6 +896,15 @@ export default function Chat() {
                               <ConfidenceIndicator metadata={message.confidence} />
                             </div>
                           )}
+                          {/* Message actions (copy/regenerate) */}
+                          {message.content && (
+                            <MessageActions
+                              content={message.content}
+                              isLastMessage={messages.findLastIndex((m) => m.role === "assistant") === messages.indexOf(message)}
+                              isStreaming={isStreaming}
+                              onRegenerate={handleRegenerateLastMessage}
+                            />
+                          )}
                         </div>
                       ) : (
                         <UserMessageContent content={message.content} />
@@ -973,14 +1004,28 @@ export default function Chat() {
                     </Button>
                   </div>
                   <div className="flex items-center gap-0.5">
-                    <Button 
-                      type="submit" 
-                      size="icon" 
-                      disabled={!input.trim() || isStreaming} 
-                      className="h-8 w-8 rounded-full"
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
+                    {isStreaming ? (
+                      <Button 
+                        type="button" 
+                        size="icon" 
+                        onClick={abort}
+                        variant="destructive"
+                        className="h-8 w-8 rounded-full"
+                        title="Stop generating"
+                        aria-label="Stop generating"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    ) : (
+                      <Button 
+                        type="submit" 
+                        size="icon" 
+                        disabled={!input.trim() || isStreaming} 
+                        className="h-8 w-8 rounded-full"
+                      >
+                        <ArrowUp className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>

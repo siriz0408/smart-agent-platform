@@ -166,16 +166,25 @@ export function usePipelineFilters(
 
 // useRevenueForecast - Commission forecast derived from shared useDeals cache
 
-/** Stage-based probability weights for pipeline forecasting. */
+/** Stage-based probability weights for pipeline forecasting (PRD Section 8). */
 export const STAGE_WEIGHTS: Record<string, { probability: number; label: string }> = {
+  // Buyer stages (PRD 8.1)
   lead: { probability: 0.1, label: "10%" },
-  contacted: { probability: 0.2, label: "20%" },
-  showing: { probability: 0.3, label: "30%" },
-  listing: { probability: 0.3, label: "30%" },
-  active: { probability: 0.4, label: "40%" },
-  offer: { probability: 0.5, label: "50%" },
+  active_buyer: { probability: 0.2, label: "20%" },
+  property_search: { probability: 0.3, label: "30%" },
+  making_offers: { probability: 0.5, label: "50%" },
+  // Seller stages (PRD 8.2)
+  prospect: { probability: 0.1, label: "10%" },
+  pre_listing: { probability: 0.2, label: "20%" },
+  active_listing: { probability: 0.4, label: "40%" },
+  offer_review: { probability: 0.6, label: "60%" },
+  // Shared stages
   under_contract: { probability: 0.8, label: "80%" },
+  closing: { probability: 0.9, label: "90%" },
+  closing_prep: { probability: 0.9, label: "90%" },
+  closed_won: { probability: 1.0, label: "100%" },
   closed: { probability: 1.0, label: "100%" },
+  closed_lost: { probability: 0.0, label: "0%" },
 };
 
 export interface MonthlyForecast {

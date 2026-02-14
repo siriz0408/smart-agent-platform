@@ -1,6 +1,6 @@
 # PM-Intelligence Backlog
 
-> **Last Updated:** 2026-02-07 (P0 Issues Added)
+> **Last Updated:** 2026-02-14 (Cycle 12)
 
 ---
 
@@ -17,8 +17,7 @@ _No tasks currently in progress_
 | INT-017 | Add visual feedback to chat buttons | P2 | UX enhancement - Add toasts, loading states, confirmations |
 | INT-018 | Add E2E tests for chat buttons | P1 | Test coverage - Verify all 18 interactive elements |
 | INT-019 | Add tooltips to chat buttons | P2 | UX enhancement - Explain button purposes |
-| INT-020 | Implement "Stop generating" button | P1 | Missing feature - Cancel in-progress AI stream |
-| INT-021 | Implement copy/regenerate response buttons | P2 | Missing feature - Common AI chat UX patterns |
+| INT-020 | Implement "Stop generating" button | P1 | ✅ COMPLETED in Cycle 11 |
 
 ---
 
@@ -287,6 +286,7 @@ _No tasks currently in progress_
 | INT-007 | Add confidence indicators to AI responses | 2026-02-07 | Frontend confidence scoring: `confidenceScoring.ts` utility (extracts citations, computes High/Medium/Low), `ConfidenceIndicator.tsx` component (color-coded badge + tooltip), integrated into Chat.tsx streaming pipeline |
 | **INT-014** | **Investigate "+" button on chat page** | **2026-02-07** | **FALSE POSITIVE: Button works correctly. See BUTTON_AUDIT_REPORT.md** |
 | **INT-015** | **Investigate "lightbulb" thinking indicator** | **2026-02-07** | **FALSE POSITIVE: Thinking mode toggle works correctly. See BUTTON_AUDIT_REPORT.md** |
+| **INT-021** | **Implement copy/regenerate response buttons** | **2026-02-14** | **COMPLETED: Created MessageActions.tsx component with Copy (clipboard) and Regenerate (re-generate last response) buttons. Integrated into Chat.tsx assistant message cards. Copy shows success toast, Regenerate removes last assistant message and re-submits user prompt.** |
 | **INT-016** | **Audit all buttons on AI chat page** | **2026-02-07** | **COMPLETED: All 18 interactive elements verified functional. Created BUTTON_AUDIT_REPORT.md with comprehensive audit. Identified 5 enhancement opportunities (INT-017 to INT-021)** |
 
 ---

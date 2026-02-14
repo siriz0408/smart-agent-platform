@@ -1,6 +1,6 @@
 # PM-Transactions Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle 9 - TRX-008 investigated)
+> **Last Updated:** 2026-02-14 (Cycle 12 - TRX-010 complete)
 
 ## In Progress
 
@@ -13,7 +13,7 @@
 | ID | Item | Priority | Description | Acceptance Criteria |
 |----|------|----------|-------------|---------------------|
 | TRX-009 | Deal Document Association View | P2 | Show documents linked to a specific deal in the deal detail sheet. Currently there's no way to see which documents are associated with a deal from the deal view. | - Documents section in DealDetailSheet - Shows documents where `documents.deal_id` matches - Link to document view - Count badge on section header |
-| TRX-010 | Align Pipeline Stages with PRD | P3 | Current stages (6 per type) don't match PRD which defines 8 buyer stages and 7 seller stages. Missing: Active Buyer, Property Search, Making Offers, Closing, Closed Lost (buyer); Pre-Listing, Offer Review, Closing Prep (seller). | - Buyer stages match PRD Section 8.1 - Seller stages match PRD Section 8.2 - Migration path for existing deals - Stage color assignments for new stages |
+| TRX-010 | ✅ COMPLETED - Align Pipeline Stages with PRD | P3 | Completed 2026-02-14 in Cycle 12 | Buyer: 8 stages (PRD 8.1), Seller: 7 stages (PRD 8.2), STAGE_WEIGHTS updated |
 | TRX-011 | Enhanced Activity Logging | P3 | Create dedicated `deal_activities` table for comprehensive audit trail with stage changes, individual note timestamps, field updates, and rich activity metadata. Deferred from TRX-008 Option B. Requires schema migration, hook updates, and backfill strategy. | - New `deal_activities` table with activity_type, metadata JSONB - Stage change tracking via trigger or hook - Individual note timestamps - Field update tracking - Migration with backfill for existing deals - Activity log query API |
 
 ## Completed

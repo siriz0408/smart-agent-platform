@@ -63,6 +63,12 @@ export function useGlobalSearch({
         throw new Error("Not authenticated");
       }
 
+      const requestBody = {
+        query,
+        entityTypes,
+        matchCountPerType,
+      };
+
       // async-parallel: Start fetch early, await late
       const responsePromise = fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/universal-search`,
@@ -72,11 +78,7 @@ export function useGlobalSearch({
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
-          body: JSON.stringify({
-            query,
-            entityTypes,
-            matchCountPerType,
-          }),
+          body: JSON.stringify(requestBody),
         }
       );
 
