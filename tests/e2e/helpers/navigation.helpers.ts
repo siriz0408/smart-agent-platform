@@ -94,3 +94,16 @@ export async function goToOnboarding(page: Page): Promise<void> {
 export async function goToAgents(page: Page): Promise<void> {
   await navigateAndWait(page, 'agents');
 }
+
+/** Navigate to the Growth Metrics page (admin only).
+ *  @param tab - Optional tab: 'growth' for MRR, 'search-analytics' for Search Analytics
+ */
+export async function goToGrowthMetrics(
+  page: Page,
+  tab: 'growth' | 'search-analytics' = 'growth',
+): Promise<void> {
+  await navigateAndWait(page, `settings#${tab}`);
+  await expect(
+    page.getByRole('heading', { name: /settings/i }),
+  ).toBeVisible({ timeout: 10000 });
+}

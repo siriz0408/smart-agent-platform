@@ -42,6 +42,7 @@ export {
   goToChat,
   goToOnboarding,
   goToAgents,
+  goToGrowthMetrics,
 } from './navigation.helpers';
 
 // Assertion helpers
