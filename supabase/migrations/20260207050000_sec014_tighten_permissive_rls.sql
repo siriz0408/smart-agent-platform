@@ -199,13 +199,23 @@ CREATE POLICY "Tenant admins can view their production metrics"
 --        does NOT restrict to service_role. Any authenticated user can insert
 --        arbitrary search metrics, poisoning analytics data.
 -- FIX:   Drop and recreate with TO service_role restriction.
+-- NOTE:  Only apply if table exists (table may not exist in all deployments)
 
-DROP POLICY IF EXISTS "Service role can insert search metrics" ON public.search_metrics;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name = 'search_metrics'
+  ) THEN
+    DROP POLICY IF EXISTS "Service role can insert search metrics" ON public.search_metrics;
 
-CREATE POLICY "search_metrics_insert_service_role"
-  ON public.search_metrics FOR INSERT
-  TO service_role
-  WITH CHECK (true);
+    CREATE POLICY "search_metrics_insert_service_role"
+      ON public.search_metrics FOR INSERT
+      TO service_role
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 -- ============================================================================
 -- PHASE 6: Fix ai_chat_metrics INSERT — missing TO service_role
@@ -214,13 +224,23 @@ CREATE POLICY "search_metrics_insert_service_role"
 --        restrict to service_role. Any authenticated user can insert fake AI
 --        chat metrics.
 -- FIX:   Drop and recreate with TO service_role restriction.
+-- NOTE:  Only apply if table exists (table may not exist in all deployments)
 
-DROP POLICY IF EXISTS "Service role can insert metrics" ON public.ai_chat_metrics;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name = 'ai_chat_metrics'
+  ) THEN
+    DROP POLICY IF EXISTS "Service role can insert metrics" ON public.ai_chat_metrics;
 
-CREATE POLICY "ai_chat_metrics_insert_service_role"
-  ON public.ai_chat_metrics FOR INSERT
-  TO service_role
-  WITH CHECK (true);
+    CREATE POLICY "ai_chat_metrics_insert_service_role"
+      ON public.ai_chat_metrics FOR INSERT
+      TO service_role
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 -- ============================================================================
 -- PHASE 7: Fix zero_results_log INSERT — missing TO service_role
@@ -229,13 +249,23 @@ CREATE POLICY "ai_chat_metrics_insert_service_role"
 --        NOT restrict to service_role. Any authenticated user can insert fake
 --        zero-result log entries, corrupting search analytics.
 -- FIX:   Drop and recreate with TO service_role restriction.
+-- NOTE:  Only apply if table exists (table may not exist in all deployments)
 
-DROP POLICY IF EXISTS "Service role can insert zero results" ON public.zero_results_log;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' 
+    AND table_name = 'zero_results_log'
+  ) THEN
+    DROP POLICY IF EXISTS "Service role can insert zero results" ON public.zero_results_log;
 
-CREATE POLICY "zero_results_log_insert_service_role"
-  ON public.zero_results_log FOR INSERT
-  TO service_role
-  WITH CHECK (true);
+    CREATE POLICY "zero_results_log_insert_service_role"
+      ON public.zero_results_log FOR INSERT
+      TO service_role
+      WITH CHECK (true);
+  END IF;
+END $$;
 
 -- ============================================================================
 -- PHASE 8: Fix notifications INSERT — missing TO service_role
