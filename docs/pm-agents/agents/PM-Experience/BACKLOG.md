@@ -1,6 +1,6 @@
 # PM-Experience Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle 9 Execution)
+> **Last Updated:** 2026-02-15 (EXP-008 Animation Polish)
 
 ---
 
@@ -18,6 +18,7 @@
 | EXP-012 | Fix workspace centering | 2026-02-07 | Added `max-w-[1920px] mx-auto w-full` to Home.tsx main container. Ensures proper centering on large screens. |
 | EXP-013 | Fix chat history layout - add padding/spacing | 2026-02-07 | Updated ConversationList.tsx padding from `p-2` to `p-4 sm:p-6`. Header padding increased to `p-4 sm:p-6`. Improved readability and spacing. |
 | EXP-009 | Dark mode contrast audit | 2026-02-07 | Comprehensive WCAG AA contrast audit for dark mode. Fixed `--muted-foreground` from 3.2:1 to 4.6:1. All color combinations now meet WCAG 2.1 AA standards. Report: `docs/pm-agents/reports/2026-02-07/pm-experience-exp009-dark-contrast-audit.md` |
+| EXP-008 | Animation polish | 2026-02-15 | Added comprehensive micro-interactions: button scale/shadow effects, card hover animations, input focus transitions, checkbox/switch animations, skeleton shimmer effect, progress bar smooth transitions, tab content fade-in, new Tailwind keyframes (fade-in-up, scale-in, shimmer, etc.). All UI components now have smooth 200ms ease-out transitions. |
 | EXP-007 | Dark mode toggle | 2026-02-06 | Full dark mode with light/dark/system support. ThemeProvider context, ThemeToggle in header, Settings appearance tab with visual selector, FOUC prevention, Sonner toast integration. Tailwind `class` strategy + CSS variable system. |
 | EXP-002 | Document UI Component Inventory | 2026-02-06 | Created comprehensive inventory with 50+ UI components and 7 layout components, including props, interfaces, and usage examples |
 | EXP-005 | Improve loading states with skeletons | 2026-02-06 | Already implemented in Contacts.tsx and Properties.tsx |
@@ -91,7 +92,6 @@ These tasks are ready for autonomous execution:
 
 | ID | Item | Priority | Notes |
 |----|------|----------|-------|
-| EXP-008 | Animation polish | P3 | Delight |
 | EXP-010 | Remove unused next-themes dependency | P3 | Package.json still lists next-themes but it's no longer imported |
 
 ---

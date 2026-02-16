@@ -1,6 +1,6 @@
 # PM-Discovery Memory
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-15 (Cycle 13)
 > **Purpose:** Retain learnings, patterns, and context across cycles
 
 ---
@@ -25,6 +25,14 @@
 - PostgreSQL `websearch_to_tsquery('english')` filters out standalone numbers
 - Need numeric-specific search path with regex matching
 - ILIKE fallback should be evaluated independently (OR not AND)
+
+**Search Analytics Dashboard Pattern (DIS-017):**
+- Use existing RPC functions (`get_search_metrics_summary`, `get_search_click_through_stats`)
+- Create dedicated hooks for each data source
+- Time-based filtering via date range parameters
+- Admin-only access via `isAdmin` check from RoleContext
+- Tab-based organization: Overview, Click Analysis, Popular Queries
+- North Star alert pattern: show warning when metrics below target
 
 ### Common Issues & Solutions
 
@@ -83,7 +91,21 @@
 
 ## Recent Work Context
 
-### Last Cycle (Cycle 10)
+### Last Cycle (Cycle 13)
+- **Worked on:** DIS-017 - Search analytics dashboard
+- **Delivered:** Full-featured admin dashboard with three tabs (Overview, Click Analysis, Popular Queries)
+- **Key components:** SearchAnalyticsDashboard.tsx, useSearchClickStats.ts
+- **Integration:** Added "Search" tab in Settings (admin only)
+- **Blocked by:** None
+- **Handoffs created:** None
+- **Learning:** Reuse existing RPC functions rather than creating new ones; follow existing dashboard patterns (GrowthMetricsDashboard)
+
+### Previous Cycle (Cycle 12)
+- **Worked on:** DIS-016 - Search input matching
+- **Delivered:** "Searching for: X" visual indicator
+- **Files modified:** useGlobalSearch.ts, GlobalSearch.tsx, SearchResultsDropdown.tsx
+
+### Previous Cycle (Cycle 10)
 - **Worked on:** DIS-015 - Comprehensive search testing (P0)
 - **Delivered:** Complete test plan with 30+ test queries, 5 entity types, 6 query types
 - **Blocked by:** Migration 20260207080000_fix_numeric_search.sql not deployed
@@ -116,16 +138,21 @@
 - Using `/feature-dev` for search architecture changes
 - Using `smart-agent-brainstorming` for UI improvements
 - Testing with real queries (zip codes, MLS numbers)
+- Following existing dashboard patterns (GrowthMetricsDashboard) for consistency
+- Creating dedicated hooks for RPC function access
+- Admin-only features via RoleContext `isAdmin` check
 
 **Avoids:**
 - Breaking existing search functionality
 - Skipping numeric query testing
 - Hardcoding search ranking
+- Creating duplicate RPC functions when existing ones suffice
 
 **Works well with:**
 - PM-Context (document indexing)
 - PM-Intelligence (RAG retrieval)
 - PM-Experience (search UI)
+- PM-Growth (metrics dashboard patterns)
 
 ---
 

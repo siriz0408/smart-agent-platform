@@ -1,6 +1,6 @@
 # PM-Integration Backlog
 
-> **Last Updated:** 2026-02-07 (Architecture Issues Added)
+> **Last Updated:** 2026-02-15 (INT-017 Completed)
 
 ## In Progress
 
@@ -12,7 +12,6 @@
 
 | ID | Item | Priority | Effort | Notes |
 |----|------|----------|--------|-------|
-| **INT-017** | **Design MCP-style connector experience** | **P1** | **L** | **Claude-like settings: enable connectors for AI chat** |
 | INT-018 | Plan AI chat integration with calendar/email/notes | P2 | L | Strategic: Agent-accessible data sources for chat |
 | INT-005 | Create API docs | P2 | M | Blocked until public API exists |
 | INT-009 | Add integration usage analytics | P2 | S | Track adoption metrics |
@@ -178,3 +177,4 @@
 | INT-004 | Plan email sync | 2026-02-07 | ✅ Comprehensive implementation plan created. 4-phase approach: Gmail read-only sync (MVP), Gmail write ops, Outlook support, advanced features. Database schema, edge functions, UI components, and testing strategy defined. Report: `docs/pm-agents/reports/2026-02-07/pm-integration-int004-email-sync-plan.md` |
 | **INT-015** | **Move Integrations page to Settings** | **2026-02-07** | ✅ Moved integrations from main nav to Settings tab. Created IntegrationsSettings component. OAuth flows updated to redirect to Settings#integrations. Legacy /integrations route redirects to Settings. |
 | **INT-016** | **Fix broken Integrations page + remove duplicate data sources** | **2026-02-07** | ✅ Removed duplicate AdminDataSources page with placeholder data. Admin console now links to Settings#integrations. Removed /admin/data-sources route. Single source of truth for integration management established. |
+| **INT-017** | **Design MCP-style connector experience** | **2026-02-15** | ✅ Implemented MCP-style AI Chat connector toggles. Created `AIConnectorToggle` component with permission dialog. Added `ai_enabled` column to `workspace_connectors` table. IntegrationCard now shows AI toggle for connected integrations. "AI Chat Data Sources" summary shows enabled connectors. |

@@ -1,6 +1,6 @@
 # PM-Communication Memory
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-15 (Cycle 13)
 > **Purpose:** Retain learnings, patterns, and context across cycles
 
 ---
@@ -26,6 +26,15 @@
 - Typing indicators (`useTypingIndicator` hook)
 - Read receipts (`useReadReceipts` hook)
 - Real-time updates via Supabase subscriptions
+
+**Push Notifications Pattern (Cycle 13):**
+- Capacitor PushNotifications plugin for native iOS/Android
+- Device tokens stored in `push_notification_tokens` table
+- `usePushNotifications` hook manages registration and permissions
+- Platform detection via `Capacitor.isNativePlatform()`
+- Token registration requires permission + native platform
+- Web fallback shows "mobile app required" message
+- Settings UI component: `PushNotificationSettings.tsx`
 
 ### Common Issues & Solutions
 
@@ -57,7 +66,7 @@
 **Notification Types:**
 - In-app notifications (working)
 - Email notifications (templates exist)
-- Push notifications (future - mobile app)
+- Push notifications (infrastructure ready, server-side sender pending)
 
 ### Cross-PM Coordination Patterns
 
@@ -79,13 +88,24 @@
 
 ## Recent Work Context
 
-### Last Cycle (Cycle 9)
-- **Worked on:** COM-006 - Message search + archive (complete)
-- **Discovered:** File attachments UI incomplete
+### Last Cycle (Cycle 13)
+- **Worked on:** COM-008 - Push notifications infrastructure (80% complete)
+- **Implemented:**
+  - Installed @capacitor/push-notifications plugin
+  - Created `usePushNotifications` hook with full lifecycle management
+  - Added `push_notification_tokens` database table with RLS
+  - Updated capacitor.config.ts with PushNotifications config
+  - Created `PushNotificationSettings.tsx` UI component
+  - Integrated into Settings page notifications tab
+- **Remaining:** Server-side push sender (edge function to send via FCM/APNs)
 - **Blocked by:** None
 - **Handoffs created:** None
 
 ### Previous Cycles
+
+**Cycle 9:**
+- Message search + archive (complete)
+- File attachments UI discovered incomplete
 
 **Cycle 8:**
 - Implemented message reactions (6 emojis)

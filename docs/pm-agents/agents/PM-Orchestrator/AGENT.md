@@ -441,22 +441,36 @@ Reviewer submits a brief report:
    - Find element with `id="submitted-feedback-markdown"` - this contains the markdown text
    - Find element with `id="submitted-feedback-images"` - this contains any attached images
    - Extract both markdown text and image data (base64 data URLs)
+   - **Important:** Images are numbered (Image 1, Image 2, Image 3, etc.) in the markdown
+   - Each feedback section can have multiple images, referenced as "Image 1", "Image 2", etc. in the text
 
 4. **Write Feedback to FEEDBACK.md**
    - Write extracted markdown to `docs/pm-agents/FEEDBACK.md`
-   - Include images as markdown image syntax: `![Description](data:image/...)`
+   - Include images as markdown image syntax: `![Section Name - Image N](data:image/...)`
+   - Images are numbered sequentially per section (Image 1, Image 2, Image 3, etc.)
    - Preserve the header/instructions section, replace "Current Feedback" section
+   - **Image Processing:** When processing feedback, analyze images carefully:
+     - For bug reports: Screenshots show visual evidence of issues
+     - For feature requests: Mockups/wireframes show desired functionality
+     - For testing feedback: Screenshots demonstrate test results or issues
+     - Cross-reference image numbers mentioned in text (e.g., "See Image 1" refers to the first image in that section)
 
 5. **Process Feedback**
    - Read `docs/pm-agents/FEEDBACK.md`
+   - **Analyze Images:** For each section with images:
+     - Review all attached images carefully
+     - Cross-reference image numbers mentioned in text (e.g., "See Image 1" = first image in that section)
+     - For bug reports: Analyze screenshots to diagnose issues, identify UI elements, error messages, console logs
+     - For feature requests: Review mockups/wireframes to understand desired functionality
+     - For testing feedback: Examine screenshots to verify test results, identify issues, understand user workflows
    - Process each section:
-     - **Strategic feedback** → Update VISION.md or priorities
-     - **Bug reports** → Route to appropriate PM (add to their BACKLOG.md)
-     - **Task delegation** → Add to PM backlogs (format: PM-[Name]: [Task])
-     - **Research assignments** → Assign to PM-Research (add to their BACKLOG.md)
-     - **Feature requests** → Score using prioritization framework, route to appropriate PM
-     - **Decision responses** → Update DECISIONS.md with human responses
-     - **Testing feedback** → Route to PM-QA and relevant domain PMs
+     - **Strategic feedback** → Update VISION.md or priorities (consider any attached diagrams/charts)
+     - **Bug reports** → Route to appropriate PM (add to their BACKLOG.md), include image references in bug description
+     - **Task delegation** → Add to PM backlogs (format: PM-[Name]: [Task]), reference images if provided
+     - **Research assignments** → Assign to PM-Research (add to their BACKLOG.md), include image context
+     - **Feature requests** → Score using prioritization framework, route to appropriate PM, analyze mockups/images
+     - **Decision responses** → Update DECISIONS.md with human responses, consider any attached context images
+     - **Testing feedback** → Route to PM-QA and relevant domain PMs, analyze screenshots for issues/improvements
 
 6. **Clear Feedback After Processing**
    - Clear `docs/pm-agents/FEEDBACK.md` (keep only header/instructions)

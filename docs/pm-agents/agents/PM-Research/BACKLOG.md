@@ -1,6 +1,6 @@
 # PM-Research Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle #9 execution complete - RES-006 verified)
+> **Last Updated:** 2026-02-15 (RES-011 complete - AI Pricing Research)
 
 ## In Progress
 
@@ -12,8 +12,8 @@ _None_
 |----|------|----------|--------|-------|
 | RES-007 | Research GTM strategy for agent onboarding and acquisition | P2 | M | PM-Research |
 | RES-008 | Evaluate property data APIs (Zillow, Redfin, Realtor.com) for enrichment | P2 | M | PM-Research |
-| RES-009 | Research team/brokerage management features in competing products | P2 | M | PM-Research |
 | RES-010 | Analyze AI agent marketplace trends and monetization models | P2 | L | PM-Research |
+| RES-012 | Research transaction coordinator automation (SkySlope, Dotloop analysis) | P2 | M | PM-Research |
 
 ## Completed
 
@@ -26,3 +26,5 @@ _None_
 | RES-004 | Top 5 competitor deep dive: features, pricing, UX | 2026-02-06 | Report, REC-012 to REC-016 |
 | RES-005 | Research real estate agent pain points and workflow bottlenecks | 2026-02-07 | Report, REC-017 to REC-026 |
 | RES-006 | Evaluate email/calendar integration APIs (Gmail, Outlook, Google Calendar) | 2026-02-07 | Report, REC-027 to REC-032 |
+| RES-009 | Research team/brokerage management features in competing products | 2026-02-15 | Report, REC-033 to REC-038 |
+| RES-011 | AI pricing research: cost optimization, pricing tiers, competitor analysis | 2026-02-15 | Report, REC-039 to REC-044 |

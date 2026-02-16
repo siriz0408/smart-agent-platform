@@ -1,7 +1,7 @@
 # PM-Research Recommendations Tracker
 
-> **Last Updated:** 2026-02-07  
-> **Status:** 32 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003, 5 from RES-004, 10 from RES-005, 6 from RES-006)
+> **Last Updated:** 2026-02-15
+> **Status:** 38 active recommendations awaiting PM-Orchestrator review (5 from RES-001, 3 from RES-002, 3 from RES-003, 5 from RES-004, 10 from RES-005, 6 from RES-006, 6 from RES-009)
 
 ---
 
@@ -1168,6 +1168,456 @@ Immediately begin the Google OAuth verification process for restricted Gmail sco
 
 ---
 
+### REC-033: Implement Lead Distribution Engine
+**Source:** RES-009 Team/Brokerage Management Research
+**Priority:** P0 - Critical
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Build an automated lead distribution engine supporting round-robin, weighted (performance-based), geographic, and custom rule-based routing. Essential for team adoption and competitive parity with Follow Up Boss.
+
+**Rationale:**
+- Follow Up Boss's #1 team feature is lead distribution
+- 80% of sales require 5+ follow-ups - fast lead assignment is critical
+- Teams with good lead routing convert 21x higher (5-minute response benchmark)
+- Current gap is a deal-breaker for team/brokerage sales
+- No competitors use AI for lead routing (blue ocean opportunity)
+
+**Impact:**
+- **User Impact:** 5/5 (transformative for teams)
+- **Vision Alignment:** 5/5 (AI-first lead intelligence)
+- **Effort:** Medium (M)
+- **Owner:** PM-Transactions + PM-Intelligence
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Lead routing rules engine (configurable per workspace)
+2. Distribution modes: round-robin, weighted, geographic, expertise-based
+3. AI enhancement: predictive routing based on agent-lead fit
+4. Lead pool feature (agents claim leads from pool)
+5. Notification + SLA tracking (time to first contact)
+6. Performance feedback loop (routing adjusts based on conversion)
+
+---
+
+### REC-034: Build Agent Performance Dashboard
+**Source:** RES-009 Team/Brokerage Management Research
+**Priority:** P0 - Critical
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Create brokerage-level analytics dashboard showing agent productivity metrics, lead conversion rates, response times, and deal performance. Include leaderboards for gamification.
+
+**Rationale:**
+- Every major competitor offers brokerage-level analytics
+- Brokerages need visibility into team performance for coaching
+- Gamification (leaderboards) increases engagement and performance
+- Follow Up Boss emphasizes accountability as core value prop
+- Data exists in SA (leads, deals, activities) - just needs aggregation
+
+**Impact:**
+- **User Impact:** 4/5 (high value for team leads/admins)
+- **Vision Alignment:** 4/5 (supports team tier value prop)
+- **Effort:** Medium (M)
+- **Owner:** PM-Experience + PM-Transactions
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Agent performance metrics: leads assigned, contacted, converted
+2. Response time tracking (first contact, average response)
+3. Deal metrics: deals in progress, closed, velocity
+4. Activity metrics: calls, emails, meetings logged
+5. Leaderboard with configurable rankings (weekly, monthly)
+6. Export/reporting for brokerage owners
+
+---
+
+### REC-035: Implement Team Hierarchy Structure
+**Source:** RES-009 Team/Brokerage Management Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Add team structure within workspaces: teams, team leads, and reporting relationships. Enable team leads to manage their sub-team while workspace admins maintain overall control.
+
+**Rationale:**
+- Large brokerages have 10-30+ agents organized into teams
+- Team leads need visibility into their team without full admin access
+- kvCORE and FUB support team hierarchy
+- Enables team-specific lead routing and reporting
+- Current flat workspace model doesn't scale to 30+ agents
+
+**Impact:**
+- **User Impact:** 4/5 (essential for larger workspaces)
+- **Vision Alignment:** 4/5 (supports brokerage tier)
+- **Effort:** Medium (M)
+- **Owner:** PM-Orchestrator (schema) + PM-Experience (UI)
+- **Timeline:** Q2-Q3 2026
+
+**Implementation:**
+1. Add `teams` table: id, workspace_id, name, team_lead_id
+2. Add `team_memberships`: user_id, team_id, joined_at
+3. New role: `team_lead` with team-scoped admin permissions
+4. Team-scoped views in dashboard and reports
+5. Team-specific lead routing and performance tracking
+6. UI for managing teams within Settings
+
+---
+
+### REC-036: Add Workspace Data Privacy Modes
+**Source:** RES-009 Team/Brokerage Management Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Implement configurable workspace data privacy modes (open, closed, hybrid) following Rex Software's model. Allows brokerages to balance collaboration with agent data ownership.
+
+**Rationale:**
+- kvCORE's "database privacy" is a key adoption driver
+- Some brokerages want full visibility (collaboration-first)
+- Others want agent-owned databases (competitive environment)
+- Hybrid mode (see all, edit own) balances both
+- Agents leaving brokerage is a real concern - data ownership matters
+
+**Impact:**
+- **User Impact:** 4/5 (addresses adoption blocker for some brokerages)
+- **Vision Alignment:** 4/5 (supports diverse brokerage models)
+- **Effort:** Medium (M)
+- **Owner:** PM-Security + PM-Context
+- **Timeline:** Q2-Q3 2026
+
+**Implementation:**
+1. Add `privacy_mode` column to workspaces: 'open', 'closed', 'hybrid'
+2. Open mode: all agents see all contacts/deals in workspace
+3. Closed mode: agents only see own data (current behavior)
+4. Hybrid mode: agents see all, edit only own records
+5. Contact ownership field: `owner_user_id` on contacts
+6. RLS policies update based on workspace privacy mode
+7. Admin override capability for any mode
+
+---
+
+### REC-037: Build Seat Management UI
+**Source:** RES-009 Team/Brokerage Management Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Create a comprehensive workspace management UI for inviting agents, managing roles, and tracking seat usage against subscription limits.
+
+**Rationale:**
+- Current workspace management is limited
+- Team/Brokerage tiers need seat management (4-30 agents)
+- Self-service reduces support burden
+- Competitive table stakes (all competitors offer this)
+- Enables workspace admins to operate independently
+
+**Impact:**
+- **User Impact:** 4/5 (essential for team/brokerage admins)
+- **Vision Alignment:** 4/5 (supports self-service growth)
+- **Effort:** Small (S)
+- **Owner:** PM-Experience + PM-Growth
+- **Timeline:** Q1-Q2 2026
+
+**Implementation:**
+1. Workspace Settings > Team Members page
+2. Invite by email with role selection
+3. Pending invitations list with resend/revoke
+4. Active members list with role editing
+5. Seat usage meter (X of Y seats used)
+6. Upgrade prompt when approaching limit
+7. Remove member with data handling options (delete/transfer/keep)
+
+---
+
+### REC-038: Implement AI-Powered Lead Scoring
+**Source:** RES-009 Team/Brokerage Management Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Build ML-based lead scoring to rank leads by conversion likelihood, enabling smarter lead distribution and prioritization. Differentiator: use document intelligence signals (pre-approval letters, signed disclosures) in scoring.
+
+**Rationale:**
+- DwellCRM has "AI Lead Scoring" but limited to engagement signals
+- SA's document intelligence provides unique data (financial docs, signed contracts)
+- Pre-approval letter = high intent signal
+- Follow Up Boss uses engagement scoring - SA can go deeper
+- Supports REC-033 (lead distribution) with intelligent routing
+
+**Impact:**
+- **User Impact:** 5/5 (higher conversion, reduced wasted effort)
+- **Vision Alignment:** 5/5 (AI-first, document intelligence compound advantage)
+- **Effort:** Medium (M)
+- **Owner:** PM-Intelligence
+- **Timeline:** Q2-Q3 2026
+
+**Implementation:**
+1. Lead scoring model inputs:
+   - Engagement: page views, email opens, chat interactions
+   - Documents: pre-approval uploaded, disclosures signed
+   - Profile: budget, timeline, location match
+   - Behavior: property saves, showing requests
+2. Score displayed on contact cards and lists
+3. "Hot leads" filter and smart list
+4. Routing integration: high-score leads to top performers
+5. Scoring model feedback loop (conversion outcomes)
+6. Explanation UI: "Why this score?" transparency
+
+---
+
+### REC-039: Implement AI Token Cost Tracking Dashboard
+**Source:** RES-011 AI Pricing Research
+**Priority:** P0 - Critical
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Build a real-time AI cost tracking dashboard showing per-user, per-feature, and per-workspace token consumption. Essential for cost management and pricing optimization.
+
+**Rationale:**
+- AI costs represent 20-40% of COGS for AI-first SaaS (vs <5% for traditional SaaS)
+- Current implementation lacks visibility into actual AI spend per customer
+- Usage monitoring enables proactive cost optimization
+- Supports usage-based billing implementation
+- Industry best practice: track costs from day one
+
+**Impact:**
+- **User Impact:** 3/5 (internal tool, enables better pricing)
+- **Vision Alignment:** 5/5 (cost-effective AI scaling)
+- **Effort:** Small (S)
+- **Owner:** PM-Infrastructure + PM-Intelligence
+- **Timeline:** Q1 2026
+
+**Implementation:**
+1. Add `ai_usage_logs` table: user_id, workspace_id, feature, input_tokens, output_tokens, model, cost_usd, timestamp
+2. Instrument all AI endpoints (ai-chat, index-document, execute-agent)
+3. Real-time cost calculation using current Anthropic pricing
+4. Admin dashboard with cost breakdown by user, feature, workspace
+5. Cost alerts when approaching thresholds
+6. Daily/weekly cost reports
+
+**Cost Context (Claude Sonnet 4.5 - current model):**
+- Input: $3/million tokens
+- Output: $15/million tokens
+- Average chat message: ~1,000 input + 500 output tokens = ~$0.0105/message
+- At 500 messages/month = ~$5.25/user/month in AI costs
+
+---
+
+### REC-040: Implement Prompt Caching for AI Chat
+**Source:** RES-011 AI Pricing Research
+**Priority:** P0 - Critical
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Implement Anthropic's prompt caching feature to reduce AI costs by 60-80% on repeated context. Structure prompts with static content (system prompts, tools) at the beginning.
+
+**Rationale:**
+- Anthropic prompt caching offers 90% savings on cached content
+- Current ai-chat sends full tool definitions and system prompt with every message
+- System prompt + tools = ~3,000 tokens × $0.003/1K = $0.009 per request
+- With caching: $0.0009 per request (cache read price = 0.1x)
+- Estimated annual savings: $10K-$30K at 1,000 user scale
+
+**Impact:**
+- **User Impact:** 3/5 (faster responses, enables more AI usage)
+- **Vision Alignment:** 5/5 (cost-effective scaling)
+- **Effort:** Small (S)
+- **Owner:** PM-Intelligence
+- **Timeline:** Q1 2026
+
+**Implementation:**
+1. Structure system prompt with static content first (tools, persona, knowledge base)
+2. Place dynamic content (user query, conversation history) at end
+3. Use Anthropic's cache control headers
+4. Monitor cache hit rates (target >80%)
+5. Implement 5-minute cache optimization for active conversations
+
+**Cost Savings Calculation:**
+- Current: ~3,500 tokens system context × 100 messages/user/month × 1,000 users = 350M tokens/month
+- Without caching: 350M × $0.003 = $1,050/month
+- With caching (90% savings): $105/month
+- Monthly savings: ~$945
+
+---
+
+### REC-041: Implement Model Routing for Cost Optimization
+**Source:** RES-011 AI Pricing Research
+**Priority:** P0 - Critical
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Implement intelligent model routing to use cheaper models (Claude Haiku 4.5) for simple queries while preserving Claude Sonnet 4.5 for complex tasks. Achieves 40-50% cost reduction.
+
+**Rationale:**
+- Claude Haiku 4.5: $1 input / $5 output per million (67% cheaper than Sonnet)
+- Many user queries are simple (greetings, FAQ, basic lookups)
+- Stanford's FrugalGPT research achieved 98% cost reduction with cascading
+- Industry trend: 70% of SaaS companies implementing model routing by 2026
+- Maintains quality for complex tasks while optimizing routine queries
+
+**Impact:**
+- **User Impact:** 4/5 (faster simple queries, same quality complex queries)
+- **Vision Alignment:** 5/5 (cost-effective scaling)
+- **Effort:** Medium (M)
+- **Owner:** PM-Intelligence
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Query classifier: simple vs complex (based on length, keywords, intent)
+2. Simple queries → Claude Haiku 4.5 (greetings, FAQ, status checks)
+3. Complex queries → Claude Sonnet 4.5 (document analysis, RAG, multi-turn)
+4. Automatic upgrade: if Haiku response confidence low → retry with Sonnet
+5. A/B testing framework to validate quality parity
+6. Monitoring dashboard for model usage split
+
+**Routing Criteria:**
+- **Haiku (70% of queries):** <50 tokens input, FAQ patterns, simple lookups, status queries
+- **Sonnet (30% of queries):** Document RAG, complex reasoning, property search, calculations
+
+**Cost Savings Calculation:**
+- Current: 100% Sonnet = $15 output per million tokens
+- With routing: 70% Haiku ($5) + 30% Sonnet ($15) = $8/million average
+- 47% reduction in output costs
+
+---
+
+### REC-042: Revise Pricing Tiers Based on AI Economics
+**Source:** RES-011 AI Pricing Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Revise pricing tiers to reflect AI economics: increase AI query limits on higher tiers, add usage-based overage pricing, and ensure gross margin viability at each tier.
+
+**Rationale:**
+- AI SaaS companies see 50-60% gross margins vs 80-90% for traditional SaaS
+- Current Free tier (50 queries) at $0 loses ~$2.50/user/month in AI costs
+- Gartner predicts 70% of businesses prefer usage-based pricing by 2026
+- Hybrid model (base + overage) is 2026 industry standard
+- Current plan limits may not align with actual AI costs
+
+**Impact:**
+- **User Impact:** 4/5 (clear value-cost alignment)
+- **Vision Alignment:** 5/5 (sustainable AI business model)
+- **Effort:** Small (S) - mostly configuration changes
+- **Owner:** PM-Growth
+- **Timeline:** Q1 2026
+
+**Recommended Pricing Structure:**
+
+| Plan | Price | AI Queries | Est. AI Cost | Gross Margin |
+|------|-------|------------|--------------|--------------|
+| Free | $0 | 25/mo | ~$1.25 | Negative (acquisition) |
+| Starter | $29 | 200/mo | ~$10 | ~65% |
+| Professional | $79 | 1,000/mo | ~$50 | ~37% |
+| Team | $199 | 5,000/mo | ~$250 | ~-25% (need overage) |
+| Brokerage | $499 | 10,000/mo | ~$500 | ~0% (need overage) |
+
+**Key Changes:**
+1. Reduce Free tier from 50→25 queries (limit losses)
+2. Add overage pricing: $0.05/query beyond limit
+3. Emphasize "unlimited documents" value on Pro+
+4. Add AI usage meter to billing page
+5. Soft limits with warning before hard cutoff
+
+---
+
+### REC-043: Implement Batch API for Non-Urgent Processing
+**Source:** RES-011 AI Pricing Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Use Anthropic's Batch API (50% discount) for non-urgent AI workloads like document indexing, daily summaries, and bulk content generation.
+
+**Rationale:**
+- Batch API provides 50% discount on all token costs
+- Document indexing doesn't require real-time response
+- Daily briefings can be pre-computed overnight
+- Bulk content generation (email drafts, social posts) can be batched
+- Reduces peak load on synchronous API calls
+
+**Impact:**
+- **User Impact:** 3/5 (same quality, slightly delayed for batch features)
+- **Vision Alignment:** 5/5 (cost optimization)
+- **Effort:** Medium (M)
+- **Owner:** PM-Intelligence
+- **Timeline:** Q2 2026
+
+**Implementation:**
+1. Identify batch-eligible workloads:
+   - Document indexing (ai-summary generation)
+   - Daily action plan generation
+   - Bulk email draft generation
+   - Weekly digest content
+2. Implement batch job queue (Supabase pg_cron or external)
+3. Process overnight during low-traffic hours
+4. Deliver results via notification/dashboard
+
+**Cost Savings:**
+- Batch workloads: ~30% of total AI usage
+- Savings: 30% × 50% discount = 15% total cost reduction
+- At $5K/month AI spend = $750/month savings
+
+---
+
+### REC-044: Add AI Feature Gating by Plan Tier
+**Source:** RES-011 AI Pricing Research
+**Priority:** P1 - High
+**Status:** Pending PM-Orchestrator Review
+**Date:** 2026-02-15
+
+**Recommendation:**
+Implement AI feature gating by plan tier: basic AI chat on Free, advanced features (document intelligence, custom agents, property search) on paid plans.
+
+**Rationale:**
+- Different AI features have different cost profiles
+- Document RAG uses 3-5x more tokens than simple chat
+- Custom agent execution is most expensive feature
+- Property search with AI analysis is high-value, high-cost
+- Feature gating creates clear upgrade paths
+- Industry trend: outcome-based/feature-based AI pricing
+
+**Impact:**
+- **User Impact:** 4/5 (clear value differentiation)
+- **Vision Alignment:** 5/5 (sustainable business model)
+- **Effort:** Small (S)
+- **Owner:** PM-Growth + PM-Intelligence
+- **Timeline:** Q1 2026
+
+**Recommended Feature Gating:**
+
+| Feature | Free | Starter | Professional | Team+ |
+|---------|------|---------|--------------|-------|
+| Basic AI Chat | ✅ | ✅ | ✅ | ✅ |
+| Mortgage Calculator | ✅ | ✅ | ✅ | ✅ |
+| Document Q&A | ❌ | ✅ (5 docs) | ✅ | ✅ |
+| Property Search | ❌ | ✅ (10/day) | ✅ | ✅ |
+| Custom AI Agents | ❌ | ❌ | ✅ (3 agents) | ✅ |
+| Bulk Content Gen | ❌ | ❌ | ✅ | ✅ |
+| AI Lead Scoring | ❌ | ❌ | ❌ | ✅ |
+
+**Implementation:**
+1. Add `feature_limits` column to subscriptions table
+2. Check feature access in Edge Functions before AI calls
+3. Show upgrade prompts when hitting limits
+4. Soft limits with grace period for new users
+5. Usage analytics to optimize gating thresholds
+
+---
+
 ## Recommendation Status Legend
 
 - **Pending Review:** Awaiting PM-Orchestrator evaluation
@@ -1182,12 +1632,14 @@ Immediately begin the Google OAuth verification process for restricted Gmail sco
 | Metric | Target | Current |
 |--------|--------|---------|
 | **Recommendation Adoption Rate** | >40% | TBD (pending review) |
-| **Research Cycle Time** | <1 week | ✅ 1 day avg (RES-001 through RES-006) |
+| **Research Cycle Time** | <1 week | ✅ 1 day avg (RES-001 through RES-011) |
 | **Roadmap Influence** | >30% | TBD (pending review) |
-| **Total Recommendations** | — | 32 (16 from RES-001–004, 10 from RES-005, 6 from RES-006) |
+| **Total Recommendations** | — | 44 (16 from RES-001–004, 10 from RES-005, 6 from RES-006, 6 from RES-009, 6 from RES-011) |
 | **Pain Points Mapped** | — | 10 identified, 7 partially+ addressed by SA |
 | **Integration APIs Evaluated** | — | 4 (Gmail, Google Calendar, Outlook Mail, Outlook Calendar) |
+| **Team Features Researched** | — | 8 key features identified, 6 recommendations submitted |
+| **AI Pricing Optimizations** | — | 6 cost optimization strategies identified |
 
 ---
 
-*Last Updated: 2026-02-07 by PM-Research (Dev Cycle #9)*
+*Last Updated: 2026-02-15 by PM-Research (RES-011 AI Pricing Research)*

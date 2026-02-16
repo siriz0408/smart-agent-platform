@@ -1,6 +1,6 @@
 # PM-Discovery Backlog
 
-> **Last Updated:** 2026-02-14 (Cycle 12)
+> **Last Updated:** 2026-02-15 (Cycle 13)
 
 ## In Progress
 
@@ -14,11 +14,74 @@
 |----|------|----------|-------|
 | DIS-011 | Search analytics alerts | P2 | Alert when success rate drops below 95% threshold |
 | DIS-012 | CTR-based ranking feedback loop | P2 | Use click-through data to improve search ranking weights |
-| DIS-013 | Search analytics dashboard widget | P3 | Surface CTR/MRR metrics in admin settings |
+| DIS-018 | Add search analytics export | P3 | Export search analytics data to CSV/JSON |
+| DIS-019 | Search analytics email reports | P3 | Weekly email digest of search performance |
 
 ---
 
 ## Task Details
+
+### DIS-017: Search analytics dashboard ✅ COMPLETED
+**Priority:** P2 | **Effort:** M | **Source:** Backlog DIS-013 evolution | **Completed:** 2026-02-15
+
+**Problem:** Admins need visibility into search performance to monitor North Star metric (>95% success rate) and identify areas for improvement.
+
+**Solution Implemented:**
+
+1. **New Hook: `useSearchClickStats`**
+   - Fetches click-through statistics from `get_search_click_through_stats` RPC
+   - TypeScript interfaces for type-safe data handling
+   - Caching with 5-minute stale time
+
+2. **New Component: `SearchAnalyticsDashboard`**
+   - Three-tab layout: Overview, Click Analysis, Popular Queries
+   - Time-based filtering: 7 days, 30 days, 90 days
+   - North Star alert when success rate drops below 95%
+
+3. **Overview Tab:**
+   - Search Success Rate card with target indicator (>95%)
+   - Total Searches with zero-result count
+   - Average Latency with P95/P99 metrics and target (<500ms)
+   - Average Results per search
+   - Latency performance progress bar
+   - Entity type distribution with success rates
+
+4. **Click Analysis Tab:**
+   - Total Clicks and unique queries
+   - Average Click Position (lower is better)
+   - Top 3 Clicks percentage
+   - Click-Through Rate calculation
+   - Clicks by entity type breakdown
+   - Top clicked queries list
+
+5. **Popular Queries Tab:**
+   - Popular successful searches with frequency and success rate
+   - Zero-result queries highlighted for content gap analysis
+   - Query length distribution analysis
+
+6. **Settings Integration:**
+   - Added "Search" tab in Settings (admin only)
+   - Follows existing admin tab pattern (Growth tab)
+
+**Files Created:**
+- `src/hooks/useSearchClickStats.ts` - Hook for CTR stats
+- `src/components/search-analytics/SearchAnalyticsDashboard.tsx` - Dashboard component
+- `src/components/search-analytics/index.ts` - Export barrel
+
+**Files Modified:**
+- `src/pages/Settings.tsx` - Added Search Analytics tab
+
+**Acceptance Criteria:**
+- [x] Dashboard component created
+- [x] Popular searches displayed
+- [x] CTR rates shown
+- [x] Zero-result queries highlighted
+- [x] Time-based filtering (7d, 30d, 90d)
+- [x] Search success rate trends visible
+- [x] Admin-only access
+- [x] Lint and TypeScript checks pass
+
+---
 
 ### DIS-014: 🚨 CRITICAL - Fix global search numeric query failure ✅ COMPLETED
 **Priority:** P0 | **Effort:** M | **Source:** Issue Tracker 2026-02-07 | **Completed:** 2026-02-07
@@ -150,6 +213,7 @@ PostgreSQL's `websearch_to_tsquery('english', p_query)` filters out pure numeric
 
 | ID | Item | Completed | Notes |
 |----|------|-----------|-------|
+| **DIS-017** | **Search analytics dashboard** | **2026-02-15** | **Full-featured admin dashboard with: search success rate, CTR metrics, latency analysis, popular/zero-result queries, entity type distribution, time-based filtering (7d/30d/90d). Files: SearchAnalyticsDashboard.tsx, useSearchClickStats.ts. Integrated in Settings > Search tab (admin only).** |
 | **DIS-015** | **Test plan creation for comprehensive search testing** | **2026-02-07** | **Created comprehensive test matrix with 30+ queries across 5 entity types. Report: pm-discovery-dis015-comprehensive-search-test.md. BLOCKED: Awaiting migration deployment** |
 | DIS-000 | PM-Discovery setup | 2026-02-05 | - |
 | DIS-001 | Initial domain audit | 2026-02-06 |

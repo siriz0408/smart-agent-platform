@@ -1,6 +1,6 @@
 # PM-Context Memory
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-15 (Cycle 13)
 > **Purpose:** Retain learnings, patterns, and context across cycles
 
 ---
@@ -14,6 +14,14 @@
 - Multi-column layout detection improves parsing quality
 - Preserve table structure in chunks
 - Section-aware chunking (100+ RE section headers)
+
+**Document Re-indexing Pattern:**
+- Reuse existing `useDocumentIndexing` hook for re-indexing
+- Show progress with batch tracking (currentBatch/totalBatches)
+- Display chunksIndexed count for user feedback
+- Handle three states: processing, failed, completed
+- Provide retry option on failure with error message
+- Auto-clear success state after 2 seconds (in hook)
 
 **Data Completeness Pattern:**
 - Track data completeness score (% of fields filled)
@@ -38,6 +46,29 @@
 **Issue:** Document indexing failures
 - **Solution:** Robust error handling for malformed PDFs
 - **Pattern:** Log failures, retry with different strategies
+
+**Issue:** Users need to re-index documents when content changes or indexing quality improves
+- **Solution:** Added Re-index button to DocumentDetailsView and dropdown menus in Documents list
+- **Pattern:**
+  - Add prominent action button in document detail header
+  - Add dropdown menu item in list views for quick access
+  - Show dedicated progress card with batch/chunk details
+  - Provide clear error messages and retry functionality
+  - Use existing indexing hook to avoid code duplication
+
+**Issue:** Users need to perform bulk operations on multiple documents
+- **Solution:** Implemented bulk document operations with multi-select UI
+- **Pattern:**
+  - Use Set<string> for tracking selected document IDs (efficient add/delete/check)
+  - Create dedicated `useBulkDocumentOperations` hook for bulk operations
+  - Show floating toolbar at bottom when items selected (fixed position, centered)
+  - Process operations sequentially with progress tracking
+  - Provide visual feedback: progress bar, completed/failed counts, toast notifications
+  - Handle partial failures gracefully (some succeed, some fail)
+  - Mobile: Show checkbox in left column with "Select All" bar above list
+  - Desktop: Add checkbox column to table with header checkbox for select all
+  - Clear selection after operation completes
+  - Auto-clear progress indicator after 3 seconds
 
 ### Domain-Specific Knowledge
 
@@ -80,13 +111,25 @@
 
 ## Recent Work Context
 
-### Last Cycle (Cycle 9)
-- **Worked on:** CTX-005/10 - Metadata column migration (pending)
-- **Discovered:** Metadata column may not exist yet, needs migration
+### Last Cycle (Cycle 13)
+- **Worked on:** CTX-013 - Bulk document operations
+- **Completed:** Full implementation of multi-select, bulk delete, bulk move to project, bulk re-index
 - **Blocked by:** None
 - **Handoffs created:** None
+- **Files modified:**
+  - `src/hooks/useBulkDocumentOperations.ts` - New hook for bulk delete, move, and re-index operations
+  - `src/components/documents/BulkActionToolbar.tsx` - New component for bulk action UI
+  - `src/pages/Documents.tsx` - Integrated multi-select checkboxes and bulk action toolbar
 
 ### Previous Cycles
+
+**Cycle 12:**
+- CTX-012 - Document re-indexing UI feature - Complete
+- Added Re-index button to DocumentDetailsView and dropdown menus
+
+**Cycle 9:**
+- CTX-005/10 - Metadata column migration (pending)
+- Discovered metadata column may not exist yet, needs migration
 
 **Cycle 8:**
 - Enhanced PDF parsing (multi-column, tables, sections)

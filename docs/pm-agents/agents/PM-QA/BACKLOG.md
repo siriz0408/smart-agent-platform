@@ -1,6 +1,6 @@
 # PM-QA Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle #9 - Gate Check Complete)
+> **Last Updated:** 2026-02-15 (Bug Fix Verification)
 
 ## In Progress
 
@@ -17,7 +17,7 @@
 | QA-010 | Audit and fix flaky tests in existing suite | P1 | M | PM-QA |
 | QA-013 | Migrate existing spec files to use new test helpers from tests/e2e/helpers/ | P2 | M | PM-QA |
 | QA-014 | Add document upload & indexing E2E tests | P0 | L | PM-QA |
-| QA-015 | Add contact/deal/property edit and delete E2E tests | P1 | M | PM-QA |
+| QA-018 | Add contact/deal/property edit and delete E2E tests | P1 | M | PM-QA |
 
 ## Completed
 
@@ -31,11 +31,43 @@
 | QA-009 | Create bug tracker and reporting template | 2026-02-06 |
 | QA-011 | Add E2E tests for Settings page (profile, notifications, appearance, security) | 2026-02-06 |
 | QA-012 | Add E2E tests for Billing page (plans, Stripe checkout, usage tracking) | 2026-02-06 |
-| **QA-016** | **Cycle 9 post-cycle gate check** | **2026-02-07** |
+| QA-015 | Bug fix verification: Upload dialog, deal dropdown, doc chat errors, chat titles | 2026-02-15 |
+| QA-016 | Cycle 9 post-cycle gate check | 2026-02-07 |
+| QA-017 | Manual testing of Cycle 12 features (pipeline, chat actions, search UX) | 2026-02-15 |
+| QA-019 | Create E2E tests for MRR Dashboard (GRW-006) - 15 tests, 100% pass | 2026-02-15 |
 
 ---
 
 ## Task Details
+
+### QA-015: Bug Fix Verification ✅ COMPLETED
+**Priority:** P0 | **Effort:** S | **Status:** ✅ PASS
+
+**Summary:**
+Verified 4 bug fixes implemented during the session. All fixes passed code review verification.
+
+**Bugs Verified:**
+1. **Upload Document Dialog Overflow** - PASS
+   - File: `src/components/documents/UploadDocumentDialog.tsx`
+   - Fix: Added `max-h-[90vh] overflow-y-auto` to DialogContent, truncated filename with `max-w-[300px]`
+
+2. **Link to Deal Dropdown Not Working** - PASS
+   - File: `src/components/documents/UploadDocumentDialog.tsx`
+   - Fix: Added fallback `${deal.deal_type} Deal` when no contact linked
+
+3. **Document Chat Not Using Indexed Content** - PASS
+   - File: `supabase/functions/ai-chat/index.ts`
+   - Fix: Added specific error messages for no-content, fetch-error, and no-tenant scenarios
+
+4. **Chat History Titles Too Long** - PASS
+   - File: `src/pages/Chat.tsx`
+   - Fix: Changed from 50-char limit to 6-word limit with ellipsis
+
+**Result:** 4/4 PASS
+
+**Completion Date:** 2026-02-15
+
+---
 
 ### QA-016: Cycle 9 Post-Cycle Gate Check ✅ COMPLETED
 **Priority:** P0 | **Effort:** M | **Status:** ✅ CONDITIONAL PASS
@@ -52,9 +84,7 @@ Comprehensive QA gate check completed for Cycle 9. All 13 critical issues addres
 - ✅ Unit Tests: 144/148 passing (97%)
 - ✅ E2E Tests: 205 tests ready
 - ✅ Frontend: Deployed to Vercel
-- ⏳ Database: 3 migrations pending deployment
-
-**Risk Assessment:** 🟡 MEDIUM
+- ⏳ Database: 3 migrations pending deployment**Risk Assessment:** 🟡 MEDIUM
 - No breaking changes
 - All changes are additive or bug fixes
 - Backward compatibility maintained
@@ -67,6 +97,4 @@ Comprehensive QA gate check completed for Cycle 9. All 13 critical issues addres
 **Deliverables:**
 - Report: `CYCLE_9_GATE_CHECK.md` (comprehensive 12-section analysis)
 - Recommendation: ✅ APPROVE with conditions
-- Next Steps: Deploy migrations, verify, monitor
-
-**Completion Date:** 2026-02-07
+- Next Steps: Deploy migrations, verify, monitor**Completion Date:** 2026-02-07

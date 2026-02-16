@@ -1,21 +1,21 @@
 # PM-Communication Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle 9 - Final)
+> **Last Updated:** 2026-02-15 (Cycle 13)
 
 ## In Progress
 
 | ID | Item | Priority | Status |
 |----|------|----------|--------|
-| _None_ | | | |
+| COM-008 | Push notifications (mobile) | P3 | 80% - Infrastructure complete, needs server-side push sender |
 
 ## Ready
 
 | ID | Item | Priority | Effort | Notes |
 |----|------|----------|--------|-------|
 | COM-007 | Message threading | P2 | L | Feature gap from PRD |
-| COM-008 | Push notifications (mobile) | P3 | XL | Future feature |
 | COM-011 | Reaction analytics/metrics | P3 | S | Track most-used reactions per conversation |
 | COM-012 | Custom emoji reactions | P3 | M | Allow workspace-defined custom emojis beyond predefined set |
+| COM-014 | Server-side push notification sender | P3 | M | Edge function to send push via FCM/APNs |
 
 ## Completed
 

@@ -1,7 +1,7 @@
 # Cross-PM Awareness
 
 > **Purpose:** Reduce silos by sharing context across all PMs
-> **Last Updated:** 2026-02-07 (Cycle 11 Complete)
+> **Last Updated:** 2026-02-15 (Cycle 12 Continuation - Run 4)
 > **Update Frequency:** After each development cycle
 
 ---
@@ -10,18 +10,18 @@
 
 | PM | Current Task | Dependencies | Blockers | Related PMs |
 |----|--------------|--------------|----------|-------------|
-| PM-Discovery | DIS-016: Fix search input matching discrepancy | None | None | PM-Experience (UI) |
-| PM-Intelligence | INT-021: Copy/regenerate response buttons | INT-020 (complete) | None | PM-Experience (UI) |
-| PM-Experience | EXP-008: More animation polish | EXP-014 (complete) | None | All PMs (UI) |
-| PM-Integration | INT-017: MCP connector Phase 1 completion (80% → 100%) | None | None | PM-Intelligence (AI integration) |
-| PM-Context | CTX-012: Document re-indexing | CTX-011 (complete) | None | PM-Intelligence (RAG) |
-| PM-Transactions | TRX-010: Align pipeline stages with PRD | None | None | None |
-| PM-Growth | GRW-006: MRR metrics dashboard | INF-017 (UNBLOCKED!) | None (unblocked) | PM-Infrastructure |
-| PM-Communication | COM-008: Push notifications (mobile) | None | None | PM-Experience (mobile) |
-| PM-Infrastructure | INF-012: Track build times | None | None | PM-Orchestrator |
-| PM-Security | SEC-016: Sanitize error messages | None | None | PM-Infrastructure |
-| PM-Research | RES-009: Team/brokerage management research | None | None | PM-Orchestrator |
-| PM-QA | QA-014: Document upload E2E tests | None | None | PM-Context |
+| PM-Discovery | DIS-018: Search analytics export | DIS-017 (complete) | None | PM-Experience (UI) |
+| PM-Intelligence | INT-024: Connector action execution | INT-018 (complete) | None | PM-Integration |
+| PM-Experience | EXP-009: Accessibility audit | EXP-008 (complete) | None | All PMs (UI) |
+| PM-Integration | INT-019: Microsoft Graph connectors | INT-018 (complete) | None | PM-Intelligence |
+| PM-Context | CTX-014: Document templates | CTX-013 (complete) | None | PM-Experience |
+| PM-Transactions | TRX-012: Enhanced activity logging | TRX-011 (complete) | None | PM-Communication |
+| PM-Growth | GRW-012: Onboarding A/B testing | GRW-006 (complete) | None | PM-Experience |
+| PM-Communication | COM-014: Server-side push sender | COM-008 (80%) | None | PM-Transactions |
+| PM-Infrastructure | INF-013: Deployment rollback automation | INF-012 (complete) | None | PM-Orchestrator |
+| PM-Security | SEC-020: Edge function auth audit | SEC-017 (complete) | None | PM-Infrastructure |
+| PM-Research | RES-011: AI pricing research | RES-009 (complete) | None | PM-Growth |
+| PM-QA | QA-020: Bulk operations E2E tests | QA-019 (complete) | None | PM-Context |
 
 ---
 

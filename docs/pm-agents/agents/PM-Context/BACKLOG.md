@@ -1,6 +1,6 @@
 # PM-Context Backlog
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-15 (Cycle 13)
 
 ## In Progress
 
@@ -13,7 +13,6 @@
 | ID | Item | Priority | Effort |
 |----|------|----------|--------|
 | CTX-006 | Research MLS integration | P2 | L |
-| CTX-011 | Verify re-indexing of existing documents with improved parser | P2 | M |
 
 ## Completed
 
@@ -28,3 +27,6 @@
 | CTX-007 | Implement production metrics monitoring | 2026-02-06 |
 | CTX-008 | Verify search functionality in production | 2026-02-06 |
 | CTX-009 | Run entity embedding backfill if needed | 2026-02-06 |
+| CTX-011 | Verify re-indexing of existing documents with improved parser | 2026-02-07 |
+| CTX-012 | Implement document re-indexing UI feature | 2026-02-15 |
+| CTX-013 | Implement bulk document operations (multi-select, bulk delete, bulk move, bulk re-index) | 2026-02-15 |

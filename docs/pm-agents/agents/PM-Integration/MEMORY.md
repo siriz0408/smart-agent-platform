@@ -1,6 +1,6 @@
 # PM-Integration Memory
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-15 (Cycle 12 - INT-017 Complete)
 > **Purpose:** Retain learnings, patterns, and context across cycles
 
 ---
@@ -15,11 +15,13 @@
 - Action executors: `create_event`, `list_events`, etc.
 - Token refresh handled automatically
 
-**MCP-Style Pattern:**
-- Settings-based connector enable/disable
-- Toggle switches per connector
-- AI chat can access enabled connectors
-- Clear permissions and data access visibility
+**MCP-Style Pattern (INT-017 Implemented):**
+- Settings-based connector enable/disable for AI access
+- Toggle switches per connector (AIConnectorToggle component)
+- AI chat can access enabled connectors via `ai_enabled` column
+- Clear permissions and data access visibility with permission dialog
+- "AI Chat Data Sources" summary card shows enabled connectors
+- Read vs Write action permissions displayed in confirmation dialog
 
 **OAuth Pattern:**
 - Supabase OAuth callback handler
@@ -66,12 +68,30 @@
 - `update_*`: Update resource
 - `delete_*`: Delete resource
 
+### AI Toggle UI Pattern (INT-017)
+
+**Permission Dialog Flow:**
+1. User clicks toggle to enable AI access
+2. Dialog shows read vs write permissions (grouped by action type)
+3. User confirms, toggle updates `ai_enabled` column
+4. Summary card updates to show connector as AI-accessible
+
+**Action Type Classification:**
+- Read actions: `read_*`, `list_*`, `get_*`, `search_*`, `availability`
+- Write actions: `create_*`, `update_*`, `delete_*`, `send_*`, `draft`
+
+**Component Relationships:**
+- `AIConnectorToggle` - Standalone toggle with dialog (reusable)
+- `IntegrationCard` - Hosts the toggle when connected
+- `IntegrationsSettings` - Contains mutation logic and summary card
+
 ### Cross-PM Coordination Patterns
 
 **With PM-Intelligence:**
 - Connector data feeds AI chat
 - MCP pattern affects agent execution
-- AI can query enabled connectors
+- AI can query enabled connectors via `get_ai_enabled_connectors()` function
+- AI chat should call this function to know available data sources
 
 **With PM-Experience:**
 - Settings UI for integrations
@@ -87,13 +107,28 @@
 
 ## Recent Work Context
 
-### Last Cycle (Cycle 9)
-- **Worked on:** INT-015/16/17/18 - Architecture refactor
-- **Discovered:** Integrations page broken, wrong location, needs MCP redesign
+### Last Cycle (Cycle 12)
+- **Worked on:** INT-017 - MCP-style connector experience (100% complete)
+- **Completed:**
+  - Database migration: `ai_enabled` column on `workspace_connectors`
+  - SQL function: `get_ai_enabled_connectors()` for AI chat queries
+  - TypeScript types: Added `ai_enabled` to `WorkspaceConnector`, new `AIEnabledConnector` type
+  - New component: `AIConnectorToggle` with permission dialog
+  - Updated `IntegrationCard` with AI toggle
+  - Updated `IntegrationsSettings` with AI summary card and toggle mutation
+- **Key Files Modified:**
+  - `supabase/migrations/20260215150000_add_ai_enabled_to_workspace_connectors.sql`
+  - `src/types/connector.ts`
+  - `src/components/integrations/AIConnectorToggle.tsx` (new)
+  - `src/components/integrations/IntegrationCard.tsx`
+  - `src/components/settings/IntegrationsSettings.tsx`
 - **Blocked by:** None
 - **Handoffs created:** None
 
 ### Previous Cycles
+
+**Cycle 9:**
+- INT-015/16 - Architecture refactor (moved to Settings, removed duplicates)
 
 **Cycle 8:**
 - Completed Google Calendar connector (5 actions)

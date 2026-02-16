@@ -1,6 +1,6 @@
 # PM-Intelligence Backlog
 
-> **Last Updated:** 2026-02-14 (Cycle 12)
+> **Last Updated:** 2026-02-15 (Cycle 12 - INT-018 Complete)
 
 ---
 
@@ -15,9 +15,10 @@ _No tasks currently in progress_
 | ID | Item | Priority | Notes |
 |----|------|----------|-------|
 | INT-017 | Add visual feedback to chat buttons | P2 | UX enhancement - Add toasts, loading states, confirmations |
-| INT-018 | Add E2E tests for chat buttons | P1 | Test coverage - Verify all 18 interactive elements |
+| INT-023 | Add E2E tests for chat buttons | P1 | Test coverage - Verify all 18 interactive elements |
 | INT-019 | Add tooltips to chat buttons | P2 | UX enhancement - Explain button purposes |
-| INT-020 | Implement "Stop generating" button | P1 | ✅ COMPLETED in Cycle 11 |
+| INT-020 | Implement "Stop generating" button | P1 | Completed in Cycle 11 |
+| INT-024 | Add connector action execution | P2 | Allow AI to execute connector actions (calendar create, email send) |
 
 ---
 
@@ -288,6 +289,7 @@ _No tasks currently in progress_
 | **INT-015** | **Investigate "lightbulb" thinking indicator** | **2026-02-07** | **FALSE POSITIVE: Thinking mode toggle works correctly. See BUTTON_AUDIT_REPORT.md** |
 | **INT-021** | **Implement copy/regenerate response buttons** | **2026-02-14** | **COMPLETED: Created MessageActions.tsx component with Copy (clipboard) and Regenerate (re-generate last response) buttons. Integrated into Chat.tsx assistant message cards. Copy shows success toast, Regenerate removes last assistant message and re-submits user prompt.** |
 | **INT-016** | **Audit all buttons on AI chat page** | **2026-02-07** | **COMPLETED: All 18 interactive elements verified functional. Created BUTTON_AUDIT_REPORT.md with comprehensive audit. Identified 5 enhancement opportunities (INT-017 to INT-021)** |
+| **INT-018** | **AI chat connector integration** | **2026-02-15** | **COMPLETED: Integrated connector data into AI chat. Backend calls `get_ai_enabled_connectors()` to fetch enabled connectors. Added `buildConnectorContext()` to add connector info to system prompt. Created `ActiveConnectorsBadge.tsx` component to show which data sources are being used. Added `active_connectors` to EmbeddedComponents type.** |
 
 ---
 

@@ -1,6 +1,6 @@
 # PM-Intelligence Memory
 
-> **Last Updated:** 2026-02-07 (Cycle 9)
+> **Last Updated:** 2026-02-15 (Cycle 12)
 > **Purpose:** Retain learnings, patterns, and context across cycles
 
 ---
@@ -25,6 +25,14 @@
 - All CRM action executors must validate tenant_id before data access
 - Use defense-in-depth: validate at entry point AND in each executor
 - Centralized `validateTenantAccess()` helper prevents data leaks
+
+**Connector Integration Pattern (INT-018):**
+- Fetch AI-enabled connectors via `get_ai_enabled_connectors(_workspace_id)` RPC
+- Note: `tenant_id = workspace_id` in the database schema
+- Build connector context using `buildConnectorContext()` helper
+- Add connector context to system prompt BEFORE mention context
+- Send `active_connectors` via embedded_components for UI display
+- Frontend `ActiveConnectorsBadge` component shows which sources are active
 
 ### Common Issues & Solutions
 
@@ -70,21 +78,41 @@
 - Button interactions need proper event handlers
 
 **With PM-Integration:**
-- Connector data feeds AI chat
-- MCP pattern affects agent execution
+- Connector data feeds AI chat via `get_ai_enabled_connectors()` SQL function
+- MCP pattern affects agent execution - connectors have `ai_enabled` toggle
 - OAuth flows need error handling
+- PM-Integration added database infrastructure (INT-017), PM-Intelligence consumes it (INT-018)
+- Next: PM-Intelligence should implement action execution using connector actions
 
 ---
 
 ## Recent Work Context
 
-### Last Cycle (Cycle 9)
-- **Worked on:** INT-014/15/16 - AI chat button fixes (investigation phase)
-- **Discovered:** Multiple buttons non-functional, needs full audit
+### Last Cycle (Cycle 12)
+- **Worked on:** INT-018 - AI chat connector integration
+- **Completed:**
+  - Backend: Added `AIEnabledConnector` interface and fetch logic in ai-chat/index.ts
+  - Backend: Created `buildConnectorContext()` to format connector info for system prompt
+  - Backend: Integrated connector context into both streaming and non-streaming code paths
+  - Backend: Added `active_connectors` to embedded_components response
+  - Frontend: Created `ActiveConnectorsBadge.tsx` component with tooltip
+  - Frontend: Added `active_connectors` to `EmbeddedComponents` type
+  - Frontend: Integrated badge display in Chat.tsx assistant messages
+- **Key Files Modified:**
+  - `supabase/functions/ai-chat/index.ts` (connector fetch, prompt context, embedded components)
+  - `src/components/ai-chat/ActiveConnectorsBadge.tsx` (new)
+  - `src/components/ai-chat/index.ts` (export)
+  - `src/types/property.ts` (active_connectors type)
+  - `src/pages/Chat.tsx` (badge display)
 - **Blocked by:** None
 - **Handoffs created:** None
+- **Next Step:** INT-024 - Add connector action execution (allow AI to actually execute actions)
 
 ### Previous Cycles
+
+**Cycle 9:**
+- Investigated INT-014/15/16 - AI chat button fixes
+- Created BUTTON_AUDIT_REPORT.md with comprehensive findings
 
 **Cycle 8:**
 - Completed HO-009: Tenant isolation across all 10 CRM action executors
