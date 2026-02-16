@@ -11,10 +11,10 @@ const config: CapacitorConfig = {
     // cleartext: true,
   },
   plugins: {
-    // Push notifications configuration (for future implementation)
-    // PushNotifications: {
-    //   presentationOptions: ['badge', 'sound', 'alert'],
-    // },
+    // Push notifications configuration
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
+    },
     // Keyboard configuration for better mobile experience
     Keyboard: {
       resize: 'body',

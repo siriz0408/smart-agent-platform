@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
+import buildMetrics from "./plugins/vite-build-metrics";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -14,6 +15,8 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    // Build time tracking for INF-012
+    buildMetrics({ verbose: false, consoleOutput: true }),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "icons/*.svg", "smart-agent-og.svg"],
