@@ -35,6 +35,21 @@ interface CollectionRef {
   collection: "Properties" | "Contacts" | "Deals" | "Documents";
 }
 
+/** Condensed property context for follow-up intent detection */
+export interface PropertyContext {
+  /** Summary of previously shown properties for the AI to reference */
+  properties: Array<{
+    index: number;
+    zpid: string;
+    address: string;
+    price: number;
+    bedrooms: number;
+    bathrooms: number;
+    livingArea: number;
+    propertyType?: string;
+  }>;
+}
+
 interface StreamOptions {
   /** The messages history to send */
   messages: StreamMessage[];
@@ -50,6 +65,8 @@ interface StreamOptions {
   collectionRefs?: CollectionRef[];
   /** Enable thinking mode for step-by-step reasoning */
   thinkingMode?: boolean;
+  /** Property context from previous search results for follow-up questions */
+  propertyContext?: PropertyContext;
   /** Called when a new content chunk arrives */
   onChunk?: (content: string, fullContent: string) => void;
   /** Called when streaming completes */
@@ -103,6 +120,7 @@ export function useAIStreaming(): UseAIStreamingReturn {
       mentionData,
       collectionRefs,
       thinkingMode,
+      propertyContext,
       onChunk,
       onComplete,
       onError,
@@ -138,6 +156,7 @@ export function useAIStreaming(): UseAIStreamingReturn {
         ...(mentionData?.length && { mentionData }),
         ...(collectionRefs?.length && { collectionRefs }),
         ...(thinkingMode && { thinkingMode }),
+        ...(propertyContext && { propertyContext }),
       };
 
       const response = await fetch(AI_CHAT_URL, {

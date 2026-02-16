@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { MilestoneList } from "./MilestoneList";
 import { AddNoteDialog } from "./AddNoteDialog";
 import { DealSuggestions } from "./DealSuggestions";
+import { DealActivityTimeline } from "./DealActivityTimeline";
 
 interface Stage {
   id: string;
@@ -422,11 +423,11 @@ export function DealDetailSheet({
                 </div>
               )}
 
-              {/* Notes Section */}
+              {/* Activity Timeline Section (TRX-012) */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
-                    Notes & Activity
+                    Activity Timeline
                   </h3>
                   <Button
                     variant="outline"
@@ -437,7 +438,15 @@ export function DealDetailSheet({
                     Add Note
                   </Button>
                 </div>
-                {deal.notes ? (
+                <DealActivityTimeline dealId={deal.id} maxHeight="300px" />
+              </div>
+
+              {/* Notes Section (legacy display for backward compatibility) */}
+              {deal.notes && (
+                <div className="space-y-3">
+                  <h3 className="font-medium text-sm text-muted-foreground uppercase tracking-wide">
+                    Notes
+                  </h3>
                   <div className="space-y-3 max-h-64 overflow-y-auto">
                     {deal.notes.split("\n\n---\n\n").map((note, index) => (
                       <div
@@ -448,12 +457,8 @@ export function DealDetailSheet({
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <div className="text-sm text-muted-foreground text-center py-4 border rounded-lg">
-                    No notes yet. Add one to track activity.
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
 
               <Separator />
 

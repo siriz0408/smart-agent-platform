@@ -9,10 +9,14 @@ import {
   Sparkles,
   HardDrive,
   Tag as TagIcon,
+  RefreshCw,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useDocumentIndexing } from "@/hooks/useDocumentIndexing";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Document = Tables<"documents">;
@@ -57,6 +62,17 @@ interface DocumentDetailsViewProps {
 export function DocumentDetailsView({ document, onDelete }: DocumentDetailsViewProps) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { indexDocument, isIndexing, getProgress } = useDocumentIndexing();
+
+  // Get indexing progress for this document
+  const progress = getProgress(document.id);
+  const isReindexing = progress && (progress.status === 'starting' || progress.status === 'processing');
+  const reindexFailed = progress?.status === 'failed';
+  const reindexCompleted = progress?.status === 'completed';
+
+  const handleReindex = () => {
+    indexDocument(document.id);
+  };
 
   // Fetch AI summary if available
   const { data: summary } = useQuery({
@@ -170,6 +186,24 @@ export function DocumentDetailsView({ document, onDelete }: DocumentDetailsViewP
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReindex}
+                disabled={isIndexing}
+              >
+                {isReindexing ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Re-indexing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Re-index
+                  </>
+                )}
+              </Button>
               <Button variant="default" size="sm" onClick={handleChatWithDocument}>
                 <MessageSquare className="h-4 w-4 mr-2" />
                 Chat with AI
@@ -178,6 +212,72 @@ export function DocumentDetailsView({ document, onDelete }: DocumentDetailsViewP
           </div>
         </CardHeader>
       </Card>
+
+      {/* Re-indexing Progress Card */}
+      {(isReindexing || reindexFailed || reindexCompleted) && (
+        <Card className={reindexFailed ? "border-destructive/50" : reindexCompleted ? "border-green-500/50" : ""}>
+          <CardHeader className="pb-2">
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              {reindexFailed ? (
+                <>
+                  <AlertCircle className="h-4 w-4 text-destructive" />
+                  Re-indexing Failed
+                </>
+              ) : reindexCompleted ? (
+                <>
+                  <Sparkles className="h-4 w-4 text-green-600" />
+                  Re-indexing Complete
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Re-indexing Document
+                </>
+              )}
+            </h3>
+          </CardHeader>
+          <CardContent>
+            {isReindexing && progress && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <Progress value={progress.progress} className="flex-1" />
+                  <span className="text-sm text-muted-foreground w-12 text-right">
+                    {Math.round(progress.progress)}%
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {progress.status === 'starting'
+                    ? 'Preparing document for indexing...'
+                    : `Processing batch ${progress.currentBatch} of ${progress.totalBatches} (${progress.chunksIndexed} chunks indexed)`
+                  }
+                </p>
+              </div>
+            )}
+            {reindexFailed && progress && (
+              <div className="space-y-3">
+                <p className="text-sm text-destructive">
+                  {progress.error || 'An error occurred while re-indexing the document.'}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleReindex}
+                  disabled={isIndexing}
+                  className="border-destructive/50 text-destructive hover:bg-destructive/10"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Try Again
+                </Button>
+              </div>
+            )}
+            {reindexCompleted && (
+              <p className="text-sm text-green-600 dark:text-green-400">
+                Document has been successfully re-indexed with the latest processing improvements.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* AI Summary Card */}
       {summary && (

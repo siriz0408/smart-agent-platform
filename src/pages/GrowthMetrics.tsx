@@ -19,6 +19,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useRole } from "@/contexts/RoleContext";
 import { useGrowthMetrics } from "@/hooks/useGrowthMetrics";
+import { MRRDashboard } from "@/components/growth";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 
 export default function GrowthMetrics() {
@@ -95,6 +97,18 @@ export default function GrowthMetrics() {
             Admin View
           </Badge>
         </div>
+
+        <Tabs defaultValue="mrr-detailed" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="mrr-detailed">MRR Details</TabsTrigger>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="mrr-detailed">
+            <MRRDashboard />
+          </TabsContent>
+
+          <TabsContent value="overview" className="space-y-4">
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
@@ -288,6 +302,9 @@ export default function GrowthMetrics() {
             </div>
           </CardContent>
         </Card>
+
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   );

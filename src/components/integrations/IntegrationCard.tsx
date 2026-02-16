@@ -1,10 +1,11 @@
-import { Mail, Calendar, Video, FileText, Building2, Zap, AlertCircle, CheckCircle2, Clock, RefreshCw, XCircle, AlertTriangle } from "lucide-react";
+import { Mail, Calendar, Video, FileText, Building2, Zap, AlertCircle, CheckCircle2, Clock, RefreshCw, XCircle, AlertTriangle, Bot } from "lucide-react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { ConnectorDefinition, ConnectorStatus } from "@/types/connector";
+import { AIConnectorToggle } from "./AIConnectorToggle";
 
 interface WorkspaceConnector {
   id: string;
@@ -13,6 +14,7 @@ interface WorkspaceConnector {
   last_sync_at: string | null;
   last_error: string | null;
   error_count: number;
+  ai_enabled?: boolean;
 }
 
 type HealthStatus = "healthy" | "degraded" | "error" | "disconnected";
@@ -23,9 +25,11 @@ interface IntegrationCardProps {
   onConnect: (connectorKey: string) => void;
   onDisconnect: (workspaceConnectorId: string) => void;
   onRetry?: (workspaceConnectorId: string) => void;
+  onToggleAI?: (workspaceConnectorId: string, enabled: boolean) => void;
   isConnecting?: boolean;
   isDisconnecting?: boolean;
   isRetrying?: boolean;
+  isUpdatingAI?: boolean;
 }
 
 // Icon mapping for connectors
@@ -55,9 +59,11 @@ export function IntegrationCard({
   onConnect,
   onDisconnect,
   onRetry,
+  onToggleAI,
   isConnecting = false,
   isDisconnecting = false,
   isRetrying = false,
+  isUpdatingAI = false,
 }: IntegrationCardProps) {
   const isConnected = workspaceConnector?.status === "active";
   const hasError = workspaceConnector?.status === "error" || (workspaceConnector?.error_count ?? 0) > 0;
@@ -231,6 +237,27 @@ export function IntegrationCard({
             {definition.supported_actions.length > 3 && (
               <span> +{definition.supported_actions.length - 3} more</span>
             )}
+          </div>
+        )}
+
+        {/* AI Chat Access Toggle (MCP-style) */}
+        {isConnected && workspaceConnector && onToggleAI && (
+          <AIConnectorToggle
+            connectorName={definition.name}
+            connectorKey={definition.connector_key}
+            isEnabled={workspaceConnector.ai_enabled ?? false}
+            isConnected={isConnected}
+            supportedActions={definition.supported_actions || []}
+            onToggle={(enabled) => onToggleAI(workspaceConnector.id, enabled)}
+            isUpdating={isUpdatingAI}
+          />
+        )}
+
+        {/* AI Enabled Badge */}
+        {isConnected && workspaceConnector?.ai_enabled && (
+          <div className="flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400">
+            <Bot className="h-3 w-3" />
+            <span>AI can access this data</span>
           </div>
         )}
       </CardContent>

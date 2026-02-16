@@ -253,7 +253,7 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Upload Document</DialogTitle>
           <DialogDescription>
@@ -314,10 +314,10 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
             />
             
             {file ? (
-              <div className="flex items-center justify-center gap-3">
-                <FileText className="h-8 w-8 text-primary" />
-                <div className="text-left">
-                  <p className="font-medium">{file.name}</p>
+              <div className="flex items-center justify-center gap-3 max-w-full overflow-hidden">
+                <FileText className="h-8 w-8 text-primary flex-shrink-0" />
+                <div className="text-left min-w-0 flex-1">
+                  <p className="font-medium truncate max-w-[300px]" title={file.name}>{file.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {(file.size / 1024 / 1024).toFixed(2)} MB
                   </p>
@@ -387,7 +387,9 @@ export function UploadDocumentDialog({ open, onOpenChange }: UploadDocumentDialo
                   <SelectItem value="none">No deal</SelectItem>
                   {deals.map((deal) => (
                     <SelectItem key={deal.id} value={deal.id}>
-                      {deal.contacts?.first_name} {deal.contacts?.last_name} ({deal.deal_type})
+                      {deal.contacts?.first_name && deal.contacts?.last_name
+                        ? `${deal.contacts.first_name} ${deal.contacts.last_name} (${deal.deal_type})`
+                        : `${deal.deal_type} Deal`}
                     </SelectItem>
                   ))}
                 </SelectContent>

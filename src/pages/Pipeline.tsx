@@ -76,6 +76,7 @@ export default function Pipeline() {
         dealId,
         newStage,
         expectedCloseDate: deal?.expected_close_date || null,
+        previousStage: deal?.stage || null, // Pass previous stage for notification (TRX-011)
       },
       {
         onSuccess: () => {
@@ -259,7 +260,7 @@ export default function Pipeline() {
             {/* Pipeline Board - Responsive layout */}
             {useMobileLayout ? (
               // Mobile: Accordion/List view
-              <div className="space-y-2">
+              <div className="space-y-2 pb-20 md:pb-0">
                 {stages.map((stage, index) => (
                   <StageColumn
                     key={stage.id}

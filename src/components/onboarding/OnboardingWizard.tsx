@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useOnboarding, OnboardingStep } from "@/hooks/useOnboarding";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, X, Check } from "lucide-react";
+import { ArrowLeft, X, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AlertDialog,
@@ -20,17 +20,23 @@ import { RoleSelectionStep } from "./steps/RoleSelectionStep";
 import { FirstContactStep } from "./steps/FirstContactStep";
 import { FirstDocumentStep } from "./steps/FirstDocumentStep";
 import { CompletionStep } from "./steps/CompletionStep";
+// GRW-012: A/B test variant steps
+import { WelcomeCombinedStep } from "./steps/WelcomeCombinedStep";
+import { FirstActionStep } from "./steps/FirstActionStep";
 
 interface OnboardingWizardProps {
   onComplete: () => void;
 }
 
+// GRW-012: Extended step labels for all variants
 const STEP_LABELS: Record<OnboardingStep, string> = {
   welcome: "Welcome",
   profile: "Profile",
   role: "Role",
   "first-contact": "Contact",
   "first-document": "Document",
+  "welcome-combined": "Setup",      // Streamlined variant
+  "first-action": "First Action",   // Guided variant
   completion: "Complete",
 };
 
@@ -48,6 +54,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     completeOnboarding,
     skipOnboarding,
     isCompleting,
+    // GRW-012: A/B test info
+    variantId,
+    stepOrder,
+    allowSkip,
+    showTooltips,
+    isExperimentLoading,
   } = useOnboarding();
 
   const [showSkipDialog, setShowSkipDialog] = useState(false);
@@ -68,8 +80,17 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
   const showBackButton = currentStepIndex > 0 && currentStep !== "completion";
 
-  // Get step order from hook (matches STEP_ORDER in useOnboarding)
-  const stepOrder: OnboardingStep[] = ["welcome", "profile", "role", "completion"];
+  // GRW-012: Show loading state while experiment loads
+  if (isExperimentLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-primary/5 to-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   const renderStep = () => {
     const stepProps = {
@@ -91,6 +112,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
         return <FirstContactStep {...stepProps} onSkip={skipStep} />;
       case "first-document":
         return <FirstDocumentStep {...stepProps} onSkip={skipStep} />;
+      // GRW-012: A/B test variant steps
+      case "welcome-combined":
+        return <WelcomeCombinedStep {...stepProps} />;
+      case "first-action":
+        return <FirstActionStep {...stepProps} onSkip={skipStep} />;
       case "completion":
         return (
           <CompletionStep
@@ -176,7 +202,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <Progress value={progress} className="h-1.5" />
           </div>
         </div>
-        {currentStep !== "completion" && (
+        {/* GRW-012: Only show skip button if variant allows it */}
+        {currentStep !== "completion" && allowSkip && (
           <Button
             variant="ghost"
             size="sm"

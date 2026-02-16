@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { logger } from "@/lib/logger";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AddNoteDialogProps {
   dealId: string;
@@ -31,6 +32,7 @@ export function AddNoteDialog({
 }: AddNoteDialogProps) {
   const [note, setNote] = useState("");
   const queryClient = useQueryClient();
+  const { user, profile } = useAuth();
 
   const addNoteMutation = useMutation({
     mutationFn: async (newNote: string) => {
@@ -56,11 +58,39 @@ export function AddNoteDialog({
         .eq("id", dealId);
 
       if (error) throw error;
+
+      // Log note activity to deal_activities (TRX-012)
+      if (user?.id && profile?.tenant_id) {
+        const notePreview = newNote.length > 100
+          ? newNote.substring(0, 100) + "..."
+          : newNote;
+
+        const { error: activityError } = await supabase
+          .from("deal_activities")
+          .insert({
+            deal_id: dealId,
+            tenant_id: profile.tenant_id,
+            activity_type: "note_added",
+            title: "Note added",
+            description: notePreview,
+            metadata: {
+              note_content: newNote,
+              note_preview: notePreview,
+            },
+            created_by: user.id,
+          });
+
+        if (activityError) {
+          // Don't fail the note add if activity logging fails
+          logger.error("Failed to log note activity:", activityError);
+        }
+      }
     },
     onSuccess: () => {
       toast.success("Note added successfully");
       queryClient.invalidateQueries({ queryKey: ["deal-detail", dealId] });
       queryClient.invalidateQueries({ queryKey: ["deals"] });
+      queryClient.invalidateQueries({ queryKey: ["deal-activities", dealId] });
       setNote("");
       onOpenChange(false);
     },

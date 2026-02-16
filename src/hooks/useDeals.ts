@@ -3,6 +3,7 @@ import { addDays, format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { logger } from "@/lib/logger";
 import type { Tables } from "@/integrations/supabase/types";
 
 // Shared Types
@@ -228,10 +229,87 @@ export function useCreateDeal() {
   });
 }
 
+// Internal helper to send deal stage change notification (TRX-011)
+async function sendStageChangeNotification(
+  dealId: string,
+  previousStage: string | null,
+  newStage: string,
+  userId: string,
+  tenantId: string
+): Promise<void> {
+  try {
+    const response = await supabase.functions.invoke("deal-notifications", {
+      body: {
+        type: "stage_change",
+        dealId,
+        previousStage,
+        newStage,
+        userId,
+        tenantId,
+      },
+    });
+
+    if (response.error) {
+      logger.error("Deal notification error", { error: response.error });
+    } else {
+      logger.info("Deal stage change notification sent", { dealId, newStage });
+    }
+  } catch (error) {
+    // Don't fail the stage change if notification fails
+    logger.error("Failed to send stage change notification", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
+// Internal helper to log stage change activity (TRX-012)
+async function logStageChangeActivity(
+  dealId: string,
+  tenantId: string,
+  userId: string,
+  previousStage: string | null,
+  newStage: string,
+  previousStageLabel: string | null,
+  newStageLabel: string
+): Promise<void> {
+  try {
+    const title = previousStage
+      ? `Stage changed: ${previousStageLabel || previousStage} to ${newStageLabel}`
+      : `Stage set to ${newStageLabel}`;
+
+    const { error } = await supabase.from("deal_activities").insert({
+      deal_id: dealId,
+      tenant_id: tenantId,
+      activity_type: "stage_changed",
+      title,
+      description: null,
+      metadata: {
+        previous_stage: previousStage,
+        new_stage: newStage,
+        previous_stage_label: previousStageLabel,
+        new_stage_label: newStageLabel,
+      },
+      created_by: userId,
+    });
+
+    if (error) {
+      logger.error("Failed to log stage change activity", { error, dealId });
+    } else {
+      logger.info("Stage change activity logged", { dealId, newStage });
+    }
+  } catch (error) {
+    // Don't fail the stage change if activity logging fails
+    logger.error("Failed to log stage change activity", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
+}
+
 // useUpdateDealStage - Mutation to move a deal between pipeline stages
 
 export function useUpdateDealStage(dealType: "buyer" | "seller") {
   const queryClient = useQueryClient();
+  const { user, profile } = useAuth();
   const stages = getStagesForType(dealType);
 
   return useMutation({
@@ -239,10 +317,12 @@ export function useUpdateDealStage(dealType: "buyer" | "seller") {
       dealId,
       newStage,
       expectedCloseDate,
+      previousStage,
     }: {
       dealId: string;
       newStage: string;
       expectedCloseDate: string | null;
+      previousStage?: string | null;
     }) => {
       const { error } = await supabase
         .from("deals")
@@ -262,10 +342,39 @@ export function useUpdateDealStage(dealType: "buyer" | "seller") {
           await createStandardMilestones(dealId, expectedCloseDate);
         }
       }
+
+      // Send notification for stage change (TRX-011)
+      if (user?.id && profile?.tenant_id) {
+        // Fire and forget - don't await to avoid blocking the UI
+        sendStageChangeNotification(
+          dealId,
+          previousStage ?? null,
+          newStage,
+          user.id,
+          profile.tenant_id
+        );
+
+        // Log activity for stage change (TRX-012)
+        const previousStageLabel = previousStage
+          ? stages.find((s) => s.id === previousStage)?.label || null
+          : null;
+        const newStageLabel = stages.find((s) => s.id === newStage)?.label || newStage;
+
+        logStageChangeActivity(
+          dealId,
+          profile.tenant_id,
+          user.id,
+          previousStage ?? null,
+          newStage,
+          previousStageLabel,
+          newStageLabel
+        );
+      }
     },
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["deals", dealType] });
       queryClient.invalidateQueries({ queryKey: ["milestone-indicators"] });
+      queryClient.invalidateQueries({ queryKey: ["deal-activities", variables.dealId] });
       const label =
         stages.find((s) => s.id === variables.newStage)?.label ??
         variables.newStage;

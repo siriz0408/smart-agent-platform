@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { AddMilestoneDialog } from "./AddMilestoneDialog";
+import { useDealNotifications } from "@/hooks/useDealNotifications";
 
 interface Milestone {
   id: string;
@@ -33,6 +34,7 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
   const queryClient = useQueryClient();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(null);
+  const { notifyMilestoneCompletion } = useDealNotifications();
 
   const { data: milestones = [], isLoading } = useQuery({
     queryKey: ["deal-milestones", dealId],
@@ -49,14 +51,19 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
   });
 
   const toggleCompleteMutation = useMutation({
-    mutationFn: async ({ id, completed }: { id: string; completed: boolean }) => {
+    mutationFn: async ({ id, completed, title }: { id: string; completed: boolean; title: string }) => {
       const { error } = await supabase
         .from("deal_milestones")
-        .update({ 
-          completed_at: completed ? new Date().toISOString() : null 
+        .update({
+          completed_at: completed ? new Date().toISOString() : null
         })
         .eq("id", id);
       if (error) throw error;
+
+      // Send notification when milestone is completed (TRX-011)
+      if (completed) {
+        notifyMilestoneCompletion(id, dealId, title);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["deal-milestones", dealId] });
@@ -159,6 +166,7 @@ export function MilestoneList({ dealId }: MilestoneListProps) {
                     toggleCompleteMutation.mutate({
                       id: milestone.id,
                       completed: !!checked,
+                      title: milestone.title,
                     });
                   }}
                   className="mt-0.5"

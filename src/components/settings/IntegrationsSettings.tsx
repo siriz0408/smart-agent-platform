@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plug2, Loader2, AlertCircle } from "lucide-react";
+import { Plug2, Loader2, AlertCircle, Bot } from "lucide-react";
 import { IntegrationCard } from "@/components/integrations/IntegrationCard";
 import { IntegrationHealthMonitor } from "@/components/integrations/IntegrationHealthMonitor";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ export function IntegrationsSettings() {
   const [connectingKey, setConnectingKey] = useState<string | null>(null);
   const [disconnectingId, setDisconnectingId] = useState<string | null>(null);
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [updatingAIId, setUpdatingAIId] = useState<string | null>(null);
 
   // Fetch all connector definitions
   const { data: definitions = [], isLoading: definitionsLoading } = useQuery({
@@ -239,6 +240,43 @@ export function IntegrationsSettings() {
     },
   });
 
+  // Toggle AI access mutation
+  const toggleAIMutation = useMutation({
+    mutationFn: async ({ workspaceConnectorId, enabled }: { workspaceConnectorId: string; enabled: boolean }) => {
+      if (!activeWorkspace?.id) {
+        throw new Error("Workspace not available");
+      }
+
+      const { error } = await supabase
+        .from("workspace_connectors")
+        .update({ ai_enabled: enabled })
+        .eq("id", workspaceConnectorId)
+        .eq("workspace_id", activeWorkspace.id);
+
+      if (error) throw error;
+      return { workspaceConnectorId, enabled };
+    },
+    onMutate: ({ workspaceConnectorId }) => {
+      setUpdatingAIId(workspaceConnectorId);
+    },
+    onSuccess: ({ enabled }) => {
+      queryClient.invalidateQueries({ queryKey: ["workspace-connectors"] });
+      toast.success(enabled ? "AI access enabled" : "AI access disabled", {
+        description: enabled
+          ? "Smart Agent AI can now access this connector's data."
+          : "AI will no longer access this connector's data.",
+      });
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to update AI access", {
+        description: error.message || "An error occurred while updating AI access.",
+      });
+    },
+    onSettled: () => {
+      setUpdatingAIId(null);
+    },
+  });
+
   // Filter definitions by search query
   const filteredDefinitions = definitions.filter((def) => {
     if (!searchQuery) return true;
@@ -331,9 +369,13 @@ export function IntegrationsSettings() {
                       onRetry={(workspaceConnectorId) =>
                         retryMutation.mutate(workspaceConnectorId)
                       }
+                      onToggleAI={(workspaceConnectorId, enabled) =>
+                        toggleAIMutation.mutate({ workspaceConnectorId, enabled })
+                      }
                       isConnecting={connectingKey === definition.connector_key}
                       isDisconnecting={disconnectingId === workspaceConnector?.id}
                       isRetrying={retryingId === workspaceConnector?.id}
+                      isUpdatingAI={updatingAIId === workspaceConnector?.id}
                     />
                   );
                 })}
@@ -343,6 +385,41 @@ export function IntegrationsSettings() {
         </div>
       )}
 
+      {/* AI Chat Connectors Summary (MCP-style) */}
+      {!isLoading && workspaceConnectors.some((wc) => wc.ai_enabled) && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                <Bot className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm mb-1">AI Chat Data Sources</h3>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Smart Agent AI can access data from these connected services:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {workspaceConnectors
+                    .filter((wc) => wc.ai_enabled && wc.status === "active")
+                    .map((wc) => {
+                      const def = definitions.find((d) => d.id === wc.connector_definition_id);
+                      return def ? (
+                        <span
+                          key={wc.id}
+                          className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-background text-xs font-medium border"
+                        >
+                          <span className="inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                          {def.name}
+                        </span>
+                      ) : null;
+                    })}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Info Alert */}
       {!isLoading && (
         <Alert>
@@ -350,6 +427,7 @@ export function IntegrationsSettings() {
           <AlertTitle>About Integrations</AlertTitle>
           <AlertDescription>
             Connect your accounts to enable Smart Agent to interact with external services.
+            Toggle "AI Chat Access" on connected integrations to let Smart Agent AI query your data.
             OAuth authentication ensures your credentials are secure and encrypted.
           </AlertDescription>
         </Alert>

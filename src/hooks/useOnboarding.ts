@@ -1,16 +1,19 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { trackEvent } from "@/lib/analytics";
+import { useOnboardingExperiment } from "./useOnboardingExperiment";
 
-export type OnboardingStep = 
+export type OnboardingStep =
   | "welcome"
   | "profile"
   | "role"
   | "first-contact"
   | "first-document"
+  | "welcome-combined"  // GRW-012: Streamlined variant combined step
+  | "first-action"      // GRW-012: Guided variant additional step
   | "completion";
 
 export interface OnboardingData {
@@ -22,44 +25,65 @@ export interface OnboardingData {
   documentUploaded?: boolean;
 }
 
-// Simplified onboarding - only require profile setup
-const STEP_ORDER: OnboardingStep[] = [
+// Default step order (used when experiment not loaded or control variant)
+const DEFAULT_STEP_ORDER: OnboardingStep[] = [
   "welcome",
   "profile",
   "role",
-  // "first-contact",  // REMOVED: Not required
-  // "first-document", // REMOVED: Not required
   "completion",
 ];
+
+// Step order mapping for variants
+const VARIANT_STEP_ORDERS: Record<string, OnboardingStep[]> = {
+  standard: ["welcome", "profile", "role", "completion"],
+  streamlined: ["welcome-combined", "completion"],
+  guided: ["welcome", "profile", "role", "first-action", "completion"],
+};
 
 export function useOnboarding() {
   const { profile, refreshProfile } = useAuth();
   const queryClient = useQueryClient();
-  
+
+  // GRW-012: Get A/B test variant
+  const experiment = useOnboardingExperiment();
+
   const [currentStep, setCurrentStep] = useState<OnboardingStep>("welcome");
   const [data, setData] = useState<OnboardingData>({});
 
-  const currentStepIndex = STEP_ORDER.indexOf(currentStep);
-  const totalSteps = STEP_ORDER.length;
+  // GRW-012: Determine step order based on variant
+  const stepOrder = useMemo((): OnboardingStep[] => {
+    const flowType = experiment.flowType;
+    return VARIANT_STEP_ORDERS[flowType] || DEFAULT_STEP_ORDER;
+  }, [experiment.flowType]);
+
+  // Adjust current step index based on dynamic step order
+  const currentStepIndex = stepOrder.indexOf(currentStep);
+  const totalSteps = stepOrder.length;
   const progress = ((currentStepIndex + 1) / totalSteps) * 100;
+
+  // GRW-012: Expose variant info
+  const variantId = experiment.variantId;
+  const allowSkip = experiment.allowSkip;
+  const showTooltips = experiment.showTooltips;
 
   const goToNextStep = useCallback(() => {
     const nextIndex = currentStepIndex + 1;
-    if (nextIndex < STEP_ORDER.length) {
-      setCurrentStep(STEP_ORDER[nextIndex]);
+    if (nextIndex < stepOrder.length) {
+      setCurrentStep(stepOrder[nextIndex]);
       trackEvent("onboarding_step_completed", {
         step: currentStep,
         step_number: currentStepIndex + 1,
+        variant: variantId,  // GRW-012: Track variant
       });
     }
-  }, [currentStepIndex, currentStep]);
+  }, [currentStepIndex, currentStep, stepOrder, variantId]);
 
   const goToPreviousStep = useCallback(() => {
     const prevIndex = currentStepIndex - 1;
     if (prevIndex >= 0) {
-      setCurrentStep(STEP_ORDER[prevIndex]);
+      setCurrentStep(stepOrder[prevIndex]);
     }
-  }, [currentStepIndex]);
+  }, [currentStepIndex, stepOrder]);
 
   const skipStep = useCallback(() => {
     goToNextStep();
@@ -75,7 +99,6 @@ export function useOnboarding() {
 
   const completeOnboardingMutation = useMutation({
     mutationFn: async () => {
-      
       if (!profile?.id) {
         throw new Error("Profile not found");
       }
@@ -89,25 +112,32 @@ export function useOnboarding() {
         })
         .eq("id", profile.id);
 
-
       if (error) throw error;
+
+      // GRW-012: Record experiment conversion
+      try {
+        await experiment.recordConversion({
+          completed_steps: stepOrder.length,
+          variant: variantId,
+        });
+      } catch (conversionError) {
+        // Don't fail onboarding if conversion tracking fails
+        console.warn("[Onboarding] Failed to record experiment conversion:", conversionError);
+      }
     },
     onSuccess: async () => {
-      
       // Refresh profile from AuthProvider to get updated onboarding_completed value
       // This is critical - profile is stored in AuthProvider state, not React Query
       await refreshProfile();
-      
-      
+
       // Also invalidate any React Query caches that might reference profile
       await queryClient.invalidateQueries({ queryKey: ["profile"] });
       await queryClient.invalidateQueries({ queryKey: ["auth"] });
-      
-      trackEvent("onboarding_completed");
+
+      trackEvent("onboarding_completed", { variant: variantId });
       toast.success("Welcome to Smart Agent!", { description: "You're all set up and ready to go." });
     },
     onError: (error) => {
-      
       console.error("Failed to complete onboarding:", error);
       toast.error("Error", { description: "Failed to complete onboarding. Please try again." });
     },
@@ -121,9 +151,10 @@ export function useOnboarding() {
     trackEvent("onboarding_skipped", {
       step: currentStep,
       step_number: currentStepIndex + 1,
+      variant: variantId,  // GRW-012: Track variant
     });
     await completeOnboarding();
-  }, [currentStep, currentStepIndex, completeOnboarding]);
+  }, [currentStep, currentStepIndex, completeOnboarding, variantId]);
 
   return {
     currentStep,
@@ -138,5 +169,11 @@ export function useOnboarding() {
     completeOnboarding,
     skipOnboarding,
     isCompleting: completeOnboardingMutation.isPending,
+    // GRW-012: A/B test variant info
+    variantId,
+    stepOrder,
+    allowSkip,
+    showTooltips,
+    isExperimentLoading: experiment.isLoading,
   };
 }

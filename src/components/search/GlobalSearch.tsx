@@ -199,6 +199,9 @@ export const GlobalSearch = memo(function GlobalSearch() {
           value={query}
           onChange={(e) => {
             const newValue = e.target.value;
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/86d72d9e-7714-47a3-9f8a-3809f80faebf',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'GlobalSearch.tsx:onChange',message:'Input onChange fired',data:{newValue,prevQuery:query,eventType:e.type,nativeEventType:e.nativeEvent?.type,inputType:(e.nativeEvent as InputEvent)?.inputType},timestamp:Date.now(),hypothesisId:'H-D,H-E'})}).catch(()=>{});
+            // #endregion
             setQuery(newValue);
             setIsOpen(newValue.length >= 1);
           }}

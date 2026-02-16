@@ -59,6 +59,19 @@ export interface WorkspaceConnector {
   error_count: number;
   config: Record<string, unknown>;
   auto_approve_actions: boolean;
+  ai_enabled: boolean;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * AI-enabled connector info returned from get_ai_enabled_connectors function
+ */
+export interface AIEnabledConnector {
+  id: string;
+  connector_key: string;
+  name: string;
+  description: string | null;
+  category: ConnectorCategory;
+  supported_actions: string[];
 }

@@ -5,3 +5,5 @@
  */
 
 export { GrowthMetricsDashboard } from './GrowthMetricsDashboard';
+export { MRRDashboard } from './MRRDashboard';
+export { ABTestingDashboard } from './ABTestingDashboard';

@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Send, Bot, User, Search, Trash2, MoreHorizontal, AlertTriangle, Loader2, Menu, PenSquare, PanelLeftClose, PanelLeft, Settings, Plus, SlidersHorizontal, Lightbulb, ArrowUp, X } from "lucide-react";
-import { useAIStreaming, type UsageLimitInfo, type StatusUpdate } from "@/hooks/useAIStreaming";
+import { useAIStreaming, type UsageLimitInfo, type StatusUpdate, type PropertyContext } from "@/hooks/useAIStreaming";
 import { useUserPreferences } from "@/hooks/useUserPreferences";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { PropertyCardGrid, ChatMarkdown, MortgageCalculator, AffordabilityCalculator, ClosingCostsCalculator, RentVsBuyCalculator, CMAComparisonWidget, HomeBuyingChecklist, HomeSellingChecklist, SellerNetSheet, AgentCommissionCalculator, UserMessageContent } from "@/components/ai-chat";
+import { PropertyCardGrid, PropertyDetailCard, PropertyComparisonCard, ChatMarkdown, MortgageCalculator, AffordabilityCalculator, ClosingCostsCalculator, RentVsBuyCalculator, CMAComparisonWidget, HomeBuyingChecklist, HomeSellingChecklist, SellerNetSheet, AgentCommissionCalculator, UserMessageContent, ActiveConnectorsBadge } from "@/components/ai-chat";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -232,7 +232,8 @@ export default function Chat() {
 
     // Create new conversation if none selected
     if (!convId) {
-      const title = input.slice(0, 50) + (input.length > 50 ? "..." : "");
+      const words = input.trim().split(/\s+/).slice(0, 6);
+      const title = words.join(' ') + (input.trim().split(/\s+/).length > 6 ? '...' : '');
       const newConv = await createConversation.mutateAsync(title);
       convId = newConv.id;
     }
@@ -256,12 +257,41 @@ export default function Chat() {
     let ragSearchPerformed = false;
     const hadMentions = mentionData.length > 0 || collectionRefs.length > 0;
 
+    // Extract property context from the most recent assistant message with property cards
+    // so the backend can handle follow-up questions about specific properties
+    let propertyContext: PropertyContext | undefined;
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const msg = messages[i];
+      if (msg.role === "assistant" && msg.embeddedComponents?.property_cards?.length) {
+        const cards = msg.embeddedComponents.property_cards;
+        propertyContext = {
+          properties: cards.map((card, idx) => ({
+            index: idx + 1,
+            zpid: card.zpid,
+            address: [
+              card.address?.streetAddress,
+              card.address?.city,
+              card.address?.state,
+              card.address?.zipcode,
+            ].filter(Boolean).join(", "),
+            price: card.price ?? 0,
+            bedrooms: card.bedrooms ?? 0,
+            bathrooms: card.bathrooms ?? 0,
+            livingArea: card.livingArea ?? 0,
+            propertyType: card.propertyType,
+          })),
+        };
+        break;
+      }
+    }
+
     const result = await streamMessage({
       messages: [...messages, userMessage],
       conversationId: convId,
       mentionData: mentionData.length > 0 ? mentionData : undefined,
       collectionRefs: collectionRefs.length > 0 ? collectionRefs : undefined,
       thinkingMode,
+      propertyContext,
       onChunk: (_chunk, fullContent) => {
         setMessages((prev) => {
           const last = prev[prev.length - 1];
@@ -787,10 +817,28 @@ export default function Chat() {
                     >
                       {message.role === "assistant" ? (
                         <div className="max-w-none">
+                          {message.embeddedComponents?.active_connectors &&
+                           message.embeddedComponents.active_connectors.length > 0 && (
+                            <div className="mb-2">
+                              <ActiveConnectorsBadge
+                                connectors={message.embeddedComponents.active_connectors}
+                              />
+                            </div>
+                          )}
                           <ChatMarkdown content={message.content} />
                           {message.embeddedComponents?.property_cards && (
                             <PropertyCardGrid 
                               properties={message.embeddedComponents.property_cards as PropertyCardData[]} 
+                            />
+                          )}
+                          {message.embeddedComponents?.property_detail && (
+                            <PropertyDetailCard 
+                              detail={message.embeddedComponents.property_detail} 
+                            />
+                          )}
+                          {message.embeddedComponents?.property_comparison && (
+                            <PropertyComparisonCard 
+                              comparison={message.embeddedComponents.property_comparison} 
                             />
                           )}
                           {message.embeddedComponents?.mortgage_calculator && (

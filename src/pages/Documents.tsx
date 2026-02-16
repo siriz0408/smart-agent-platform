@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Filter, FileText, Upload, MoreHorizontal, Download, Eye, FolderOpen, Loader2, Sparkles, CheckCircle2, Trash2, FolderPlus } from "lucide-react";
+import { Search, Filter, FileText, Upload, MoreHorizontal, Download, Eye, FolderOpen, Loader2, Sparkles, CheckCircle2, Trash2, FolderPlus, RefreshCw } from "lucide-react";
 import { UploadDocumentDialog } from "@/components/documents/UploadDocumentDialog";
 import { ProjectSidebar } from "@/components/documents/ProjectSidebar";
 import { CreateProjectDialog } from "@/components/documents/CreateProjectDialog";
 import { AddToProjectDialog } from "@/components/documents/AddToProjectDialog";
+import { BulkActionToolbar } from "@/components/documents/BulkActionToolbar";
 import { useQuery } from "@tanstack/react-query";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useDocumentProjects } from "@/hooks/useDocumentProjects";
+import { useBulkDocumentOperations } from "@/hooks/useBulkDocumentOperations";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -85,6 +88,10 @@ export default function Documents() {
   const { indexDocument, isIndexing, getProgress } = useDocumentIndexing();
   const deleteDocument = useDocumentDelete();
   const { projects } = useDocumentProjects();
+  const { bulkDelete, bulkMoveToProject, bulkReindex, progress: bulkProgress, isProcessing: isBulkProcessing } = useBulkDocumentOperations();
+
+  // Multi-select state
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState<Set<string>>(new Set());
 
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ["documents", activeProjectId],
@@ -146,6 +153,42 @@ export default function Documents() {
 
   const totalSize = documents.reduce((acc, d) => acc + (d.file_size || 0), 0);
   const indexedCount = documents.filter((d) => d.indexed_at).length;
+
+  // Selection helpers
+  const toggleDocumentSelection = (docId: string) => {
+    setSelectedDocumentIds(prev => {
+      const next = new Set(prev);
+      if (next.has(docId)) {
+        next.delete(docId);
+      } else {
+        next.add(docId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDocumentIds.size === filteredDocuments.length) {
+      setSelectedDocumentIds(new Set());
+    } else {
+      setSelectedDocumentIds(new Set(filteredDocuments.map(d => d.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedDocumentIds(new Set());
+  };
+
+  // Computed values for bulk actions
+  const selectedDocuments = useMemo(() =>
+    filteredDocuments.filter(d => selectedDocumentIds.has(d.id)),
+    [filteredDocuments, selectedDocumentIds]
+  );
+
+  const selectedIndexedCount = useMemo(() =>
+    selectedDocuments.filter(d => d.indexed_at).length,
+    [selectedDocuments]
+  );
 
   const handleChatWithDocuments = () => {
     navigate("/documents/chat");
@@ -384,12 +427,42 @@ export default function Documents() {
                       </CardContent>
                     </Card>
                   ) : (
-                    filteredDocuments.map((doc) => (
-                      <Card key={doc.id} className="overflow-hidden">
+                    <>
+                      {/* Mobile Select All Control */}
+                      <div className="flex items-center justify-between p-2 bg-muted/50 rounded-lg mb-2">
+                        <div className="flex items-center gap-2">
+                          <Checkbox
+                            checked={filteredDocuments.length > 0 && selectedDocumentIds.size === filteredDocuments.length}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Select all documents"
+                            className="h-5 w-5"
+                          />
+                          <span className="text-sm text-muted-foreground">
+                            {selectedDocumentIds.size > 0
+                              ? `${selectedDocumentIds.size} selected`
+                              : "Select all"}
+                          </span>
+                        </div>
+                        {selectedDocumentIds.size > 0 && (
+                          <Button variant="ghost" size="sm" onClick={clearSelection}>
+                            Clear
+                          </Button>
+                        )}
+                      </div>
+                      {filteredDocuments.map((doc) => (
+                      <Card key={doc.id} className={`overflow-hidden ${selectedDocumentIds.has(doc.id) ? 'ring-2 ring-primary' : ''}`}>
                         <CardContent className="p-4">
                           <div className="flex items-start gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-muted flex-shrink-0">
-                              <FileText className="h-6 w-6 text-muted-foreground" />
+                            <div className="flex flex-col items-center gap-2 flex-shrink-0">
+                              <Checkbox
+                                checked={selectedDocumentIds.has(doc.id)}
+                                onCheckedChange={() => toggleDocumentSelection(doc.id)}
+                                aria-label={`Select ${doc.name}`}
+                                className="h-5 w-5"
+                              />
+                              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
+                                <FileText className="h-5 w-5 text-muted-foreground" />
+                              </div>
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2 mb-2">
@@ -419,10 +492,22 @@ export default function Documents() {
                                       Move to Project
                                     </DropdownMenuItem>
                                     {doc.indexed_at && (
-                                      <DropdownMenuItem onClick={() => handleAskAboutDocument(doc.id)}>
-                                        <Sparkles className="h-4 w-4 mr-2" />
-                                        Ask AI about this
-                                      </DropdownMenuItem>
+                                      <>
+                                        <DropdownMenuItem onClick={() => handleAskAboutDocument(doc.id)}>
+                                          <Sparkles className="h-4 w-4 mr-2" />
+                                          Ask AI about this
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            indexDocument(doc.id);
+                                          }}
+                                          disabled={isIndexing}
+                                        >
+                                          <RefreshCw className="h-4 w-4 mr-2" />
+                                          Re-index
+                                        </DropdownMenuItem>
+                                      </>
                                     )}
                                     <DropdownMenuItem
                                       className="text-destructive focus:text-destructive"
@@ -458,7 +543,8 @@ export default function Documents() {
                           </div>
                         </CardContent>
                       </Card>
-                    ))
+                    ))}
+                    </>
                   )}
                 </div>
               ) : (
@@ -467,6 +553,13 @@ export default function Documents() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[50px]">
+                          <Checkbox
+                            checked={filteredDocuments.length > 0 && selectedDocumentIds.size === filteredDocuments.length}
+                            onCheckedChange={toggleSelectAll}
+                            aria-label="Select all documents"
+                          />
+                        </TableHead>
                         <TableHead>Name</TableHead>
                         <TableHead>Category</TableHead>
                         <TableHead>Status</TableHead>
@@ -479,6 +572,7 @@ export default function Documents() {
                       {isLoading ? (
                         Array.from({ length: 5 }).map((_, i) => (
                           <TableRow key={i}>
+                            <TableCell><Skeleton className="h-4 w-4" aria-hidden="true" /></TableCell>
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <Skeleton className="h-9 w-9 rounded-lg" aria-hidden="true" />
@@ -497,7 +591,7 @@ export default function Documents() {
                         ))
                       ) : filteredDocuments.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
+                          <TableCell colSpan={7} className="text-center py-8">
                             <FolderOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                             <p className="text-muted-foreground">
                               {searchQuery ? "No documents match your search" : "No documents yet. Upload your first document!"}
@@ -507,6 +601,13 @@ export default function Documents() {
                       ) : (
                         filteredDocuments.map((doc) => (
                           <TableRow key={doc.id} className="cursor-pointer hover:bg-muted/50">
+                            <TableCell onClick={(e) => e.stopPropagation()}>
+                              <Checkbox
+                                checked={selectedDocumentIds.has(doc.id)}
+                                onCheckedChange={() => toggleDocumentSelection(doc.id)}
+                                aria-label={`Select ${doc.name}`}
+                              />
+                            </TableCell>
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
@@ -571,10 +672,22 @@ export default function Documents() {
                                     Move to Project
                                   </DropdownMenuItem>
                                   {doc.indexed_at && (
-                                    <DropdownMenuItem onClick={() => handleAskAboutDocument(doc.id)}>
-                                      <Sparkles className="h-4 w-4 mr-2" />
-                                      Ask AI about this
-                                    </DropdownMenuItem>
+                                    <>
+                                      <DropdownMenuItem onClick={() => handleAskAboutDocument(doc.id)}>
+                                        <Sparkles className="h-4 w-4 mr-2" />
+                                        Ask AI about this
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          indexDocument(doc.id);
+                                        }}
+                                        disabled={isIndexing}
+                                      >
+                                        <RefreshCw className="h-4 w-4 mr-2" />
+                                        Re-index
+                                      </DropdownMenuItem>
+                                    </>
                                   )}
                                   <DropdownMenuItem
                                     className="text-destructive focus:text-destructive"
@@ -659,6 +772,21 @@ export default function Documents() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {/* Bulk Action Toolbar */}
+        <BulkActionToolbar
+          selectedCount={selectedDocumentIds.size}
+          selectedDocumentIds={Array.from(selectedDocumentIds)}
+          indexedCount={selectedIndexedCount}
+          onClearSelection={clearSelection}
+          onBulkDelete={bulkDelete}
+          onBulkMoveToProject={bulkMoveToProject}
+          onBulkReindex={bulkReindex}
+          progress={bulkProgress}
+          isProcessing={isBulkProcessing}
+          projects={projects}
+          onCreateProject={() => setCreateProjectOpen(true)}
+        />
       </TooltipProvider>
     </AppLayout>
   );

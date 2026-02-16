@@ -124,4 +124,47 @@ export interface EmbeddedComponents {
     listingBuyerSplit?: number;
     brokerSplit?: number;
   };
+  property_detail?: {
+    zpid: string;
+    address: PropertyAddress;
+    price: number;
+    bedrooms: number;
+    bathrooms: number;
+    livingArea: number;
+    lotSize?: number;
+    yearBuilt?: number;
+    propertyType: string;
+    homeStatus: string;
+    description?: string;
+    photos: string[];
+    features?: string[];
+    parkingSpaces?: number;
+    hoaFee?: number;
+    pricePerSqFt?: number;
+    taxHistory?: Array<{ year: number; amount: number }>;
+    priceHistory?: Array<{ date: string; price: number; event: string }>;
+  };
+  property_comparison?: {
+    properties: Array<{
+      zpid: string;
+      imgSrc?: string;
+      address: string;
+      price: number;
+      bedrooms: number;
+      bathrooms: number;
+      livingArea: number;
+      yearBuilt?: number;
+      pricePerSqFt?: number;
+      propertyType: string;
+      hoaFee?: number;
+    }>;
+    userPreferences?: Record<string, string>;
+  };
+  /** Connectors used in this response */
+  active_connectors?: Array<{
+    name: string;
+    connector_key: string;
+    category: string;
+    icon?: string;
+  }>;
 }

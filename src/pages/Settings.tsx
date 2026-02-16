@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check, Plug2, TrendingUp } from "lucide-react";
+import { User, Bell, CreditCard, Palette, Keyboard, Shield, ChevronRight, Download, Sun, Moon, Monitor, Check, Plug2, TrendingUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -26,7 +26,9 @@ import { CredentialsManagement } from "@/components/settings/CredentialsManageme
 import { SocialLinksManagement } from "@/components/settings/SocialLinksManagement";
 import { PhotoGalleryManagement } from "@/components/settings/PhotoGalleryManagement";
 import { IntegrationsSettings } from "@/components/settings/IntegrationsSettings";
-import { GrowthMetricsDashboard } from "@/components/growth/GrowthMetricsDashboard";
+import { PushNotificationSettings } from "@/components/settings/PushNotificationSettings";
+import { GrowthMetricsDashboard, MRRDashboard, ABTestingDashboard } from "@/components/growth";
+import { SearchAnalyticsDashboard } from "@/components/search-analytics";
 import { Progress } from "@/components/ui/progress";
 
 export default function Settings() {
@@ -108,6 +110,12 @@ export default function Settings() {
                 <span className="hidden sm:inline">Growth</span>
               </TabsTrigger>
             )}
+            {isAdmin && (
+              <TabsTrigger value="search-analytics" className="gap-1.5">
+                <Search className="h-4 w-4" />
+                <span className="hidden sm:inline">Search</span>
+              </TabsTrigger>
+            )}
             <TabsTrigger value="billing" className="gap-1.5">
               <CreditCard className="h-4 w-4" />
               <span className="hidden sm:inline">More</span>
@@ -181,42 +189,32 @@ export default function Settings() {
 
           {/* Notifications Tab */}
           <TabsContent value="notifications" className="space-y-4 md:space-y-6">
+            {/* Mobile Push Notifications */}
+            <PushNotificationSettings />
+
+            {/* Email Notifications */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Bell className="h-5 w-5" />
-                  Notification Channels
+                  Email Notifications
                 </CardTitle>
                 <CardDescription>
-                  Choose how you receive notifications
+                  Receive email updates about your activity
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="email-notifications">Email Notifications</Label>
+                    <Label htmlFor="email-notifications">Enable Email Notifications</Label>
                     <p className="text-sm text-muted-foreground">
-                      Receive email updates about your activity
+                      Receive important updates via email
                     </p>
                   </div>
                   <Switch
                     id="email-notifications"
                     checked={preferences.emailNotifications}
                     onCheckedChange={(checked) => updatePreference("emailNotifications", checked)}
-                  />
-                </div>
-                <Separator />
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="push-notifications">Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive push notifications in your browser
-                    </p>
-                  </div>
-                  <Switch
-                    id="push-notifications"
-                    checked={preferences.pushNotifications}
-                    onCheckedChange={(checked) => updatePreference("pushNotifications", checked)}
                   />
                 </div>
               </CardContent>
@@ -463,7 +461,29 @@ export default function Settings() {
           {/* Growth Tab (Admin Only) */}
           {isAdmin && (
             <TabsContent value="growth" className="space-y-4 md:space-y-6">
-              <GrowthMetricsDashboard />
+              <Tabs defaultValue="mrr">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="mrr">MRR Metrics</TabsTrigger>
+                  <TabsTrigger value="churn">Churn Analysis</TabsTrigger>
+                  <TabsTrigger value="ab-testing">A/B Testing</TabsTrigger>
+                </TabsList>
+                <TabsContent value="mrr">
+                  <MRRDashboard />
+                </TabsContent>
+                <TabsContent value="churn">
+                  <GrowthMetricsDashboard />
+                </TabsContent>
+                <TabsContent value="ab-testing">
+                  <ABTestingDashboard />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+          )}
+
+          {/* Search Analytics Tab (Admin Only) */}
+          {isAdmin && (
+            <TabsContent value="search-analytics" className="space-y-4 md:space-y-6">
+              <SearchAnalyticsDashboard />
             </TabsContent>
           )}
 
