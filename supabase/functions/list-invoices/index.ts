@@ -3,6 +3,7 @@ import Stripe from "https://esm.sh/stripe@14.21.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logger } from "../_shared/logger.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface InvoiceResponse {
   id: string;
@@ -114,14 +115,9 @@ serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    logger.error("Error fetching invoices", { error: error instanceof Error ? error.message : "Unknown error" });
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "list-invoices",
+      logContext: { endpoint: "list-invoices" },
+    });
   }
 });

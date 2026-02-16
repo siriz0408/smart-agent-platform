@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface AuditResult {
   timestamp: string;
@@ -343,16 +344,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    logger.error("Audit error", { error: error instanceof Error ? error.message : String(error) });
-    return new Response(
-      JSON.stringify({ 
-        error: error instanceof Error ? error.message : "Unknown error",
-        timestamp: new Date().toISOString(),
-      }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "audit-document-indexing",
+      logContext: { endpoint: "audit-document-indexing" },
+    });
   }
 });

@@ -4,6 +4,7 @@ import { logger } from "../_shared/logger.ts";
 import { AI_CONFIG, getAIApiKey, getAnthropicHeaders, callAnthropicAPI, extractTextFromResponse } from "../_shared/ai-config.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 import { checkRateLimit, rateLimitResponse, DOCUMENT_INDEX_LIMITS } from "../_shared/rateLimit.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 import {
   cleanExtractedText,
   detectColumns,
@@ -1250,10 +1251,9 @@ serve(async (req) => {
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
-    logger.error("index-document error", { error: error instanceof Error ? error.message : String(error) });
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "index-document",
+      logContext: { endpoint: "index-document" },
+    });
   }
 });

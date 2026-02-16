@@ -1,6 +1,7 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { getAIApiKey, getAnthropicHeaders, AI_CONFIG } from "../_shared/ai-config.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 Deno.serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -80,10 +81,9 @@ Write ONLY the system prompt content, no explanations or meta-commentary. Start 
     );
 
   } catch (error) {
-    console.error("Error generating prompt:", error);
-    return new Response(
-      JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "generate-agent-prompt",
+      logContext: { endpoint: "generate-agent-prompt" },
+    });
   }
 });

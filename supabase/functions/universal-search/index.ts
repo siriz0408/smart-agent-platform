@@ -8,6 +8,8 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { logger } from "../_shared/logger.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface SearchRequest {
   query: string;
@@ -157,7 +159,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("🔍 Auth user:", { user_id: user?.id });
+    logger.debug("Auth user", { user_id: user?.id });
 
     // Get tenant ID from profiles table using admin client (bypasses RLS)
     const { data: profile, error: profileError } = await supabaseAdmin
@@ -167,14 +169,14 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (profileError) {
-      console.error("❌ Profile lookup error:", profileError);
+      logger.error("Profile lookup error", { error: profileError?.message || String(profileError) });
     }
 
     // Use profile tenant_id - this should always exist for authenticated users
     const tenantId = profile?.tenant_id;
 
     if (!tenantId) {
-      console.error("❌ No tenant_id found for user:", user.id);
+      logger.error("No tenant_id found for user", { user_id: user.id });
       return new Response(
         JSON.stringify({ 
           error: "User profile not found", 
@@ -188,7 +190,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log("🔍 Profile lookup result:", {
+    logger.debug("Profile lookup result", {
       profile_exists: !!profile,
       tenant_id: tenantId,
     });
@@ -211,9 +213,9 @@ Deno.serve(async (req) => {
     const searchLatencyMs = Date.now() - searchStartTime;
 
     if (searchError) {
-      console.error("❌ RPC error:", searchError);
+      logger.error("RPC error", { error: searchError?.message || String(searchError) });
     } else {
-      console.log("✅ RPC results:", {
+      logger.info("Search completed", {
         count: results?.length || 0,
         query: query,
         tenant_id: tenantId,
@@ -275,13 +277,11 @@ Deno.serve(async (req) => {
         })
         .then(({ error }) => {
           if (error) {
-            console.error("❌ Failed to log search metric:", error);
-          } else {
-            console.log("📊 Logged search metric for analytics");
+            logger.warn("Failed to log search metric", { error: error.message });
           }
         })
         .catch((err) => {
-          console.error("❌ Error logging search metric:", err);
+          logger.warn("Error logging search metric", { error: err instanceof Error ? err.message : String(err) });
         });
 
       // Also log zero results to zero_results_log for backward compatibility (DIS-004)
@@ -303,13 +303,11 @@ Deno.serve(async (req) => {
           })
           .then(({ error }) => {
             if (error) {
-              console.error("❌ Failed to log zero result:", error);
-            } else {
-              console.log("📊 Logged zero result for analytics");
+              logger.warn("Failed to log zero result", { error: error.message });
             }
           })
           .catch((err) => {
-            console.error("❌ Error logging zero result:", err);
+            logger.warn("Error logging zero result", { error: err instanceof Error ? err.message : String(err) });
           });
       }
     }
@@ -328,17 +326,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Unexpected error:", error);
-
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "universal-search",
+      logContext: { endpoint: "universal-search" },
+    });
   }
 });

@@ -10,6 +10,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { getEmailTemplate } from "../_shared/email-templates.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface CampaignRecipient {
   id: string;
@@ -275,12 +276,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    logger.error("Drip email processing failed", { error: errorMessage });
-    
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "send-drip-email",
+      logContext: { endpoint: "send-drip-email" },
+    });
   }
 });

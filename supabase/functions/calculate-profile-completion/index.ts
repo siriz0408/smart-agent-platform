@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface ProfileCompletionResult {
   score: number;
@@ -141,10 +142,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error calculating profile completion:', error);
-    return new Response(
-      JSON.stringify({ error: 'Internal server error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "calculate-profile-completion",
+      logContext: { endpoint: "calculate-profile-completion" },
+    });
   }
 });

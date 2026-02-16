@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { checkRateLimit, rateLimitResponse, EMAIL_LIMITS } from "../_shared/rateLimit.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface InviteRequest {
   contactId: string;
@@ -142,11 +143,9 @@ serve(async (req: Request): Promise<Response> => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: unknown) {
-    logger.error("Error in send-invite function", { error: error instanceof Error ? error.message : "Unknown error" });
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "send-invite",
+      logContext: { endpoint: "send-invite" },
     });
   }
 });

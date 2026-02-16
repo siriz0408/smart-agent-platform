@@ -201,6 +201,46 @@ View conversation: ${vars.action_url}
     `.trim(),
   },
 
+  milestone_completed: {
+    subject: (vars) => `Milestone completed: ${vars.notification_title}`,
+    html: (vars) => `
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+      <body style="${baseStyles}">
+        <div style="${headerGradient}">
+          <h1 style="color: white; margin: 0; font-size: 24px;">Milestone Completed</h1>
+        </div>
+        <div style="${bodySection}">
+          <p style="font-size: 16px;">Hi ${vars.recipient_name || 'there'},</p>
+          <p style="font-size: 16px;">Great news! A milestone has been marked complete:</p>
+          <div style="background: #d1fae5; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #10b981; text-align: center;">
+            <div style="font-size: 24px; color: #10b981; margin-bottom: 10px;">&#10003;</div>
+            <h3 style="margin: 0 0 10px 0; color: #064e3b;">${vars.notification_title}</h3>
+            ${vars.notification_body ? `<p style="margin: 0; color: #047857;">${vars.notification_body}</p>` : ''}
+          </div>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${vars.action_url}" style="${buttonStyle}">View Deal</a>
+          </div>
+        </div>
+        ${footer}
+      </body>
+      </html>
+    `,
+    text: (vars) => `
+Milestone Completed
+
+Hi ${vars.recipient_name || 'there'},
+
+Great news! A milestone has been marked complete:
+
+${vars.notification_title}
+${vars.notification_body || ''}
+
+View deal: ${vars.action_url}
+    `.trim(),
+  },
+
   weekly_digest: {
     subject: (vars) => `Your Weekly Summary - Smart Agent`,
     html: (vars) => `

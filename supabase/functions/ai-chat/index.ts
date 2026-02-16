@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { convertAnthropicStreamToOpenAI } from "../_shared/stream-converter.ts";
 import { checkRateLimit, rateLimitResponse, AI_CHAT_LIMITS } from "../_shared/rateLimit.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 import { getCorsHeaders } from "../_shared/cors.ts";
 
@@ -467,6 +468,78 @@ This tool provides context from the user's own data to answer queries.`,
   }
 };
 
+// Property Detail tool definition for AI
+const PROPERTY_DETAIL_TOOL = {
+  type: "function",
+  function: {
+    name: "get_property_detail",
+    description: `Get detailed information about a specific property from previously shown search results. Call this when the user:
+- Asks "tell me more about the second property" or "details on the one on Oak Street"
+- References a specific property from the search results by number, address, or description
+- Asks about a specific home's features, photos, history, or details
+- Says "more info", "what about that one", "can you tell me more about..."
+- Refers to a property by position ("the first one", "the last one", "property #3")
+- Refers to a property by partial address or distinguishing feature
+IMPORTANT: Only call this if properties were previously shown in the conversation. Use the property context to resolve which property the user means.`,
+    parameters: {
+      type: "object",
+      properties: {
+        zpid: {
+          type: "string",
+          description: "Zillow Property ID (zpid) of the specific property to get details for. Extract from the property context."
+        },
+        property_reference: {
+          type: "string",
+          description: "How the user referred to the property (e.g., 'the second one', 'the house on Oak St', 'property #3'). Used for context in the response."
+        }
+      },
+      required: ["zpid"]
+    }
+  }
+};
+
+// Property Comparison tool definition for AI
+const PROPERTY_COMPARISON_TOOL = {
+  type: "function",
+  function: {
+    name: "compare_properties",
+    description: `Compare two or more properties side by side. Call this when the user:
+- Asks "compare all the properties" or "compare these homes"
+- Says "how do they compare", "which one is better", "compare property X vs Y"
+- Asks "put them side by side" or "show me a comparison"
+- Wants to see differences in price, size, features between properties
+- Says "which one is the best value" or "which should I choose"
+IMPORTANT: Only call this if properties were previously shown in the conversation. Use the property context to identify which properties to compare.`,
+    parameters: {
+      type: "object",
+      properties: {
+        zpids: {
+          type: "array",
+          items: { type: "string" },
+          description: "Array of Zillow Property IDs to compare. If user says 'compare all', include all zpids from the property context."
+        },
+        comparison_focus: {
+          type: "string",
+          description: "Optional focus area for comparison (e.g., 'price', 'size', 'value', 'investment potential', 'schools'). Influences the AI's analysis."
+        }
+      },
+      required: ["zpids"]
+    }
+  }
+};
+
+// Property detail params interface
+interface PropertyDetailParams {
+  zpid: string;
+  property_reference?: string;
+}
+
+// Property comparison params interface
+interface PropertyComparisonParams {
+  zpids: string[];
+  comparison_focus?: string;
+}
+
 // Collection query params interface
 interface CollectionQueryParams {
   collection: "contacts" | "properties" | "deals" | "documents";
@@ -586,8 +659,10 @@ function enhanceLocation(location: string): string {
 
 // Combined intent detection result
 interface IntentDetectionResult {
-  type: "property_search" | "mortgage_calculator" | "affordability_calculator" | "closing_costs_calculator" | "rent_vs_buy_calculator" | "cma_comparison" | "home_buying_checklist" | "home_selling_checklist" | "seller_net_sheet" | "agent_commission_calculator" | "collection_query" | "none";
+  type: "property_search" | "property_detail" | "property_comparison" | "mortgage_calculator" | "affordability_calculator" | "closing_costs_calculator" | "rent_vs_buy_calculator" | "cma_comparison" | "home_buying_checklist" | "home_selling_checklist" | "seller_net_sheet" | "agent_commission_calculator" | "collection_query" | "none";
   propertySearchParams?: PropertySearchParams;
+  propertyDetailParams?: PropertyDetailParams;
+  propertyComparisonParams?: PropertyComparisonParams;
   mortgageCalculatorParams?: MortgageCalculatorParams;
   affordabilityCalculatorParams?: AffordabilityCalculatorParams;
   closingCostsCalculatorParams?: ClosingCostsCalculatorParams;
@@ -603,9 +678,20 @@ interface IntentDetectionResult {
 // AI-powered intent detection using tool calling (supports both property search and mortgage calculator)
 async function detectIntentWithAI(
   message: string, 
-  apiKey: string
+  apiKey: string,
+  propertyContext?: { properties: Array<{ index: number; zpid: string; address: string; price: number; bedrooms: number; bathrooms: number; livingArea: number; propertyType?: string }> }
 ): Promise<IntentDetectionResult> {
   try {
+    // Build property context section for system prompt
+    let propertyContextPrompt = "";
+    if (propertyContext?.properties?.length) {
+      propertyContextPrompt = `\n\n## PREVIOUSLY SHOWN PROPERTIES\nThe following properties were shown to the user in a previous response. Use this to resolve references like "the second one", "the house on Oak St", etc.\n`;
+      for (const p of propertyContext.properties) {
+        propertyContextPrompt += `${p.index}. ${p.address} (zpid: "${p.zpid}", $${p.price?.toLocaleString()}, ${p.bedrooms}bd/${p.bathrooms}ba, ${p.livingArea} sqft${p.propertyType ? `, ${p.propertyType}` : ""})\n`;
+      }
+      propertyContextPrompt += `\nIMPORTANT: When the user refers to one of these properties (by number, address, or description), call get_property_detail with the matching zpid. When they ask to compare, call compare_properties with the relevant zpids.\n`;
+    }
+
     const intentResponse = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -616,9 +702,22 @@ async function detectIntentWithAI(
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
         max_tokens: 1024,
-        system: `You are a real estate assistant query parser. Your job is to detect user intent and call the appropriate tool.
+        system: `You are a real estate assistant query parser. Your job is to detect user intent and call the appropriate tool.${propertyContextPrompt}
 
 ## TOOL SELECTION RULES
+
+### Call get_property_detail when the user:
+- Asks about a specific property from previously shown results (e.g., "tell me more about the second one")
+- References a property by number, address fragment, or distinguishing feature
+- Says "more info", "details on", "what about that one", "expand on property #3"
+- Only use this if properties were previously shown (see PREVIOUSLY SHOWN PROPERTIES section above)
+
+### Call compare_properties when the user:
+- Asks to compare two or more properties from previous results
+- Says "compare all the properties", "compare these homes", "which is better"
+- Wants a side-by-side comparison of previously shown properties
+- Says "put them side by side" or "show me a comparison table"
+- If "compare all", include ALL zpids from the property context
 
 ### Call search_properties when the user:
 - Mentions finding, searching, showing, or looking for homes/houses/properties
@@ -766,7 +865,7 @@ async function detectIntentWithAI(
         messages: [
           { role: "user", content: message }
         ],
-        tools: convertToAnthropicTools([PROPERTY_SEARCH_TOOL, MORTGAGE_CALCULATOR_TOOL, AFFORDABILITY_CALCULATOR_TOOL, CLOSING_COSTS_CALCULATOR_TOOL, RENT_VS_BUY_CALCULATOR_TOOL, CMA_COMPARISON_TOOL, HOME_BUYING_CHECKLIST_TOOL, HOME_SELLING_CHECKLIST_TOOL, SELLER_NET_SHEET_TOOL, AGENT_COMMISSION_CALCULATOR_TOOL, QUERY_COLLECTION_TOOL]),
+        tools: convertToAnthropicTools([PROPERTY_SEARCH_TOOL, PROPERTY_DETAIL_TOOL, PROPERTY_COMPARISON_TOOL, MORTGAGE_CALCULATOR_TOOL, AFFORDABILITY_CALCULATOR_TOOL, CLOSING_COSTS_CALCULATOR_TOOL, RENT_VS_BUY_CALCULATOR_TOOL, CMA_COMPARISON_TOOL, HOME_BUYING_CHECKLIST_TOOL, HOME_SELLING_CHECKLIST_TOOL, SELLER_NET_SHEET_TOOL, AGENT_COMMISSION_CALCULATOR_TOOL, QUERY_COLLECTION_TOOL]),
         tool_choice: { type: "auto" },
       }),
     });
@@ -810,6 +909,26 @@ async function detectIntentWithAI(
           year_built_min: args.year_built_min,
           amenities: args.amenities || [],
           keywords: args.keywords || [],
+        }
+      };
+    }
+
+    if (toolUseBlock.name === "get_property_detail") {
+      return {
+        type: "property_detail",
+        propertyDetailParams: {
+          zpid: args.zpid,
+          property_reference: args.property_reference,
+        }
+      };
+    }
+
+    if (toolUseBlock.name === "compare_properties") {
+      return {
+        type: "property_comparison",
+        propertyComparisonParams: {
+          zpids: args.zpids || [],
+          comparison_focus: args.comparison_focus,
         }
       };
     }
@@ -1244,6 +1363,80 @@ The user has mentioned specific contacts, properties, or documents using @mentio
 
 `;
 
+// ====================================================================
+// CONNECTOR CONTEXT PROMPT
+// ====================================================================
+
+const CONNECTOR_CONTEXT_PROMPT = `
+## Connected Data Sources
+
+You have access to the following integrated data sources. When responding to queries that relate to these connectors, mention which data source you're using:
+
+`;
+
+// Interface for AI-enabled connector returned from database
+interface AIEnabledConnector {
+  id: string;
+  connector_key: string;
+  name: string;
+  description: string | null;
+  category: string;
+  supported_actions: string[];
+}
+
+// Function to build connector context for the system prompt
+function buildConnectorContext(connectors: AIEnabledConnector[]): string {
+  if (!connectors || connectors.length === 0) return "";
+
+  const sections: string[] = [];
+
+  // Group connectors by category
+  const byCategory = new Map<string, AIEnabledConnector[]>();
+  for (const conn of connectors) {
+    const cat = conn.category || "other";
+    if (!byCategory.has(cat)) {
+      byCategory.set(cat, []);
+    }
+    byCategory.get(cat)!.push(conn);
+  }
+
+  // Format category names nicely
+  const formatCategory = (cat: string) => {
+    return cat.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+
+  // Format action names nicely
+  const formatAction = (action: string) => {
+    return action.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  };
+
+  for (const [category, conns] of byCategory) {
+    sections.push(`### ${formatCategory(category)}`);
+
+    for (const conn of conns) {
+      const actionsText = conn.supported_actions?.length > 0
+        ? conn.supported_actions.map(formatAction).join(', ')
+        : 'Read access';
+
+      sections.push(`**${conn.name}** (${conn.connector_key})
+- ${conn.description || 'Connected integration'}
+- Available actions: ${actionsText}`);
+    }
+  }
+
+  const connectorNames = connectors.map(c => c.name).join(', ');
+
+  return CONNECTOR_CONTEXT_PROMPT + sections.join('\n\n') + `
+
+---
+
+When answering questions about calendar events, emails, or other connected data, always:
+1. Mention which data source (${connectorNames}) you're referencing
+2. Be clear about any limitations (e.g., "based on your connected Google Calendar")
+3. For calendar queries like "What meetings do I have today?", use the calendar connector data
+
+`;
+
 // Helper to build mention context from mentionData
 interface MentionDataItem {
   type: "contact" | "property" | "doc" | "deal";
@@ -1425,7 +1618,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, conversationId, includeDocuments, documentIds, mentionData, collectionRefs } = await req.json();
+    const { messages, conversationId, includeDocuments, documentIds, mentionData, collectionRefs, propertyContext } = await req.json();
     
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     if (!ANTHROPIC_API_KEY) {
@@ -1522,6 +1715,34 @@ serve(async (req) => {
     }
 
     // ====================================================================
+    // FETCH AI-ENABLED CONNECTORS
+    // ====================================================================
+    let aiConnectors: AIEnabledConnector[] = [];
+
+    if (tenantId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
+      try {
+        const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+        // Call the get_ai_enabled_connectors function (tenant_id = workspace_id)
+        const { data: connectorData, error: connectorError } = await supabaseAdmin.rpc(
+          "get_ai_enabled_connectors",
+          { _workspace_id: tenantId }
+        );
+
+        if (connectorError) {
+          console.error("Error fetching AI-enabled connectors:", connectorError);
+        } else if (connectorData && connectorData.length > 0) {
+          aiConnectors = connectorData as AIEnabledConnector[];
+          console.log(`Loaded ${aiConnectors.length} AI-enabled connectors:`, aiConnectors.map(c => c.connector_key));
+        } else {
+          console.log("No AI-enabled connectors for this workspace");
+        }
+      } catch (err) {
+        console.error("Error loading connectors:", err);
+      }
+    }
+
+    // ====================================================================
     // AI-POWERED INTENT DETECTION WITH STATUS STREAMING
     // (Supports: Property Search, Mortgage Calculator, or General Chat)
     // ====================================================================
@@ -1538,7 +1759,18 @@ serve(async (req) => {
         try {
           // Send initial analyzing status
           await writeStatus(writer, encoder, "analyzing", "Understanding your request...");
-          
+
+          // If connectors are enabled, notify frontend which data sources are available
+          if (aiConnectors.length > 0) {
+            await writeEmbeddedComponents(writer, encoder, {
+              active_connectors: aiConnectors.map(c => ({
+                name: c.name,
+                connector_key: c.connector_key,
+                category: c.category,
+              })),
+            });
+          }
+
           console.log("Analyzing message for intent:", lastUserMessage.content);
           
           // ================================================================
@@ -1709,7 +1941,7 @@ serve(async (req) => {
           }
           
           // Use combined intent detection (for single collection or other intents)
-          const intentResult = await detectIntentWithAI(lastUserMessage.content, ANTHROPIC_API_KEY);
+          const intentResult = await detectIntentWithAI(lastUserMessage.content, ANTHROPIC_API_KEY, propertyContext);
           console.log("Intent detection result:", intentResult.type);
           
           // ================================================================
@@ -3266,6 +3498,380 @@ Use this data to answer the user's question. Be specific and reference the actua
             }
           }
           
+          // ================================================================
+          // HANDLE PROPERTY DETAIL INTENT
+          // ================================================================
+          if (intentResult.type === "property_detail" && intentResult.propertyDetailParams) {
+            const { zpid, property_reference } = intentResult.propertyDetailParams;
+            console.log("Property detail request for zpid:", zpid, "ref:", property_reference);
+            
+            await writeStatus(writer, encoder, "searching", `Getting details for ${property_reference || `property ${zpid}`}...`);
+            
+            const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
+            if (!RAPIDAPI_KEY) {
+              console.warn("RAPIDAPI_KEY not configured - skipping property detail");
+              await writeStatus(writer, encoder, "error", "Property details are temporarily unavailable.");
+              await writer.close();
+              return;
+            }
+            
+            try {
+              // Fetch property details
+              const detailResponse = await fetch(
+                `https://real-estate101.p.rapidapi.com/api/property?zpid=${zpid}`,
+                {
+                  method: "GET",
+                  headers: {
+                    "X-RapidAPI-Key": RAPIDAPI_KEY,
+                    "X-RapidAPI-Host": "real-estate101.p.rapidapi.com",
+                  },
+                }
+              );
+              
+              let detailData: Record<string, unknown> = {};
+              if (detailResponse.ok) {
+                detailData = await detailResponse.json();
+              } else {
+                console.error("Property detail API error:", detailResponse.status);
+              }
+              
+              // Fetch property photos in parallel
+              const addressStr = [
+                detailData.streetAddress || detailData.address || "",
+                detailData.city || "",
+                detailData.state || "",
+                detailData.zipcode || detailData.zip || "",
+              ].filter(Boolean).join(", ");
+              
+              let photos: string[] = [];
+              try {
+                const addressSlug = addressStr
+                  .replace(/\s+/g, "-")
+                  .replace(/,/g, "")
+                  .replace(/--+/g, "-");
+                const zillowUrl = encodeURIComponent(
+                  `https://www.zillow.com/homedetails/${addressSlug}/${zpid}_zpid/`
+                );
+                const photosResponse = await fetch(
+                  `https://real-estate101.p.rapidapi.com/api/property-info/photos?zpid=${zpid}&url=${zillowUrl}&address=${encodeURIComponent(addressStr)}`,
+                  {
+                    method: "GET",
+                    headers: {
+                      "X-RapidAPI-Key": RAPIDAPI_KEY,
+                      "X-RapidAPI-Host": "real-estate101.p.rapidapi.com",
+                    },
+                  }
+                );
+                if (photosResponse.ok) {
+                  const photosData = await photosResponse.json();
+                  if (Array.isArray(photosData)) {
+                    photos = photosData.map((p: unknown) => {
+                      if (typeof p === "string") return p;
+                      const obj = p as Record<string, unknown>;
+                      return String(obj?.url || obj?.href || obj?.mixedSources?.jpeg?.[0]?.url || "");
+                    }).filter(Boolean);
+                  } else if (photosData?.photos && Array.isArray(photosData.photos)) {
+                    photos = photosData.photos.map((p: unknown) => {
+                      if (typeof p === "string") return p;
+                      const obj = p as Record<string, unknown>;
+                      return String(obj?.url || obj?.href || "");
+                    }).filter(Boolean);
+                  }
+                }
+              } catch (photoErr) {
+                console.error("Photo fetch error:", photoErr);
+              }
+
+              // Fall back to any photos from the detail data
+              if (photos.length === 0) {
+                if (Array.isArray(detailData.photos)) {
+                  photos = (detailData.photos as unknown[]).map((p: unknown) => typeof p === "string" ? p : String((p as Record<string, unknown>)?.url || "")).filter(Boolean);
+                } else if (Array.isArray(detailData.images)) {
+                  photos = (detailData.images as unknown[]).map((p: unknown) => typeof p === "string" ? p : String((p as Record<string, unknown>)?.url || "")).filter(Boolean);
+                }
+                if (detailData.imgSrc && photos.length === 0) {
+                  photos = [String(detailData.imgSrc)];
+                }
+              }
+              
+              // Parse features
+              let features: string[] = [];
+              if (Array.isArray(detailData.features)) {
+                features = detailData.features.map((f: unknown) => String(f));
+              } else if (Array.isArray(detailData.amenities)) {
+                features = detailData.amenities.map((f: unknown) => String(f));
+              }
+              
+              // Parse price/tax/price history
+              let taxHistory: Array<{ year: number; amount: number }> = [];
+              if (Array.isArray(detailData.taxHistory)) {
+                taxHistory = (detailData.taxHistory as unknown[]).slice(0, 5).map((t: unknown) => {
+                  const tax = t as Record<string, unknown>;
+                  return { year: Number(tax.time || tax.year || 0), amount: Number(tax.value || tax.taxPaid || tax.amount || 0) };
+                });
+              }
+              
+              let priceHistory: Array<{ date: string; price: number; event: string }> = [];
+              if (Array.isArray(detailData.priceHistory)) {
+                priceHistory = (detailData.priceHistory as unknown[]).slice(0, 10).map((h: unknown) => {
+                  const hist = h as Record<string, unknown>;
+                  return {
+                    date: String(hist.date || hist.time || ""),
+                    price: Number(hist.price || hist.value || 0),
+                    event: String(hist.event || hist.priceChangeRate || ""),
+                  };
+                });
+              }
+              
+              const price = Number(detailData.price || detailData.listPrice || 0);
+              const livingArea = Number(detailData.livingArea || detailData.sqft || 0);
+              
+              // Build the property_detail embedded component
+              const propertyDetail = {
+                zpid: String(detailData.zpid || zpid),
+                address: {
+                  streetAddress: String(detailData.streetAddress || detailData.address || ""),
+                  city: String(detailData.city || ""),
+                  state: String(detailData.state || ""),
+                  zipcode: String(detailData.zipcode || detailData.zip || ""),
+                  latitude: Number(detailData.latitude) || undefined,
+                  longitude: Number(detailData.longitude) || undefined,
+                },
+                price,
+                bedrooms: Number(detailData.bedrooms || detailData.beds || 0),
+                bathrooms: Number(detailData.bathrooms || detailData.baths || 0),
+                livingArea,
+                lotSize: Number(detailData.lotAreaValue || detailData.lotSize || 0) || undefined,
+                yearBuilt: Number(detailData.yearBuilt) || undefined,
+                propertyType: String(detailData.propertyType || detailData.homeType || "Single Family"),
+                homeStatus: String(detailData.homeStatus || "For Sale"),
+                description: String(detailData.description || ""),
+                photos,
+                features,
+                parkingSpaces: Number(detailData.parkingSpaces) || undefined,
+                hoaFee: Number(detailData.hoaFee || detailData.monthlyHoaFee) || undefined,
+                pricePerSqFt: livingArea > 0 ? Math.round(price / livingArea) : undefined,
+                taxHistory: taxHistory.length > 0 ? taxHistory : undefined,
+                priceHistory: priceHistory.length > 0 ? priceHistory : undefined,
+              };
+              
+              // Send embedded component
+              await writeEmbeddedComponents(writer, encoder, { property_detail: propertyDetail });
+              await writeStatus(writer, encoder, "generating", "Preparing detailed analysis...");
+              
+              // Build rich context for the AI response
+              const detailContext = `\n\n## PROPERTY DETAIL CONTEXT
+You are providing a detailed analysis of this specific property. Here is the full data:
+
+**Property:** ${propertyDetail.address.streetAddress}, ${propertyDetail.address.city}, ${propertyDetail.address.state} ${propertyDetail.address.zipcode}
+**Price:** $${propertyDetail.price.toLocaleString()}
+**Bedrooms:** ${propertyDetail.bedrooms} | **Bathrooms:** ${propertyDetail.bathrooms}
+**Living Area:** ${propertyDetail.livingArea.toLocaleString()} sqft${propertyDetail.lotSize ? ` | **Lot:** ${propertyDetail.lotSize.toLocaleString()} sqft` : ""}
+**Year Built:** ${propertyDetail.yearBuilt || "N/A"} | **Type:** ${propertyDetail.propertyType}
+**Status:** ${propertyDetail.homeStatus}
+${propertyDetail.pricePerSqFt ? `**Price/sqft:** $${propertyDetail.pricePerSqFt}` : ""}
+${propertyDetail.hoaFee ? `**HOA Fee:** $${propertyDetail.hoaFee}/month` : ""}
+${propertyDetail.parkingSpaces ? `**Parking:** ${propertyDetail.parkingSpaces} spaces` : ""}
+${propertyDetail.description ? `\n**Description:** ${propertyDetail.description}` : ""}
+${features.length > 0 ? `\n**Features:** ${features.join(", ")}` : ""}
+${priceHistory.length > 0 ? `\n**Price History:** ${priceHistory.map(h => `${h.date}: $${h.price.toLocaleString()} (${h.event})`).join(", ")}` : ""}
+**Photos available:** ${photos.length}
+
+Provide a detailed, engaging analysis of this property. Highlight key selling points, potential concerns, and value assessment. The property detail card with photos and a mortgage calculator are being shown to the user alongside your response.`;
+              
+              // Call AI for text response
+              const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                  "x-api-key": ANTHROPIC_API_KEY,
+                  "anthropic-version": "2023-06-01",
+                  "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "claude-sonnet-4-20250514",
+                  max_tokens: 1500,
+                  system: BASE_SYSTEM_PROMPT + detailContext,
+                  messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
+                  stream: true,
+                }),
+              });
+              
+              if (aiResponse.ok && aiResponse.body) {
+                const reader = aiResponse.body.getReader();
+                await convertAnthropicStreamToOpenAI(reader, writer);
+              }
+              
+              // Track usage
+              if (userId && tenantId && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                  global: { headers: { Authorization: authHeader! } },
+                });
+                await supabase.from("usage_records").insert({
+                  tenant_id: tenantId,
+                  record_type: "ai_query",
+                  quantity: 1,
+                });
+              }
+              
+              await writer.close();
+              return;
+            } catch (detailError) {
+              console.error("Property detail error:", detailError);
+              await writeStatus(writer, encoder, "error", "Failed to fetch property details, continuing with general response...");
+              // Fall through to regular chat
+            }
+          }
+          
+          // ================================================================
+          // HANDLE PROPERTY COMPARISON INTENT
+          // ================================================================
+          if (intentResult.type === "property_comparison" && intentResult.propertyComparisonParams) {
+            const { zpids, comparison_focus } = intentResult.propertyComparisonParams;
+            console.log("Property comparison request for zpids:", zpids, "focus:", comparison_focus);
+            
+            await writeStatus(writer, encoder, "searching", `Comparing ${zpids.length} properties...`);
+            
+            const RAPIDAPI_KEY = Deno.env.get("RAPIDAPI_KEY");
+            if (!RAPIDAPI_KEY) {
+              console.warn("RAPIDAPI_KEY not configured - skipping property comparison");
+              await writeStatus(writer, encoder, "error", "Property comparison is temporarily unavailable.");
+              await writer.close();
+              return;
+            }
+            
+            try {
+              // Fetch details for all properties in parallel
+              const detailPromises = zpids.map(async (zpid: string) => {
+                try {
+                  const resp = await fetch(
+                    `https://real-estate101.p.rapidapi.com/api/property?zpid=${zpid}`,
+                    {
+                      method: "GET",
+                      headers: {
+                        "X-RapidAPI-Key": RAPIDAPI_KEY,
+                        "X-RapidAPI-Host": "real-estate101.p.rapidapi.com",
+                      },
+                    }
+                  );
+                  if (resp.ok) {
+                    const data = await resp.json();
+                    const price = Number(data.price || data.listPrice || 0);
+                    const livingArea = Number(data.livingArea || data.sqft || 0);
+                    return {
+                      zpid: String(data.zpid || zpid),
+                      imgSrc: String(data.imgSrc || data.image || data.thumbnail || ""),
+                      address: [
+                        data.streetAddress || data.address || "",
+                        data.city || "",
+                        data.state || "",
+                        data.zipcode || data.zip || "",
+                      ].filter(Boolean).join(", "),
+                      price,
+                      bedrooms: Number(data.bedrooms || data.beds || 0),
+                      bathrooms: Number(data.bathrooms || data.baths || 0),
+                      livingArea,
+                      yearBuilt: Number(data.yearBuilt) || undefined,
+                      pricePerSqFt: livingArea > 0 ? Math.round(price / livingArea) : undefined,
+                      propertyType: String(data.propertyType || data.homeType || "Single Family"),
+                      hoaFee: Number(data.hoaFee || data.monthlyHoaFee) || undefined,
+                    };
+                  }
+                  return null;
+                } catch (err) {
+                  console.error(`Error fetching detail for zpid ${zpid}:`, err);
+                  return null;
+                }
+              });
+              
+              const detailResults = await Promise.all(detailPromises);
+              const properties = detailResults.filter(Boolean);
+              
+              if (properties.length === 0) {
+                // Fall back to property context if API calls fail
+                if (propertyContext?.properties?.length) {
+                  const fallbackProperties = propertyContext.properties
+                    .filter((p: { zpid: string }) => zpids.includes(p.zpid))
+                    .map((p: { zpid: string; address: string; price: number; bedrooms: number; bathrooms: number; livingArea: number; propertyType?: string }) => ({
+                      zpid: p.zpid,
+                      address: p.address,
+                      price: p.price,
+                      bedrooms: p.bedrooms,
+                      bathrooms: p.bathrooms,
+                      livingArea: p.livingArea,
+                      propertyType: p.propertyType || "House",
+                    }));
+                  if (fallbackProperties.length > 0) {
+                    await writeEmbeddedComponents(writer, encoder, { property_comparison: { properties: fallbackProperties } });
+                  }
+                }
+              } else {
+                await writeEmbeddedComponents(writer, encoder, { property_comparison: { properties } });
+              }
+              
+              await writeStatus(writer, encoder, "generating", "Analyzing the comparison...");
+              
+              // Build comparison context for AI
+              const compProperties = properties.length > 0 ? properties : (propertyContext?.properties || []);
+              let compContext = `\n\n## PROPERTY COMPARISON CONTEXT
+You are comparing ${compProperties.length} properties side by side. A comparison table is being displayed to the user. Here are the details:\n\n`;
+              
+              compProperties.forEach((p: Record<string, unknown>, i: number) => {
+                compContext += `**Property ${i + 1}:** ${p.address}
+- Price: $${Number(p.price).toLocaleString()} | ${p.bedrooms}bd/${p.bathrooms}ba | ${Number(p.livingArea).toLocaleString()} sqft
+${p.yearBuilt ? `- Built: ${p.yearBuilt}` : ""}${p.pricePerSqFt ? ` | $${p.pricePerSqFt}/sqft` : ""}
+${p.propertyType ? `- Type: ${p.propertyType}` : ""}${p.hoaFee ? ` | HOA: $${p.hoaFee}/mo` : ""}
+\n`;
+              });
+              
+              if (comparison_focus) {
+                compContext += `\nThe user is particularly interested in comparing by: **${comparison_focus}**\n`;
+              }
+              
+              compContext += `\nProvide a clear, comparative analysis. Highlight the best value, pros/cons of each, and make a recommendation based on the data. The comparison table is shown alongside your response.`;
+              
+              // Call AI for text response
+              const aiResponse = await fetch("https://api.anthropic.com/v1/messages", {
+                method: "POST",
+                headers: {
+                  "x-api-key": ANTHROPIC_API_KEY,
+                  "anthropic-version": "2023-06-01",
+                  "content-type": "application/json",
+                },
+                body: JSON.stringify({
+                  model: "claude-sonnet-4-20250514",
+                  max_tokens: 1500,
+                  system: BASE_SYSTEM_PROMPT + compContext,
+                  messages: messages.filter((m: { role: string }) => m.role === "user" || m.role === "assistant"),
+                  stream: true,
+                }),
+              });
+              
+              if (aiResponse.ok && aiResponse.body) {
+                const reader = aiResponse.body.getReader();
+                await convertAnthropicStreamToOpenAI(reader, writer);
+              }
+              
+              // Track usage
+              if (userId && tenantId && SUPABASE_URL && SUPABASE_ANON_KEY) {
+                const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                  global: { headers: { Authorization: authHeader! } },
+                });
+                await supabase.from("usage_records").insert({
+                  tenant_id: tenantId,
+                  record_type: "ai_query",
+                  quantity: 1,
+                });
+              }
+              
+              await writer.close();
+              return;
+            } catch (compError) {
+              console.error("Property comparison error:", compError);
+              await writeStatus(writer, encoder, "error", "Failed to compare properties, continuing with general response...");
+              // Fall through to regular chat
+            }
+          }
+          
           // Fall through to regular AI chat response
           // This handles: no property intent, no properties found, or API error
           console.log("Falling through to regular AI chat response");
@@ -3273,8 +3879,16 @@ Use this data to answer the user's question. Be specific and reference the actua
           // Send status so user sees we're responding
           await writeStatus(writer, encoder, "generating", "Processing your request...");
           
-          // Build system prompt with mention context if available
+          // Build system prompt with mention context and connector context if available
           let streamSystemPrompt = BASE_SYSTEM_PROMPT;
+
+          // Add connector context if user has AI-enabled connectors
+          if (aiConnectors.length > 0) {
+            const connectorContext = buildConnectorContext(aiConnectors);
+            console.log("Adding connector context to streaming system prompt");
+            streamSystemPrompt += connectorContext;
+          }
+
           const streamMentionContext = buildMentionContext(mentionData as MentionDataItem[] || []);
           if (streamMentionContext) {
             console.log("Adding mention context to streaming system prompt");
@@ -3339,13 +3953,23 @@ Use this data to answer the user's question. Be specific and reference the actua
     let documentContext = "";
     let structuredDataContext = "";
     const sourceDocs: { id: string; name: string; category: string; chunkCount: number }[] = [];
-    
+
+    // Add connector context if user has AI-enabled connectors
+    if (aiConnectors.length > 0) {
+      const connectorContext = buildConnectorContext(aiConnectors);
+      console.log("Adding connector context to system prompt");
+      systemPrompt += connectorContext;
+    }
+
     // Build mention context if mentionData was provided
     const mentionContext = buildMentionContext(mentionData as MentionDataItem[] || []);
     if (mentionContext) {
       console.log("Adding mention context to system prompt");
       systemPrompt += mentionContext;
     }
+
+    // Track if documents were requested for fallback messaging
+    const documentsRequested = includeDocuments && (documentIds?.length > 0 || true);
 
     if (includeDocuments && tenantId && SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       try {
@@ -3553,7 +4177,25 @@ Let them know you couldn't find relevant information in the selected documents a
         }
       } catch (docError) {
         console.error("Error fetching document context:", docError);
+        // Set fallback message when document search fails
+        systemPrompt = BASE_SYSTEM_PROMPT + `
+
+Note: The user requested document analysis, but an error occurred while retrieving document content.
+Let them know there was a technical issue accessing the documents and suggest they:
+1. Try refreshing the page and selecting the documents again
+2. Verify the documents are properly indexed
+3. If the issue persists, contact support`;
       }
+    } else if (documentsRequested && !tenantId) {
+      // User requested documents but we don't have their tenant context
+      console.log("Document search requested but no tenant ID available");
+      systemPrompt = BASE_SYSTEM_PROMPT + `
+
+Note: The user wants to analyze documents, but their account context could not be verified.
+Politely let them know you're unable to access their documents right now and suggest they:
+1. Try signing out and signing back in
+2. Refresh the page and try again
+3. Make sure they have documents uploaded and indexed`;
     }
 
     // ====================================================================
@@ -3615,10 +4257,9 @@ Let them know you couldn't find relevant information in the selected documents a
       headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
     });
   } catch (error) {
-    console.error("ai-chat error:", error);
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "ai-chat",
+      logContext: { endpoint: "ai-chat" },
+    });
   }
 });

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { processQueuedAction, ActionResult } from "../_shared/agentActions.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface ExecuteActionsRequest {
   // Execute a specific action by ID
@@ -194,13 +195,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    logger.error("Execute actions error", { error: error instanceof Error ? error.message : String(error) });
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : "Unknown error" }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "execute-actions",
+      logContext: { endpoint: "execute-actions" },
+    });
   }
 });

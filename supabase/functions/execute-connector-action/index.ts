@@ -25,6 +25,7 @@ import { GmailConnector } from "../_shared/connectors/gmail-connector.ts";
 import { BridgeMLSConnector } from "../_shared/connectors/bridge-mls-connector.ts";
 import { GoogleCalendarConnector } from "../_shared/connectors/google-calendar-connector.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 // Initialize connector registry
 const registry = new ConnectorRegistry();
@@ -470,15 +471,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error("Execute connector action error", { error: errorMessage });
-    
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "execute-connector-action",
+      logContext: { endpoint: "execute-connector-action" },
+    });
   }
 });

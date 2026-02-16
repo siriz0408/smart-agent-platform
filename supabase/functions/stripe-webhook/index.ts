@@ -87,7 +87,7 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log(`Processing webhook event: ${event.type}`);
+    logger.info("Processing webhook event", { event_type: event.type });
 
     switch (event.type) {
       case "customer.subscription.created":
@@ -105,7 +105,7 @@ serve(async (req) => {
             .maybeSingle();
           
           if (!existingSub?.workspace_id) {
-            console.error("No workspace found for subscription:", subscription.id);
+            logger.error("No workspace found for subscription", { subscription_id: subscription.id });
             break;
           }
         }
@@ -135,9 +135,9 @@ serve(async (req) => {
 
         const { error } = await updateQuery;
         if (error) {
-          console.error("Error updating subscription:", error);
+          logger.error("Error updating subscription", { error: error?.message || String(error) });
         } else {
-          console.log(`Subscription updated: ${subscription.id} -> ${plan}`);
+          logger.info("Subscription updated", { subscription_id: subscription.id, plan });
         }
         break;
       }
@@ -156,23 +156,23 @@ serve(async (req) => {
           .eq("stripe_subscription_id", subscription.id);
 
         if (error) {
-          console.error("Error canceling subscription:", error);
+          logger.error("Error canceling subscription", { error: error?.message || String(error) });
         } else {
-          console.log(`Subscription canceled: ${subscription.id}`);
+          logger.info("Subscription canceled", { subscription_id: subscription.id });
         }
         break;
       }
 
       case "invoice.payment_succeeded": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log(`Payment succeeded for invoice: ${invoice.id}`);
+        logger.info("Payment succeeded", { invoice_id: invoice.id });
         // Could track invoice history here if needed
         break;
       }
 
       case "invoice.payment_failed": {
         const invoice = event.data.object as Stripe.Invoice;
-        console.log(`Payment failed for invoice: ${invoice.id}`);
+        logger.warn("Payment failed", { invoice_id: invoice.id });
         
         // Update subscription status to past_due
         if (invoice.subscription) {
@@ -182,14 +182,14 @@ serve(async (req) => {
             .eq("stripe_subscription_id", invoice.subscription as string);
           
           if (error) {
-            console.error("Error updating subscription status:", error);
+            logger.error("Error updating subscription status", { error: error?.message || String(error) });
           }
         }
         break;
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        logger.debug("Unhandled event type", { event_type: event.type });
     }
 
     return new Response(JSON.stringify({ received: true }), {

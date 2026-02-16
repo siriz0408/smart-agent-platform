@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { logger } from "../_shared/logger.ts";
 import { requireEnv } from "../_shared/validateEnv.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface PlaywrightMcpRequest {
   tool_name: "playwright_run_test" | "playwright_run_suite" | "playwright_compare_visual";
@@ -104,17 +105,10 @@ serve(async (req) => {
     });
 
   } catch (error) {
-    logger.error("Playwright MCP error", { error: error instanceof Error ? error.message : String(error) });
-    return new Response(
-      JSON.stringify({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "playwright-mcp",
+      logContext: { endpoint: "playwright-mcp" },
+    });
   }
 });
 

@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { logger } from "../_shared/logger.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 // This function is called via a database webhook when a deal's stage changes
 // It sends notifications to relevant parties (agent, buyer, seller)
@@ -246,11 +247,9 @@ serve(async (req) => {
       }
     );
   } catch (error: unknown) {
-    logger.error("Error in deal-stage-webhook", { error: error instanceof Error ? error.message : "Unknown error" });
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
-    return new Response(JSON.stringify({ error: errorMessage }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "deal-stage-webhook",
+      logContext: { endpoint: "deal-stage-webhook" },
     });
   }
 });

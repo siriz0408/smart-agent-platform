@@ -8,6 +8,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { generateDeterministicEmbedding } from "../_shared/embedding-utils.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface IndexRequest {
   entityType: "contact" | "property" | "deal" | "all";
@@ -340,17 +341,9 @@ Deno.serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error("Unexpected error:", error);
-
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "index-entities",
+      logContext: { endpoint: "index-entities" },
+    });
   }
 });

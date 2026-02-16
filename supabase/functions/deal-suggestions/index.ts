@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { createErrorResponse } from "../_shared/error-handler.ts";
 
 interface DealSuggestion {
   type: "action" | "warning" | "info" | "opportunity";
@@ -261,11 +262,10 @@ Be concise and actionable. Return ONLY valid JSON array, no markdown or explanat
     );
 
   } catch (error) {
-    console.error("Error generating deal suggestions:", error);
-    return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    return createErrorResponse(error, corsHeaders, {
+      functionName: "deal-suggestions",
+      logContext: { endpoint: "deal-suggestions" },
+    });
   }
 });
 
